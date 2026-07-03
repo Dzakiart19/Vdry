@@ -54,6 +54,11 @@ function allowedStreamUrl(raw) {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+/* ── Health check (untuk cronjob / uptime monitor) ── */
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', ts: Date.now() });
+});
+
 /* ═══════════════════════════════════════
    FOLDER API
 ═══════════════════════════════════════ */
