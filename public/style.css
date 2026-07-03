@@ -595,6 +595,33 @@ html, body {
 /* ══════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════ */
+/* ══════════════════════════════════
+   TOAST NOTIFIKASI
+══════════════════════════════════ */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--surface2);
+  border: 1px solid var(--primary);
+  color: var(--text);
+  font-size: 13px;
+  padding: 10px 20px;
+  border-radius: 30px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  z-index: 999;
+  opacity: 0;
+  transition: transform .3s ease, opacity .3s ease;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 @media (max-width: 700px) {
   :root { --sidebar-w: 0px; }
 

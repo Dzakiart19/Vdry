@@ -461,8 +461,56 @@ const App = (() => {
     if (e.key === 'Escape') closePlayer();
   });
 
+  /* ─── Auto-refresh ─── */
+  const REFRESH_MS = 3 * 60 * 1000; // 3 menit
+  let refreshTimer = null;
+
+  function scheduleRefresh() {
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => {
+      // Refresh folder yang sedang aktif (tanpa reset breadcrumb)
+      silentRefresh();
+    }, REFRESH_MS);
+  }
+
+  async function silentRefresh() {
+    try {
+      const resp = await fetch(`/api/folder/${currentFolder}?p=${currentPage}`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (data.error) return;
+
+      const prevVideoIds  = new Set((currentData?.videos  || []).map(v => v.id));
+      const prevFolderIds = new Set((currentData?.folders || []).map(f => f.id));
+
+      const newVideos  = (data.videos  || []).filter(v => !prevVideoIds.has(v.id));
+      const newFolders = (data.folders || []).filter(f => !prevFolderIds.has(f.id));
+
+      if (newVideos.length > 0 || newFolders.length > 0) {
+        currentData = data;
+        renderFolder(data);
+        showToast(`${newVideos.length + newFolders.length} konten baru ditemukan!`);
+      }
+    } catch { /* abaikan error saat refresh background */ }
+    finally { scheduleRefresh(); }
+  }
+
+  function showToast(msg) {
+    let t = document.getElementById('toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'toast';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
   /* ─── init ─── */
   loadFolder(DEFAULT_FOLDER);
+  scheduleRefresh();
 
   /* ─── utils ─── */
   function escHtml(str) {
