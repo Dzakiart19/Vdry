@@ -3,6 +3,7 @@
    ════════════════════════════════════════ */
 
 const DEFAULT_FOLDER = 'e2bo9hcw9pe';
+const STORAGE_KEY    = 'xpvid_saved_folders';
 
 const App = (() => {
   /* ─── state ─── */
@@ -13,22 +14,54 @@ const App = (() => {
   let searchQuery   = '';
   let retryFn       = null;
 
+  /* ─── saved folders (localStorage) ─── */
+  function getSaved() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+  function setSaved(arr) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  }
+  function addSaved(id, name) {
+    const arr = getSaved();
+    if (arr.find(f => f.id === id)) return false; // sudah ada
+    arr.push({ id, name: name || id });
+    setSaved(arr);
+    return true;
+  }
+  function removeSaved(id) {
+    setSaved(getSaved().filter(f => f.id !== id));
+  }
+
+  /* ─── parse folder ID dari link atau ID mentah ─── */
+  function parseInput(raw) {
+    raw = raw.trim();
+    // URL: https://xpvid.cc/f/abc123
+    const m = raw.match(/\/f\/([a-z0-9]+)/i);
+    if (m) return m[1];
+    // ID murni
+    if (/^[a-z0-9]+$/i.test(raw)) return raw;
+    return null;
+  }
+
   /* ─── DOM refs ─── */
   const $  = id => document.getElementById(id);
   const el = {
-    loading:    $('loadingState'),
-    error:      $('errorState'),
-    errorMsg:   $('errorMsg'),
-    empty:      $('emptyState'),
-    grid:       $('videoGrid'),
-    pagination: $('pagination'),
-    sidebar:    $('folderList'),
-    breadcrumb: $('breadcrumb'),
-    modal:      $('playerModal'),
-    video:      $('videoPlayer'),
-    videoTitle: $('videoTitle'),
-    videoSub:   $('videoSubtitle'),
-    search:     $('searchInput'),
+    loading:      $('loadingState'),
+    error:        $('errorState'),
+    errorMsg:     $('errorMsg'),
+    empty:        $('emptyState'),
+    grid:         $('videoGrid'),
+    pagination:   $('pagination'),
+    sidebar:      $('folderList'),
+    breadcrumb:   $('breadcrumb'),
+    modal:        $('playerModal'),
+    video:        $('videoPlayer'),
+    videoTitle:   $('videoTitle'),
+    videoSub:     $('videoSubtitle'),
+    search:       $('searchInput'),
+    addInput:     $('addFolderInput'),
+    addBtn:       $('addFolderBtn'),
   };
 
   /* ─── helpers ─── */
@@ -108,58 +141,115 @@ const App = (() => {
     });
   }
 
-  function renderSidebar(folders) {
+  function folderIcon() {
+    return `<svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+    </svg>`;
+  }
+
+  function renderSidebar(subFolders) {
     el.sidebar.innerHTML = '';
 
-    if (folders.length === 0) {
+    const saved = getSaved();
+
+    /* ── Saved folders section ── */
+    if (saved.length > 0) {
+      const label = document.createElement('div');
+      label.className = 'sidebar-section-label';
+      label.textContent = 'Tersimpan';
+      el.sidebar.appendChild(label);
+
+      saved.forEach(f => {
+        const item = document.createElement('div');
+        item.className = 'folder-item';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = f.name || f.id;
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'folder-del-btn';
+        delBtn.title = 'Hapus';
+        delBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+        delBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          removeSaved(f.id);
+          renderSidebar(subFolders);
+          // Refresh home cards jika lagi di home
+          if (currentFolder === DEFAULT_FOLDER) renderSavedCards();
+        });
+
+        item.innerHTML = folderIcon();
+        item.appendChild(nameSpan);
+        item.appendChild(delBtn);
+
+        item.addEventListener('click', () => {
+          breadcrumbs = [{ id: DEFAULT_FOLDER, name: 'Home' }, { id: f.id, name: f.name || f.id }];
+          loadFolder(f.id);
+        });
+
+        el.sidebar.appendChild(item);
+      });
+    }
+
+    if (subFolders.length === 0 && saved.length === 0) {
       const msg = document.createElement('div');
-      msg.style.cssText = 'padding:10px 10px;font-size:12px;color:var(--muted2)';
-      msg.textContent = 'Tidak ada subfolder.';
+      msg.style.cssText = 'padding:10px;font-size:12px;color:var(--muted2)';
+      msg.textContent = 'Belum ada folder tersimpan.';
       el.sidebar.appendChild(msg);
       return;
     }
 
-    folders.forEach(f => {
-      const item = document.createElement('div');
-      item.className = 'folder-item';
-      item.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
-        </svg>
-        <span>${escHtml(f.name || f.id)}</span>`;
+    /* ── Subfolder section ── */
+    if (subFolders.length > 0) {
+      const label = document.createElement('div');
+      label.className = 'sidebar-section-label';
+      label.textContent = 'Subfolder';
+      el.sidebar.appendChild(label);
 
-      item.addEventListener('click', () => {
-        breadcrumbs.push({ id: f.id, name: f.name || f.id });
-        loadFolder(f.id);
+      subFolders.forEach(f => {
+        const item = document.createElement('div');
+        item.className = 'folder-item';
+        item.innerHTML = `${folderIcon()}<span>${escHtml(f.name || f.id)}</span>`;
+        item.addEventListener('click', () => {
+          breadcrumbs.push({ id: f.id, name: f.name || f.id });
+          loadFolder(f.id);
+        });
+        el.sidebar.appendChild(item);
       });
-
-      el.sidebar.appendChild(item);
-    });
+    }
   }
 
-  function renderFolderCards(folders) {
-    // Hapus folder cards lama jika ada
-    const old = document.getElementById('folderCards');
+  /* Buat satu folder card element */
+  function makeFolderCard(f, onClick) {
+    const card = document.createElement('div');
+    card.className = 'folder-card';
+    card.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+      </svg>
+      <span>${escHtml(f.name || f.id)}</span>`;
+    card.addEventListener('click', onClick);
+    return card;
+  }
+
+  /* Render saved-folder cards di home (section teratas) */
+  function renderSavedCards() {
+    const old = document.getElementById('savedCards');
     if (old) old.remove();
-    if (!folders.length) return;
+
+    const saved = getSaved();
+    if (!saved.length) return;
 
     const wrap = document.createElement('div');
-    wrap.id = 'folderCards';
-    wrap.innerHTML = `<div class="section-label">Folder</div>`;
+    wrap.id = 'savedCards';
+    wrap.innerHTML = `<div class="section-label">Folder Tersimpan</div>`;
 
     const grid = document.createElement('div');
     grid.className = 'folder-card-grid';
 
-    folders.forEach(f => {
-      const card = document.createElement('div');
-      card.className = 'folder-card';
-      card.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
-        </svg>
-        <span>${escHtml(f.name || f.id)}</span>`;
-      card.addEventListener('click', () => {
-        breadcrumbs.push({ id: f.id, name: f.name || f.id });
+    saved.forEach(f => {
+      const card = makeFolderCard(f, () => {
+        breadcrumbs = [{ id: DEFAULT_FOLDER, name: 'Home' }, { id: f.id, name: f.name || f.id }];
         loadFolder(f.id);
       });
       grid.appendChild(card);
@@ -167,8 +257,36 @@ const App = (() => {
 
     wrap.appendChild(grid);
 
-    // Sisipkan sebelum video grid
+    // Sisipkan paling atas, sebelum folderCards / videoGrid
+    const ref = document.getElementById('folderCards') || el.grid;
+    ref.parentNode.insertBefore(wrap, ref);
+  }
+
+  function renderFolderCards(folders) {
+    const old = document.getElementById('folderCards');
+    if (old) old.remove();
+    if (!folders.length) return;
+
+    const wrap = document.createElement('div');
+    wrap.id = 'folderCards';
+    wrap.innerHTML = `<div class="section-label">Subfolder</div>`;
+
+    const grid = document.createElement('div');
+    grid.className = 'folder-card-grid';
+
+    folders.forEach(f => {
+      const card = makeFolderCard(f, () => {
+        breadcrumbs.push({ id: f.id, name: f.name || f.id });
+        loadFolder(f.id);
+      });
+      grid.appendChild(card);
+    });
+
+    wrap.appendChild(grid);
     el.grid.parentNode.insertBefore(wrap, el.grid);
+
+    // Jika di home, tampilkan saved cards di atasnya
+    if (currentFolder === DEFAULT_FOLDER) renderSavedCards();
   }
 
   function renderGrid(videos) {
@@ -284,6 +402,49 @@ const App = (() => {
   function retry() {
     if (retryFn) retryFn();
   }
+
+  /* ─── Add Folder ─── */
+  async function doAddFolder() {
+    const raw = el.addInput.value.trim();
+    if (!raw) return;
+
+    const id = parseInput(raw);
+    if (!id) {
+      el.addInput.style.borderColor = '#e05';
+      setTimeout(() => el.addInput.style.borderColor = '', 1200);
+      return;
+    }
+
+    el.addBtn.disabled = true;
+    el.addInput.disabled = true;
+
+    try {
+      // Fetch nama folder dari API
+      const resp = await fetch(`/api/folder/${id}?p=1`);
+      const data = resp.ok ? await resp.json() : null;
+      const name = data?.title || id;
+
+      addSaved(id, name);
+      el.addInput.value = '';
+      renderSidebar(currentData?.folders || []);
+      if (currentFolder === DEFAULT_FOLDER) renderSavedCards();
+    } catch {
+      // Simpan dengan ID saja kalau fetch gagal
+      addSaved(id, id);
+      el.addInput.value = '';
+      renderSidebar(currentData?.folders || []);
+      if (currentFolder === DEFAULT_FOLDER) renderSavedCards();
+    } finally {
+      el.addBtn.disabled = false;
+      el.addInput.disabled = false;
+      el.addInput.focus();
+    }
+  }
+
+  el.addBtn.addEventListener('click', doAddFolder);
+  el.addInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doAddFolder();
+  });
 
   /* ─── search ─── */
   let searchTimer;

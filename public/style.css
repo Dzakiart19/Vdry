@@ -155,7 +155,76 @@ html, body {
   padding: 6px 10px 10px;
 }
 
+/* add folder input */
+.add-folder-wrap {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px 10px;
+}
+
+.add-folder-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text);
+  padding: 7px 10px;
+  font-size: 12px;
+  outline: none;
+  min-width: 0;
+  transition: border-color .2s;
+}
+
+.add-folder-input:focus {
+  border-color: var(--primary);
+}
+
+.add-folder-input::placeholder { color: var(--muted2); }
+
+.add-folder-btn {
+  flex: 0 0 30px;
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+  align-self: center;
+}
+
+.add-folder-btn:hover { background: var(--primary-dk); }
+.add-folder-btn svg { width: 16px; height: 16px; }
+
 .folder-list { display: flex; flex-direction: column; gap: 2px; }
+
+.sidebar-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  padding: 10px 10px 4px;
+}
+
+.folder-del-btn {
+  margin-left: auto;
+  flex: 0 0 20px;
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--muted2);
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s, background .15s, color .15s;
+}
+
+.folder-item:hover .folder-del-btn { opacity: 1; }
+.folder-del-btn:hover { background: rgba(255,60,60,.15); color: #f55; }
+.folder-del-btn svg { width: 12px; height: 12px; }
 
 .folder-item {
   display: flex;
