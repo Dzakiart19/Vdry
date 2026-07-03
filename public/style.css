@@ -194,6 +194,60 @@ html, body {
 .content::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; }
 
 /* ══════════════════════════════════
+   FOLDER CARDS (main area)
+══════════════════════════════════ */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-bottom: 12px;
+}
+
+#folderCards { margin-bottom: 28px; }
+
+.folder-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.folder-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background .15s, border-color .2s, transform .15s;
+  min-width: 0;
+}
+
+.folder-card:hover {
+  background: var(--surface2);
+  border-color: rgba(254,96,129,.4);
+  transform: translateY(-2px);
+}
+
+.folder-card svg {
+  width: 20px; height: 20px;
+  flex: 0 0 20px;
+  color: var(--primary);
+  opacity: .85;
+}
+
+.folder-card span {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ══════════════════════════════════
    VIDEO GRID
 ══════════════════════════════════ */
 .video-grid {

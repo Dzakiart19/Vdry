@@ -73,8 +73,10 @@ const App = (() => {
 
   /* ─── render ─── */
   function renderFolder(data) {
+    showState(null); // hapus loading/error/empty dulu
     renderBreadcrumb(data);
     renderSidebar(data.folders || []);
+    renderFolderCards(data.folders || []);
     renderGrid(data.videos || []);
     renderPagination(data);
   }
@@ -135,6 +137,40 @@ const App = (() => {
     });
   }
 
+  function renderFolderCards(folders) {
+    // Hapus folder cards lama jika ada
+    const old = document.getElementById('folderCards');
+    if (old) old.remove();
+    if (!folders.length) return;
+
+    const wrap = document.createElement('div');
+    wrap.id = 'folderCards';
+    wrap.innerHTML = `<div class="section-label">Folder</div>`;
+
+    const grid = document.createElement('div');
+    grid.className = 'folder-card-grid';
+
+    folders.forEach(f => {
+      const card = document.createElement('div');
+      card.className = 'folder-card';
+      card.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+        </svg>
+        <span>${escHtml(f.name || f.id)}</span>`;
+      card.addEventListener('click', () => {
+        breadcrumbs.push({ id: f.id, name: f.name || f.id });
+        loadFolder(f.id);
+      });
+      grid.appendChild(card);
+    });
+
+    wrap.appendChild(grid);
+
+    // Sisipkan sebelum video grid
+    el.grid.parentNode.insertBefore(wrap, el.grid);
+  }
+
   function renderGrid(videos) {
     el.grid.innerHTML = '';
 
@@ -143,7 +179,8 @@ const App = (() => {
       : videos;
 
     if (filtered.length === 0) {
-      showState('empty');
+      // Hanya tampilkan empty kalau juga tidak ada folder cards
+      if (!document.getElementById('folderCards')) showState('empty');
       return;
     }
 

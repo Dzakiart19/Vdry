@@ -91,21 +91,35 @@ app.get('/api/folder/:id', async (req, res) => {
       }
     });
 
+    // Parse videos — use only .thumb-link anchors (one per card) to avoid duplicates.
+    // Title comes from aria-label (most reliable), thumb from child <img>.
     const videos = [];
-    $('a[href^="/d/"]').each((_, el) => {
-      const href = $(el).attr('href') || '';
-      const vid  = href.replace('/d/', '').split('?')[0];
-      if (!vid || !/^[a-z0-9]+$/i.test(vid)) return;
+    const seenVids = new Set();
+    $('a.thumb-link[href^="/d/"]').each((_, el) => {
+      const href  = $(el).attr('href') || '';
+      const vid   = href.replace('/d/', '').split('?')[0];
+      if (!vid || !/^[a-z0-9]+$/i.test(vid) || seenVids.has(vid)) return;
+      seenVids.add(vid);
 
-      const img  = $(el).find('img').attr('src') || '';
-      const name = $(el).find('.file-name, .title, h3, h4, span')
-                        .first().text().trim()
-                || $(el).attr('title')
-                || $(el).text().trim()
-                || vid;
-
+      const name  = $(el).attr('aria-label')
+                 || $(el).attr('title')
+                 || vid;
+      const img   = $(el).find('img').attr('src') || '';
       videos.push({ id: vid, name, thumb: img });
     });
+
+    // Fallback: if site changes class, try all /d/ links but deduplicate
+    if (videos.length === 0) {
+      $('a[href^="/d/"]').each((_, el) => {
+        const href = $(el).attr('href') || '';
+        const vid  = href.replace('/d/', '').split('?')[0];
+        if (!vid || !/^[a-z0-9]+$/i.test(vid) || seenVids.has(vid)) return;
+        seenVids.add(vid);
+        const img  = $(el).find('img').attr('src') || '';
+        const name = $(el).attr('aria-label') || $(el).attr('title') || $(el).text().trim() || vid;
+        if (img || name !== vid) videos.push({ id: vid, name, thumb: img });
+      });
+    }
 
     const pages = [];
     $('.page-btn[href]').each((_, el) => {
