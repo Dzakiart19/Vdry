@@ -11,7 +11,6 @@ const App = (() => {
   let currentPage   = 1;
   let currentData   = null;
   let breadcrumbs   = [{ id: DEFAULT_FOLDER, name: 'Home' }];
-  let searchQuery   = '';
   let retryFn       = null;
 
   /* ─── saved folders (localStorage) ─── */
@@ -59,9 +58,9 @@ const App = (() => {
     video:        $('videoPlayer'),
     videoTitle:   $('videoTitle'),
     videoSub:     $('videoSubtitle'),
-    search:       $('searchInput'),
     addInput:     $('addFolderInput'),
     addBtn:       $('addFolderBtn'),
+
   };
 
   /* ─── helpers ─── */
@@ -82,8 +81,6 @@ const App = (() => {
   async function loadFolder(id, page = 1) {
     currentFolder = id;
     currentPage   = page;
-    searchQuery   = '';
-    el.search.value = '';
 
     showState('loading');
     el.grid.innerHTML       = '';
@@ -292,9 +289,7 @@ const App = (() => {
   function renderGrid(videos) {
     el.grid.innerHTML = '';
 
-    const filtered = searchQuery
-      ? videos.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()))
-      : videos;
+    const filtered = videos;
 
     if (filtered.length === 0) {
       // Hanya tampilkan empty kalau juga tidak ada folder cards
@@ -444,16 +439,6 @@ const App = (() => {
   el.addBtn.addEventListener('click', doAddFolder);
   el.addInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') doAddFolder();
-  });
-
-  /* ─── search ─── */
-  let searchTimer;
-  el.search.addEventListener('input', () => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-      searchQuery = el.search.value.trim();
-      if (currentData) renderGrid(currentData.videos || []);
-    }, 250);
   });
 
   /* ─── keyboard ─── */
