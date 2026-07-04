@@ -1,5 +1,6 @@
 const express = require('express');
 const axios   = require('axios');
+const https   = require('https');
 const cheerio = require('cheerio');
 const stream  = require('stream');
 const path    = require('path');
@@ -32,6 +33,31 @@ const axNoRedirect = axios.create({
   maxRedirects: 0,
   validateStatus: s => s < 400,
 });
+
+// Dedicated instance for ruangbokep.ws — keepAlive:false prevents ECONNRESET
+// ("aborted") when WordPress closes a keep-alive socket between requests.
+const axRb = axios.create({
+  timeout:      25000,
+  maxRedirects: 5,
+  httpsAgent:   new https.Agent({ keepAlive: false }),
+});
+
+// Retry wrapper: catches transient network errors (ECONNRESET, ETIMEDOUT, aborted)
+// and retries up to `retries` times with exponential back-off.
+async function axRbGet(url, config = {}, retries = 2) {
+  let lastErr;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await axRb.get(url, config);
+    } catch (err) {
+      lastErr = err;
+      // Don't retry on 4xx HTTP errors — those won't change
+      if (err.response?.status >= 400 && err.response?.status < 500) throw err;
+      if (i < retries) await new Promise(r => setTimeout(r, 800 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
 
 /* ── Sanitized error helper ── */
 function apiError(res, status, msg) {
@@ -335,7 +361,7 @@ const rbHeaders = {
 /* ── RB: Categories ── */
 app.get('/api/rb/categories', async (_req, res) => {
   try {
-    const { data } = await ax.get(
+    const { data } = await axRbGet(
       `${RB_BASE}/wp-json/wp/v2/categories?per_page=100&_fields=id,name,slug,count&orderby=count&order=desc`,
       { headers: { ...rbHeaders, Accept: 'application/json' } }
     );
@@ -372,7 +398,7 @@ app.get('/api/rb/posts', async (req, res) => {
       url = page > 1 ? `${RB_BASE}/page/${page}/` : `${RB_BASE}/`;
     }
 
-    const { data: html } = await ax.get(url, { headers: rbHeaders });
+    const { data: html } = await axRbGet(url, { headers: rbHeaders });
     const $ = cheerio.load(html);
 
     const posts = [];
@@ -533,7 +559,7 @@ async function resolveRbVideoUrl(embedUrl) {
   } catch { return null; }
 
   try {
-    const { data: html } = await ax.get(embedUrl, {
+    const { data: html } = await axRbGet(embedUrl, {
       headers: {
         'User-Agent':      UA,
         'Referer':         `${RB_BASE}/`,
@@ -559,7 +585,7 @@ app.get('/api/rb/video/:slug', async (req, res) => {
   if (!/^[a-z0-9-]+$/i.test(slug)) return apiError(res, 400, 'Invalid slug');
 
   try {
-    const { data: html } = await ax.get(`${RB_BASE}/${slug}/`, { headers: rbHeaders });
+    const { data: html } = await axRbGet(`${RB_BASE}/${slug}/`, { headers: rbHeaders });
     const $ = cheerio.load(html);
 
     const title = $('h1.entry-title, h2.entry-title, .entry-title, h1').first().text().trim() || slug;
@@ -604,7 +630,7 @@ app.get('/proxy/rb/hls/:slug', async (req, res) => {
       m3u8Url = cached.url;
     } else {
       // Re-resolve jika cache expired
-      const { data: html } = await ax.get(`${RB_BASE}/${slug}/`, { headers: rbHeaders });
+      const { data: html } = await axRbGet(`${RB_BASE}/${slug}/`, { headers: rbHeaders });
       const $ = cheerio.load(html);
       const embedUrl = $('meta[itemprop="embedURL"]').attr('content')
                     || $('IFRAME[SRC*="putarvid"]').first().attr('SRC')
