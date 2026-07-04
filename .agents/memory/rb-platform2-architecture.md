@@ -30,3 +30,9 @@ description: ruangbokep.ws proxy via HLS — video resolution, caching, and prox
 ## Scraper Detection
 - Warning log `[scraper-alert]` fires when upstream HTML has <article> elements but 0 posts parsed
 - This distinguishes genuine empty pages from broken selectors
+
+## Self-Healing CDN Tokens (autoscale IP-lock workaround)
+- putarvid/streamruby CDN tokens are locked to the resolving server's egress IP (`i=` param). On autoscale (free tier, no VM/sticky-IP option), each HTTP request can land on a different instance with a different IP, so a token baked in by one instance can be rejected by the CDN when a later request (e.g. segment fetch) is served by another instance.
+- Fix: every proxied m3u8/segment URL carries `&_s={slug}`. When `/proxy/rb/seg` gets a non-2xx (401/403/5xx) from the CDN, it re-resolves a **fresh** master m3u8 from the *current* instance, matches the failing URL by filename (not by query token) against the new master/sub-playlists, and retries once with the newly matched URL.
+- `handleRbSeg(raw, slugHint, req, res, isRetry)` is a plain function (not a route handler) so it can recurse for the one-shot retry — call sites must always pass `req` explicitly (easy to forget since it's not an Express middleware signature).
+- **Why:** avoids needing a VM/reserved-IP deployment just to keep CDN tokens valid across autoscale instances.
