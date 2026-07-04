@@ -171,6 +171,10 @@ app.get('/api/folder/:id', async (req, res) => {
         const name = $(el).attr('aria-label') || $(el).attr('title') || $(el).text().trim() || vid;
         if (img || name !== vid) videos.push({ id: vid, name, thumb: img });
       });
+      // Jika fallback juga kosong tapi ada /d/ links di halaman → selector rusak, bukan folder kosong
+      if (videos.length === 0 && $('a[href^="/d/"]').length > 0) {
+        console.warn(`[scraper-alert] folder/${id} p=${page}: ada ${$('a[href^="/d/"]').length} /d/ links tapi 0 videos di-parse — selector mungkin berubah`);
+      }
     }
 
     const pages = [];
@@ -196,6 +200,12 @@ app.get('/api/video/:id', async (req, res) => {
   const id = req.params.id;
   if (!/^[a-z0-9]+$/i.test(id)) return apiError(res, 400, 'Invalid video ID');
 
+  // Serve from cache jika sudah pernah di-resolve
+  const cachedVideo = videoUrlCache.get(id);
+  if (cachedVideo) {
+    return res.json({ id, title: cachedVideo.title, src: cachedVideo.src, thumb: cachedVideo.thumb });
+  }
+
   try {
     const { data } = await ax.get(`${BASE}/embed.php?bucket=vidoycdn&id=${id}`, {
       headers: { ...baseHeaders, 'Referer': `${BASE}/e/${id}` },
@@ -211,12 +221,13 @@ app.get('/api/video/:id', async (req, res) => {
       return apiError(res, 404, 'Sumber video tidak ditemukan');
     }
 
-    res.json({
-      id,
-      title: $('title').text().trim() || id,
-      src,
-      thumb: $('video').attr('poster') || '',
-    });
+    const title = $('title').text().trim() || id;
+    const thumb = $('video').attr('poster') || '';
+
+    // Simpan payload lengkap agar /proxy/stream/:id tidak perlu re-fetch
+    videoUrlCache.set(id, { src, title, thumb });
+
+    res.json({ id, title, src, thumb });
   } catch (err) {
     console.error('video error:', err.message);
     if (err.response?.status === 404) return apiError(res, 404, 'Video tidak ditemukan');
@@ -231,16 +242,28 @@ app.get('/proxy/stream/:id', async (req, res) => {
   const id = req.params.id;
   if (!/^[a-z0-9]+$/i.test(id)) return apiError(res, 400, 'Invalid ID');
 
-  // Step 1 — resolve MP4 URL
-  let mp4Url;
-  try {
+  // Step 1 — resolve MP4 URL (cache dulu, baru fetch jika miss)
+  async function resolveP1Mp4(evictFirst = false) {
+    if (evictFirst) videoUrlCache.del(id);
+    const cached = videoUrlCache.get(id);
+    if (cached) return cached.src;
     const { data } = await ax.get(`${BASE}/embed.php?bucket=vidoycdn&id=${id}`, {
       headers: { ...baseHeaders, 'Referer': `${BASE}/e/${id}` },
     });
-    const $ = cheerio.load(data);
-    mp4Url = $('source[type="video/mp4"]').attr('src')
-          || $('video source').attr('src')
-          || $('video').attr('src');
+    const $e = cheerio.load(data);
+    const src = $e('source[type="video/mp4"]').attr('src')
+             || $e('video source').attr('src')
+             || $e('video').attr('src')
+             || null;
+    if (src && allowedStreamUrl(src)) {
+      videoUrlCache.set(id, { src, title: $e('title').text().trim() || id, thumb: $e('video').attr('poster') || '' });
+    }
+    return src;
+  }
+
+  let mp4Url;
+  try {
+    mp4Url = await resolveP1Mp4();
   } catch (err) {
     console.error('stream resolve error:', err.message);
     return apiError(res, 502, 'Gagal resolve URL video');
@@ -258,13 +281,34 @@ app.get('/proxy/stream/:id', async (req, res) => {
   };
   if (req.headers.range) reqHeaders['Range'] = req.headers.range;
 
-  try {
-    const upstream = await ax.get(mp4Url, {
+  // Helper fetch — ekstrak agar bisa dipanggil ulang setelah evict cache
+  async function fetchUpstream(url) {
+    return ax.get(url, {
       headers:        reqHeaders,
       responseType:   'stream',
       validateStatus: s => s < 500,
       timeout:        30000,
     });
+  }
+
+  try {
+    let upstream = await fetchUpstream(mp4Url);
+
+    // Jika CDN tolak URL (token expired / 403/404), evict cache & re-resolve sekali
+    if (upstream.status === 403 || upstream.status === 404) {
+      upstream.data.destroy();
+      console.warn(`[stream-evict] CDN ${upstream.status} for ${id} — re-resolving`);
+      try {
+        mp4Url = await resolveP1Mp4(true /* evictFirst */);
+      } catch (e) {
+        console.error('stream re-resolve error:', e.message);
+        return apiError(res, 502, 'Gagal resolve URL video');
+      }
+      if (!mp4Url || !allowedStreamUrl(mp4Url)) {
+        return apiError(res, 404, 'Sumber video tidak ditemukan');
+      }
+      upstream = await fetchUpstream(mp4Url);
+    }
 
     res.status(upstream.status);
 
@@ -331,7 +375,11 @@ app.get('/proxy/thumb', async (req, res) => {
     req.on('close', onClose);
     res.on('close', onClose);
 
-    upstream.data.on('error', () => res.end());
+    upstream.data.on('error', err => {
+      console.error('thumb stream error:', err.message);
+      if (!res.headersSent) res.status(502).end();
+      else res.end();
+    });
 
     stream.pipeline(upstream.data, res, err => {
       if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
@@ -340,6 +388,7 @@ app.get('/proxy/thumb', async (req, res) => {
     });
 
   } catch (err) {
+    console.error('thumb proxy error:', err.message);
     if (!res.headersSent) res.status(502).end();
   }
 });
@@ -382,6 +431,9 @@ app.get('/api/rb/posts', async (req, res) => {
   const cacheKey = postsCacheKey(page, cat, q);
   const cached = postsCacheGet(cacheKey);
   if (cached) {
+    // Periksa sentinel sebelum serve — jangan bocorkan internal state ke client
+    if (cached._error)  return apiError(res, 502, 'Gagal memuat konten');
+    if (cached._status === 404) return apiError(res, 404, 'Halaman tidak ditemukan');
     res.setHeader('X-Cache', 'HIT');
     return res.json(cached);
   }
@@ -438,14 +490,31 @@ app.get('/api/rb/posts', async (req, res) => {
 
     const result = { posts, page, totalPages, category: cat || null };
 
-    // ── Simpan ke cache hanya jika ada posts (jangan cache empty/error) ──
-    if (posts.length > 0) postsCacheSet(cacheKey, result);
+    if (posts.length > 0) {
+      // Cache normal — 3 menit
+      postsCacheSet(cacheKey, result);
+    } else {
+      // Bedakan: halaman genuinely kosong vs selector rusak.
+      // Selector rusak = upstream punya <article> tapi kita tidak bisa parse.
+      const articleCount = $('article').length;
+      if (articleCount > 0) {
+        console.warn(`[scraper-alert] rb/posts key="${cacheKey}": ${articleCount} <article> ditemukan tapi 0 posts di-parse — selector mungkin berubah`);
+      }
+      // Cache singkat 30 detik — throttle upstream untuk halaman kosong/rusak
+      postsCacheSet(cacheKey, result, 30 * 1000);
+    }
 
     res.setHeader('X-Cache', 'MISS');
     res.json(result);
   } catch (err) {
     console.error('rb posts error:', err.message);
-    if (err.response?.status === 404) return apiError(res, 404, 'Halaman tidak ditemukan');
+    if (err.response?.status === 404) {
+      // Cache dengan _status sentinel — cache check akan return 404 yang benar
+      postsCacheSet(cacheKey, { _status: 404 }, 30 * 1000);
+      return apiError(res, 404, 'Halaman tidak ditemukan');
+    }
+    // Untuk error 502/network: cache error singkat 20 detik
+    postsCacheSet(cacheKey, { _error: true }, 20 * 1000);
     apiError(res, 502, 'Gagal memuat konten');
   }
 });
@@ -493,43 +562,52 @@ const axSegment = axios.create({
   timeout: 20000, maxRedirects: 5, validateStatus: s => s < 500,
 });
 
-/* ── Cache m3u8 yang sudah di-resolve (TTL 5 menit, max 500 entries) ── */
-const m3u8Cache = new Map(); // slug → { url, expires }
-function m3u8CacheSet(slug, url) {
-  if (m3u8Cache.size >= 500) {
-    // Evict satu expired entry dulu, fallback ke FIFO
-    for (const [k, v] of m3u8Cache) {
-      if (v.expires <= Date.now()) { m3u8Cache.delete(k); break; }
-    }
-    if (m3u8Cache.size >= 500) m3u8Cache.delete(m3u8Cache.keys().next().value);
-  }
-  m3u8Cache.set(slug, { url, expires: Date.now() + 5 * 60 * 1000 });
+/* ── Generic cache helper — reusable untuk semua in-memory cache ── */
+function makeCache(maxSize, defaultTtlMs) {
+  const store = new Map();
+  return {
+    get(key) {
+      const entry = store.get(key);
+      if (!entry) return null;
+      if (entry.expires <= Date.now()) { store.delete(key); return null; }
+      return entry.value;
+    },
+    set(key, value, ttlMs = defaultTtlMs) {
+      if (store.size >= maxSize) {
+        // Evict satu expired entry dulu, fallback FIFO
+        for (const [k, v] of store) {
+          if (v.expires <= Date.now()) { store.delete(k); break; }
+        }
+        if (store.size >= maxSize) store.delete(store.keys().next().value);
+      }
+      store.set(key, { value, expires: Date.now() + ttlMs });
+    },
+    del(key) { store.delete(key); },
+    has(key) { return this.get(key) !== null; },
+  };
 }
+
+/* ── Cache MP4 URL Platform 1 (TTL 5 menit, max 300 entries) ──────────
+   Mencegah double HTTP call ke embed.php: /api/video/:id dan
+   /proxy/stream/:id keduanya butuh URL yang sama — cukup fetch sekali.
+──────────────────────────────────────────────────────────────────────── */
+const videoUrlCache = makeCache(300, 5 * 60 * 1000); // id → mp4Url
+
+/* ── Cache m3u8 yang sudah di-resolve (TTL 5 menit, max 500 entries) ── */
+const m3u8Cache = makeCache(500, 5 * 60 * 1000); // slug → m3u8Url
+// Shim agar kode lama yang pakai m3u8CacheSet/m3u8Cache.get tetap bekerja
+function m3u8CacheSet(slug, url) { m3u8Cache.set(slug, url); }
 
 /* ── Cache posts listing (TTL 3 menit, max 200 entries) ────────────────
    Key: "page:cat:q" — mencegah scrape berulang saat navigasi antar halaman.
    TTL pendek (3 menit) supaya konten baru tetap muncul dalam waktu wajar.
+   Empty result di-cache 30 detik, error di-cache 20 detik — mencegah
+   upstream di-pukul terus-menerus saat halaman memang kosong/error.
 ──────────────────────────────────────────────────────────────────────── */
-const postsCache = new Map(); // key → { data, expires }
-function postsCacheKey(page, cat, q) {
-  return `${page}:${cat || ''}:${q || ''}`;
-}
-function postsCacheGet(key) {
-  const entry = postsCache.get(key);
-  if (!entry) return null;
-  if (entry.expires <= Date.now()) { postsCache.delete(key); return null; }
-  return entry.data;
-}
-function postsCacheSet(key, data) {
-  if (postsCache.size >= 200) {
-    // Evict expired dulu, fallback FIFO
-    for (const [k, v] of postsCache) {
-      if (v.expires <= Date.now()) { postsCache.delete(k); break; }
-    }
-    if (postsCache.size >= 200) postsCache.delete(postsCache.keys().next().value);
-  }
-  postsCache.set(key, { data, expires: Date.now() + 3 * 60 * 1000 });
-}
+const postsCache = makeCache(200, 3 * 60 * 1000); // key → result
+function postsCacheKey(page, cat, q) { return `${page}:${cat || ''}:${q || ''}`; }
+function postsCacheGet(key) { return postsCache.get(key); }
+function postsCacheSet(key, data, ttlMs = 3 * 60 * 1000) { postsCache.set(key, data, ttlMs); }
 
 /* ── Safe PackerJS decoder — ONLY string replacements, no code execution ── */
 function unpackPacker(html) {
@@ -634,11 +712,8 @@ app.get('/proxy/rb/hls/:slug', async (req, res) => {
 
   try {
     // Cek cache dulu
-    let m3u8Url = null;
-    const cached = m3u8Cache.get(slug);
-    if (cached && cached.expires > Date.now()) {
-      m3u8Url = cached.url;
-    } else {
+    let m3u8Url = m3u8Cache.get(slug) || null;
+    if (!m3u8Url) {
       // Re-resolve jika cache expired
       const { data: html } = await axRbGet(`${RB_BASE}/${slug}/`, { headers: rbHeaders });
       const $ = cheerio.load(html);
@@ -759,9 +834,17 @@ app.get('/proxy/rb/thumb', async (req, res) => {
     res.setHeader('content-type', ct);
     res.setHeader('cache-control', 'public, max-age=86400');
     req.on('close', () => up.data.destroy());
-    up.data.on('error', () => !res.headersSent && res.status(502).end());
-    stream.pipeline(up.data, res, () => {});
-  } catch {
+    up.data.on('error', err => {
+      console.error('rb thumb stream error:', err.message);
+      if (!res.headersSent) res.status(502).end();
+    });
+    stream.pipeline(up.data, res, err => {
+      if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+        console.error('rb thumb pipeline error:', err.message);
+      }
+    });
+  } catch (err) {
+    console.error('rb thumb proxy error:', err.message);
     if (!res.headersSent) res.status(502).end();
   }
 });
