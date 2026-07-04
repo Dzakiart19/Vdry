@@ -352,6 +352,14 @@ app.get('/api/rb/posts', async (req, res) => {
   const cat  = (req.query.cat || '').replace(/[^a-z0-9-]/gi, '');
   const q    = (req.query.q  || '').trim().substring(0, 150);
 
+  // ── Cache check — kembalikan langsung jika masih fresh ──
+  const cacheKey = postsCacheKey(page, cat, q);
+  const cached = postsCacheGet(cacheKey);
+  if (cached) {
+    res.setHeader('X-Cache', 'HIT');
+    return res.json(cached);
+  }
+
   try {
     let url;
     if (q) {
@@ -402,7 +410,13 @@ app.get('/api/rb/posts', async (req, res) => {
       });
     }
 
-    res.json({ posts, page, totalPages, category: cat || null });
+    const result = { posts, page, totalPages, category: cat || null };
+
+    // ── Simpan ke cache hanya jika ada posts (jangan cache empty/error) ──
+    if (posts.length > 0) postsCacheSet(cacheKey, result);
+
+    res.setHeader('X-Cache', 'MISS');
+    res.json(result);
   } catch (err) {
     console.error('rb posts error:', err.message);
     if (err.response?.status === 404) return apiError(res, 404, 'Halaman tidak ditemukan');
@@ -464,6 +478,31 @@ function m3u8CacheSet(slug, url) {
     if (m3u8Cache.size >= 500) m3u8Cache.delete(m3u8Cache.keys().next().value);
   }
   m3u8Cache.set(slug, { url, expires: Date.now() + 5 * 60 * 1000 });
+}
+
+/* ── Cache posts listing (TTL 3 menit, max 200 entries) ────────────────
+   Key: "page:cat:q" — mencegah scrape berulang saat navigasi antar halaman.
+   TTL pendek (3 menit) supaya konten baru tetap muncul dalam waktu wajar.
+──────────────────────────────────────────────────────────────────────── */
+const postsCache = new Map(); // key → { data, expires }
+function postsCacheKey(page, cat, q) {
+  return `${page}:${cat || ''}:${q || ''}`;
+}
+function postsCacheGet(key) {
+  const entry = postsCache.get(key);
+  if (!entry) return null;
+  if (entry.expires <= Date.now()) { postsCache.delete(key); return null; }
+  return entry.data;
+}
+function postsCacheSet(key, data) {
+  if (postsCache.size >= 200) {
+    // Evict expired dulu, fallback FIFO
+    for (const [k, v] of postsCache) {
+      if (v.expires <= Date.now()) { postsCache.delete(k); break; }
+    }
+    if (postsCache.size >= 200) postsCache.delete(postsCache.keys().next().value);
+  }
+  postsCache.set(key, { data, expires: Date.now() + 3 * 60 * 1000 });
 }
 
 /* ── Safe PackerJS decoder — ONLY string replacements, no code execution ── */
