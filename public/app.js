@@ -11,12 +11,13 @@ const STORAGE_KEY    = 'vidorey_saved_v2';
 const App = (() => {
 
   /* ──────── State ──────── */
-  let currentFolder = DEFAULT_FOLDER;
-  let currentPage   = 1;
-  let currentData   = null;
-  let breadcrumbs   = [{ id: DEFAULT_FOLDER, name: 'Home' }];
-  let retryFn       = null;
-  let refreshTimer  = null;
+  let currentFolder      = DEFAULT_FOLDER;
+  let currentPage        = 1;
+  let currentData        = null;
+  let breadcrumbs        = [{ id: DEFAULT_FOLDER, name: 'Home' }];
+  let retryFn            = null;
+  let refreshTimer       = null;
+  let modalHistoryPushed = false;
 
   /* ──────── DOM ──────── */
   const $  = id => document.getElementById(id);
@@ -78,10 +79,24 @@ const App = (() => {
   }
 
   window.addEventListener('popstate', e => {
-    if (e.state) {
+    // Jika modal video sedang terbuka → Back HP harus tutup modal, BUKAN keluar folder
+    if (!el.modal.classList.contains('hidden')) {
+      modalHistoryPushed = false;
+      el.modal.classList.add('hidden');
+      el.video.pause();
+      el.video.removeAttribute('src');
+      el.video.load();
+      document.body.style.overflow = '';
+      // Bersihkan URL dari #player, restore state folder yang sedang aktif
+      replaceNav(currentFolder, currentPage, breadcrumbs);
+      return;
+    }
+
+    // Modal tertutup: navigasi folder biasa (back/forward antar folder)
+    if (e.state && !e.state.modal) {
       breadcrumbs = e.state.breadcrumbs || [{ id: DEFAULT_FOLDER, name: 'Home' }];
       loadFolder(e.state.folderId || DEFAULT_FOLDER, e.state.page || 1, false);
-    } else {
+    } else if (!e.state) {
       breadcrumbs = [{ id: DEFAULT_FOLDER, name: 'Home' }];
       loadFolder(DEFAULT_FOLDER, 1, false);
     }
@@ -446,6 +461,15 @@ const App = (() => {
     el.modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 
+    // Push state #player (URL berbeda dari URL folder) supaya Back HP menutup modal,
+    // bukan keluar dari folder. Pakai replaceNav URL + '#player' agar URL tetap
+    // mencerminkan folder aktif (bukan kehilangan ?f= param).
+    const folderUrl = currentFolder === DEFAULT_FOLDER
+      ? '/'
+      : `/?f=${currentFolder}${currentPage > 1 ? '&p=' + currentPage : ''}`;
+    history.pushState({ modal: true }, '', folderUrl + '#player');
+    modalHistoryPushed = true;
+
     try {
       const resp = await fetchWithTimeout(`${API}/api/video/${id}`);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -468,6 +492,13 @@ const App = (() => {
     el.video.removeAttribute('src');
     el.video.load();
     document.body.style.overflow = '';
+
+    // Ganti entry #player dengan URL folder yang bersih — BUKAN history.back()
+    // (back() berisiko melewati folder dan keluar ke halaman sebelumnya)
+    if (modalHistoryPushed) {
+      modalHistoryPushed = false;
+      replaceNav(currentFolder, currentPage, breadcrumbs);
+    }
   }
 
   function retry() { if (retryFn) retryFn(); }
