@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet  = require('helmet');
 const axios   = require('axios');
 const https   = require('https');
 const cheerio = require('cheerio');
@@ -78,6 +79,13 @@ function allowedStreamUrl(raw) {
     return u.protocol === 'https:' && STREAM_HOSTS.has(u.hostname);
   } catch { return false; }
 }
+
+/* ── Security headers ── */
+app.use(helmet({
+  contentSecurityPolicy:    false, // dihandle manual karena proxy inline script
+  crossOriginEmbedderPolicy: false, // video HLS butuh cross-origin resource
+  crossOriginOpenerPolicy:  false, // Adsterra popunder perlu window.opener
+}));
 
 /* ── CORS — izinkan Firebase Hosting & dev ── */
 app.use(cors({

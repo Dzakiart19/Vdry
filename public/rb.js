@@ -160,7 +160,7 @@
       renderPagination();
     } catch (e) {
       console.error('loadPosts:', e.message);
-      els.errorMsg.textContent = e.message || 'Gagal memuat konten.';
+      els.errorMsg.textContent = 'Gagal memuat konten. Periksa koneksi internet atau coba lagi.';
       showState('error');
     } finally {
       state.loading = false;
