@@ -309,7 +309,7 @@
       console.error('openPlayer:', e.message);
       els.playerLoading.classList.add('hidden');
       els.videoTitle.textContent = 'Gagal memuat video';
-      showToast(e.message || 'Gagal memuat video');
+      showToast('Gagal memuat video. Periksa koneksi internet atau coba lagi.');
     }
   }
 
