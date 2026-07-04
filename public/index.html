@@ -87,6 +87,48 @@
   </main>
 </div>
 
+<!-- ─── WELCOME POPUP ─── -->
+<div id="welcomePopup" class="welcome-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="welcome-box">
+    <div class="welcome-header">
+      <div class="welcome-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </div>
+      <div>
+        <h2 id="welcomeTitle" class="welcome-title">Selamat Datang di Vidorey</h2>
+        <p class="welcome-sub">Platform video gratis, update setiap hari</p>
+      </div>
+    </div>
+
+    <ul class="welcome-list">
+      <li>
+        <span class="wl-icon">🆓</span>
+        <span><strong>Gratis selamanya</strong> — tidak perlu daftar atau bayar apapun</span>
+      </li>
+      <li>
+        <span class="wl-icon">🔄</span>
+        <span><strong>Update setiap hari</strong> — konten baru ditambahkan secara rutin</span>
+      </li>
+      <li>
+        <span class="wl-icon">📁</span>
+        <span><strong>Simpan folder favorit</strong> — klik + untuk menyimpan folder pilihan</span>
+      </li>
+      <li>
+        <span class="wl-icon">▶️</span>
+        <span><strong>Nonton langsung</strong> — putar video tanpa perlu download</span>
+      </li>
+    </ul>
+
+    <div class="welcome-footer">
+      <label class="welcome-check">
+        <input type="checkbox" id="welcomeDontShow" />
+        <span>Jangan tampilkan lagi</span>
+      </label>
+      <button id="welcomeClose" class="welcome-btn">Mulai Nonton →</button>
+    </div>
+  </div>
+</div>
+
 <!-- ─── PLAYER MODAL ─── -->
 <div id="playerModal" class="modal hidden" role="dialog" aria-modal="true">
   <div class="modal-backdrop" id="modalBackdrop"></div>
@@ -114,6 +156,39 @@
 
 <script src="/config.js"></script>
 <script src="/app.js"></script>
+
+<!-- ─── Welcome Popup Logic ─── -->
+<script>
+(function () {
+  const STORAGE_KEY = 'vidorey_welcome_hidden_until';
+  const popup    = document.getElementById('welcomePopup');
+  const closeBtn = document.getElementById('welcomeClose');
+  const checkbox = document.getElementById('welcomeDontShow');
+
+  function shouldShow() {
+    const until = localStorage.getItem(STORAGE_KEY);
+    if (!until) return true;
+    return Date.now() > parseInt(until, 10);
+  }
+
+  function closePopup() {
+    popup.classList.add('hidden');
+    if (checkbox.checked) {
+      const sevenDays = Date.now() + 7 * 24 * 60 * 60 * 1000;
+      localStorage.setItem(STORAGE_KEY, sevenDays);
+    }
+  }
+
+  if (shouldShow()) {
+    setTimeout(() => popup.classList.remove('hidden'), 600);
+  }
+
+  closeBtn.addEventListener('click', closePopup);
+  popup.addEventListener('click', function (e) {
+    if (e.target === popup) closePopup();
+  });
+})();
+</script>
 
 <!-- ─── Adsterra: Popunder (background tab, tidak ganggu video) ─── -->
 <script src="https://pl28418540.effectivecpmnetwork.com/e2/23/51/e223516a3660ad6a4214cb47e436c599.js"></script>
