@@ -71,7 +71,8 @@
     ['loading','error','empty'].forEach(k => {
       els[k].classList.toggle('hidden', k !== which);
     });
-    if (which !== 'loading') els.grid.innerHTML = '';
+    // Only clear grid when starting a fresh load — not on error/empty
+    if (which === 'loading') els.grid.innerHTML = '';
     if (which !== 'error')   els.pagination.classList.add('hidden');
   }
 
@@ -81,9 +82,16 @@
     els.empty.classList.add('hidden');
   }
 
+  /* ── fetch() dengan timeout 15 detik ── */
+  function fetchWithTimeout(url, ms = 15000) {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(tid));
+  }
+
   /* ── Fetch helper ── */
   async function apiFetch(path) {
-    const r = await fetch(`${API}${path}`);
+    const r = await fetchWithTimeout(`${API}${path}`);
     if (!r.ok) {
       const body = await r.json().catch(() => ({}));
       throw new Error(body.error || `HTTP ${r.status}`);

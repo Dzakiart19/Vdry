@@ -1242,6 +1242,7 @@ body {
   outline: none;
 }
 .rb-player-video.hidden { display: none; }
+.rb-player-frame.hidden  { display: none; }
 
 /* Fallback iframe */
 .rb-player-frame {

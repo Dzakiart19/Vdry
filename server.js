@@ -107,10 +107,10 @@ app.get('/api/folder/:id', async (req, res) => {
     })();
 
     const folders = [];
-    $('.folder-row a').each((_, el) => {
+    // xpvid.cc uses class "folder-chip" for folder links (updated selector)
+    $('a.folder-chip[href^="/f/"]').each((_, el) => {
       const href = $(el).attr('href') || '';
-      if (!href.startsWith('/f/') || $(el).hasClass('back-btn')) return;
-      const fid   = href.replace('/f/', '').split('?')[0];
+      const fid  = href.replace('/f/', '').split('?')[0];
       const label = $(el).text().trim() || fid;
       if (fid && fid !== id && /^[a-z0-9]+$/i.test(fid)) {
         folders.push({ id: fid, name: label });
@@ -464,7 +464,7 @@ function rewriteM3u8(content, baseUrl) {
 
 /* ── Axios instance tanpa redirect untuk segment proxy ── */
 const axSegment = axios.create({
-  timeout: 20000, maxRedirects: 0, validateStatus: s => s < 400,
+  timeout: 20000, maxRedirects: 5, validateStatus: s => s < 500,
 });
 
 /* ── Cache m3u8 yang sudah di-resolve (TTL 5 menit, max 500 entries) ── */

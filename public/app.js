@@ -96,6 +96,13 @@ const App = (() => {
   /* ──────── Backend base URL ──────── */
   const API = (window.BACKEND_URL || '').replace(/\/$/, '');
 
+  /* ──────── fetch() dengan timeout 15 detik ──────── */
+  function fetchWithTimeout(url, ms = 15000) {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(tid));
+  }
+
   /* ──────── Thumb proxy ──────── */
   function thumbSrc(raw) {
     if (!raw) return '';
@@ -125,7 +132,7 @@ const App = (() => {
     document.querySelector('.content')?.scrollTo({ top: 0, behavior: 'smooth' });
 
     try {
-      const resp = await fetch(`${API}/api/folder/${id}?p=${page}`);
+      const resp = await fetchWithTimeout(`${API}/api/folder/${id}?p=${page}`);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
@@ -440,7 +447,7 @@ const App = (() => {
     document.body.style.overflow = 'hidden';
 
     try {
-      const resp = await fetch(`${API}/api/video/${id}`);
+      const resp = await fetchWithTimeout(`${API}/api/video/${id}`);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
@@ -482,7 +489,7 @@ const App = (() => {
     el.addInput.disabled = true;
 
     try {
-      const resp = await fetch(`${API}/api/folder/${id}?p=1`);
+      const resp = await fetchWithTimeout(`${API}/api/folder/${id}?p=1`);
       const data = resp.ok ? await resp.json() : null;
       const name = data?.title || id;
       addSaved(id, name);
@@ -508,7 +515,7 @@ const App = (() => {
 
   async function silentRefresh() {
     try {
-      const resp = await fetch(`${API}/api/folder/${currentFolder}?p=${currentPage}`);
+      const resp = await fetchWithTimeout(`${API}/api/folder/${currentFolder}?p=${currentPage}`);
       if (!resp.ok) return;
       const data = await resp.json();
       if (data.error) return;
