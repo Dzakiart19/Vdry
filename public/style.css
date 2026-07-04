@@ -711,3 +711,19 @@ body {
   .modal-title { font-size: 13px; }
   .video-stage video { max-height: 52vw; min-height: 180px; }
 }
+
+/* ── Adsterra Native Banner Slot ── */
+.ad-native-slot {
+  margin: 20px 24px 4px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-height: 60px;
+}
+
+.ad-native-slot:empty,
+.ad-native-slot > div:empty {
+  display: none;
+}
