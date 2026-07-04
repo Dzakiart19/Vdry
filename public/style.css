@@ -1266,6 +1266,7 @@ body {
   background: #000;          /* solid black agar video di bawah tidak tembus */
   z-index: 2;
 }
+.rb-player-loader.hidden { display: none; }
 
 /* ── RB: Pagination ── */
 .page-btn {
