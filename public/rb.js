@@ -335,7 +335,7 @@
       if (session !== playerSession) return;
       destroyHls(); // destroyHls sudah tambahkan .hidden ke video
       els.playerLoading.classList.add('hidden');
-      showToast('Stream expired — klik video lagi untuk reload');
+      showToast('Stream terputus — klik video lagi untuk reload');
     };
 
     if (typeof Hls !== 'undefined' && Hls.isSupported()) {
@@ -343,8 +343,41 @@
       hlsInstance = hls;
       hls.loadSource(m3u8Url);
       hls.attachMedia(video); // video sudah visible → GPU surface dialokasikan
-      hls.on(Hls.Events.MANIFEST_PARSED, onReady);
-      hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) onFatalError(); });
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        netRetries = 0;
+        mediaRetries = 0;
+        onReady();
+      });
+
+      // Error transient (network hiccup / buffer stall) jangan langsung nyerah —
+      // coba recovery standar hls.js dulu sebelum benar-benar fatal ke user.
+      let netRetries = 0;
+      let mediaRetries = 0;
+      const MAX_RETRIES = 3;
+      hls.on(Hls.Events.ERROR, (_, d) => {
+        if (session !== playerSession) return;
+        if (!d.fatal) return;
+        switch (d.type) {
+          case Hls.ErrorTypes.NETWORK_ERROR:
+            if (netRetries < MAX_RETRIES) {
+              netRetries++;
+              setTimeout(() => { if (session === playerSession) hls.startLoad(); }, 500 * netRetries);
+            } else {
+              onFatalError();
+            }
+            break;
+          case Hls.ErrorTypes.MEDIA_ERROR:
+            if (mediaRetries < MAX_RETRIES) {
+              mediaRetries++;
+              hls.recoverMediaError();
+            } else {
+              onFatalError();
+            }
+            break;
+          default:
+            onFatalError();
+        }
+      });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       // Native HLS (Safari / iOS)
       video.src = m3u8Url;

@@ -570,6 +570,23 @@ const axSegment = axios.create({
   timeout: 20000, maxRedirects: 5, validateStatus: s => s < 500,
 });
 
+// Retry wrapper untuk manifest/segment CDN — CDN streamruby/putarvid kadang
+// ECONNRESET/timeout sesaat di bawah traffic produksi. Jangan retry status HTTP
+// (403/404/dll sudah valid dari CDN, tidak akan berubah dengan retry).
+async function axSegmentGet(url, config = {}, retries = 2) {
+  let lastErr;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await axSegment.get(url, config);
+    } catch (err) {
+      lastErr = err;
+      if (err.response) throw err; // status HTTP nyata dari CDN — jangan retry
+      if (i < retries) await new Promise(r => setTimeout(r, 400 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
 /* ── Generic cache helper — reusable untuk semua in-memory cache ── */
 function makeCache(maxSize, defaultTtlMs) {
   const store = new Map();
@@ -741,7 +758,7 @@ app.get('/proxy/rb/hls/:slug', async (req, res) => {
     if (!m3u8Url) return apiError(res, 404, 'Stream tidak ditemukan');
 
     // Fetch master manifest dari CDN (dengan header yang benar)
-    const manifestResp = await axSegment.get(m3u8Url, {
+    const manifestResp = await axSegmentGet(m3u8Url, {
       headers: { 'User-Agent': UA, 'Referer': 'https://putarvid.com/', 'Origin': 'https://putarvid.com', 'Accept-Encoding': 'gzip, deflate' },
       timeout: 15000,
     });
@@ -769,7 +786,7 @@ app.get('/proxy/rb/seg', async (req, res) => {
   if (!raw || !isAllowedRbCdnUrl(raw)) return res.status(400).end();
 
   try {
-    const upstream = await axSegment.get(raw, {
+    const upstream = await axSegmentGet(raw, {
       headers: { 'User-Agent': UA, 'Referer': 'https://putarvid.com/', 'Origin': 'https://putarvid.com' },
       responseType: 'stream',
       timeout: 20000,
