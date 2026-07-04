@@ -198,7 +198,7 @@
     let html = '';
 
     if (cur > 1) {
-      html += `<button class="page-btn page-prev" data-page="${cur - 1}">
+      html += `<button type="button" class="page-btn page-prev" data-page="${cur - 1}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
@@ -209,12 +209,12 @@
       if (p === '…') {
         html += `<span class="page-ellipsis">…</span>`;
       } else {
-        html += `<button class="page-btn ${p === cur ? 'active' : ''}" data-page="${p}">${p}</button>`;
+        html += `<button type="button" class="page-btn ${p === cur ? 'active' : ''}" data-page="${p}">${p}</button>`;
       }
     });
 
     if (cur < total) {
-      html += `<button class="page-btn page-next" data-page="${cur + 1}">
+      html += `<button type="button" class="page-btn page-next" data-page="${cur + 1}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9 18 15 12 9 6"/>
         </svg>
@@ -223,7 +223,7 @@
 
     // Last button (jika tidak ada di buildPageList)
     if (cur < total - 1 && pages[pages.length - 1] !== total) {
-      html += `<button class="page-btn" data-page="${total}">Last</button>`;
+      html += `<button type="button" class="page-btn" data-page="${total}">Last</button>`;
     }
 
     els.pagination.innerHTML = html;
@@ -345,39 +345,46 @@
   }
 
   /* ── Modal controls ── */
-  // Tracks apakah kita sudah push history state untuk modal ini
+  // Flag: apakah kita sudah push history state untuk modal ini
   let modalHistoryPushed = false;
 
   function openModal() {
     els.modal.classList.remove('hidden');
     document.body.classList.add('modal-open');
-    // Push state supaya tombol Back browser menutup modal, bukan navigasi ke P1
-    history.pushState({ rbModal: true }, '', '/rb');
+    // Push state BERBEDA (/rb#player) supaya browser bisa membedakannya dari /rb biasa.
+    // Ini penting karena history.back() dari dua URL /rb yang identik bisa melewati
+    // keduanya sekaligus dan mendarat di P1 (/) — masalah Chrome/Safari.
+    history.pushState({ rbModal: true }, '', '/rb#player');
     modalHistoryPushed = true;
   }
 
-  function closeModal() {
+  function _doCloseModal() {
     destroyHls();
     els.playerLoading.classList.remove('hidden');
     els.modal.classList.add('hidden');
     document.body.classList.remove('modal-open');
+  }
 
-    // Jika modal dibuka via tombol UI (bukan popstate), hapus state history yang kita push
+  function closeModal() {
+    _doCloseModal();
+
     if (modalHistoryPushed) {
       modalHistoryPushed = false;
-      history.back(); // hapus state { rbModal: true } dari history stack
+      // replaceState (BUKAN history.back()) — ganti entry modal dengan /rb bersih.
+      // history.back() berbahaya: jika browser menggabungkan dua entry /rb yang sama,
+      // back() langsung ke / (Platform 1). replaceState tidak memicu navigasi sama sekali.
+      history.replaceState(null, '', '/rb');
     }
   }
 
-  // Tangkap tombol Back browser: jika state rbModal → tutup modal, tetap di /rb
+  // Tangkap tombol Back browser saat modal sedang terbuka
   window.addEventListener('popstate', e => {
     if (!els.modal.classList.contains('hidden')) {
-      // Modal masih terbuka saat popstate — artinya user tekan Back
-      modalHistoryPushed = false; // state sudah di-pop oleh browser
-      destroyHls();
-      els.playerLoading.classList.remove('hidden');
-      els.modal.classList.add('hidden');
-      document.body.classList.remove('modal-open');
+      // User menekan Back saat modal terbuka → tutup modal, tetap di /rb
+      modalHistoryPushed = false;
+      _doCloseModal();
+      // Pastikan URL kembali ke /rb (bukan /rb#player)
+      history.replaceState(null, '', '/rb');
     }
   });
 
