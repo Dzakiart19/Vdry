@@ -319,6 +319,142 @@ app.get('/proxy/thumb', async (req, res) => {
 });
 
 /* ═══════════════════════════════════════
+   PLATFORM 2 — RUANGBOKEP (RB)
+═══════════════════════════════════════ */
+
+const RB_BASE = 'https://ruangbokep.ws';
+const rbHeaders = {
+  'User-Agent':      UA,
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Referer':         `${RB_BASE}/`,
+};
+
+/* ── RB: Categories ── */
+app.get('/api/rb/categories', async (_req, res) => {
+  try {
+    const { data } = await ax.get(
+      `${RB_BASE}/wp-json/wp/v2/categories?per_page=30&_fields=id,name,slug,count&orderby=count&order=desc`,
+      { headers: { ...rbHeaders, Accept: 'application/json' } }
+    );
+    res.json(data.filter(c => c.slug !== 'uncategorized' && c.count > 0));
+  } catch (err) {
+    console.error('rb categories error:', err.message);
+    apiError(res, 502, 'Gagal memuat kategori');
+  }
+});
+
+/* ── RB: Post listing (with optional category) ── */
+app.get('/api/rb/posts', async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.p) || 1);
+  const cat  = (req.query.cat || '').replace(/[^a-z0-9-]/gi, '');
+
+  try {
+    const url = cat
+      ? (page > 1 ? `${RB_BASE}/${cat}/page/${page}/` : `${RB_BASE}/${cat}/`)
+      : (page > 1 ? `${RB_BASE}/page/${page}/` : `${RB_BASE}/`);
+
+    const { data: html } = await ax.get(url, { headers: rbHeaders });
+    const $ = cheerio.load(html);
+
+    const posts = [];
+    $('article.loop-video').each((_, el) => {
+      const $el   = $(el);
+      const thumb = $el.attr('data-main-thumb')
+                 || $el.find('img.video-main-thumb').attr('data-lazy-src')
+                 || $el.find('img.video-main-thumb').attr('src')
+                 || '';
+      const href  = $el.find('a[href*="ruangbokep.ws"]').first().attr('href')
+                 || $el.find('a').first().attr('href')
+                 || '';
+      const title = $el.find('img.video-main-thumb').attr('alt')
+                 || $el.find('.entry-title, h2, h3').first().text().trim()
+                 || '';
+      const m = href.match(/ruangbokep\.ws\/([^/]+)\/?$/);
+      const slug = m ? m[1] : '';
+      if (slug && title) posts.push({ slug, title, thumb });
+    });
+
+    // Detect total pages
+    const nums = [];
+    $('a.page-numbers').each((_, el) => {
+      const n = parseInt($(el).text().trim());
+      if (n && !isNaN(n)) nums.push(n);
+    });
+    // Also try "Pages: X" or "X of Y" patterns
+    const ofMatch = $('[class*="page"]').text().match(/of\s+(\d+)/i);
+    if (ofMatch) nums.push(parseInt(ofMatch[1]));
+
+    const totalPages = nums.length ? Math.max(...nums) : 1;
+
+    res.json({ posts, page, totalPages, category: cat || null });
+  } catch (err) {
+    console.error('rb posts error:', err.message);
+    if (err.response?.status === 404) return apiError(res, 404, 'Halaman tidak ditemukan');
+    apiError(res, 502, 'Gagal memuat konten');
+  }
+});
+
+/* ── RB: Single video — resolve putarvid embed URL ── */
+app.get('/api/rb/video/:slug', async (req, res) => {
+  const slug = req.params.slug;
+  if (!/^[a-z0-9-]+$/i.test(slug)) return apiError(res, 400, 'Invalid slug');
+
+  try {
+    const { data: html } = await ax.get(`${RB_BASE}/${slug}/`, { headers: rbHeaders });
+    const $ = cheerio.load(html);
+
+    const embedUrl = $('iframe[src*="putarvid"]').first().attr('src')
+                  || $('iframe[src*="streamruby"]').first().attr('src')
+                  || $('iframe').first().attr('src')
+                  || '';
+
+    const title = $('h1.entry-title, h2.entry-title, .entry-title, h1').first().text().trim() || slug;
+    const thumb = $('meta[property="og:image"]').attr('content') || '';
+
+    if (!embedUrl) return apiError(res, 404, 'Player tidak ditemukan');
+
+    res.json({ slug, title, thumb, embedUrl });
+  } catch (err) {
+    console.error('rb video error:', err.message);
+    if (err.response?.status === 404) return apiError(res, 404, 'Video tidak ditemukan');
+    apiError(res, 502, 'Gagal memuat video');
+  }
+});
+
+/* ── RB: Thumbnail proxy ── */
+app.get('/proxy/rb/thumb', async (req, res) => {
+  const raw = req.query.url;
+  if (!raw) return res.status(400).end();
+
+  let parsed;
+  try { parsed = new URL(raw); } catch { return res.status(400).end(); }
+  const allowed = ['ruangbokep.ws', 'img.streamruby.com'];
+  if (!allowed.some(h => parsed.hostname === h || parsed.hostname.endsWith('.' + h))) {
+    return res.status(400).end();
+  }
+
+  try {
+    const up = await axNoRedirect.get(raw, {
+      headers: { 'User-Agent': UA, 'Referer': `${RB_BASE}/` },
+      responseType: 'stream',
+    });
+    const ct = up.headers['content-type'] || '';
+    if (!ct.startsWith('image/')) { up.data.destroy(); return res.status(415).end(); }
+    res.setHeader('content-type', ct);
+    res.setHeader('cache-control', 'public, max-age=86400');
+    req.on('close', () => up.data.destroy());
+    up.data.on('error', () => !res.headersSent && res.status(502).end());
+    stream.pipeline(up.data, res, () => {});
+  } catch {
+    if (!res.headersSent) res.status(502).end();
+  }
+});
+
+/* ── RB: SPA routes ── */
+app.get('/rb', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'rb.html')));
+app.get('/rb/*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'rb.html')));
+
+/* ═══════════════════════════════════════
    SPA FALLBACK
 ═══════════════════════════════════════ */
 app.get('*', (req, res) => {

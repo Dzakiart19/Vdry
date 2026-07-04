@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Vidorey — Platform 2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" type="image/png" href="/logo.png" />
+</head>
+<body>
+
+<!-- ─── TOPBAR ─── -->
+<header class="topbar">
+  <a class="brand" href="javascript:void(0)" id="rbBrandHome">
+    <div class="brand-icon">
+      <img src="/logo.png" alt="Vidorey" class="brand-logo-img" />
+    </div>
+    <span class="brand-name">Vidorey</span>
+    <span class="rb-platform-badge">Platform 2</span>
+  </a>
+
+  <nav class="rb-topnav" aria-label="Navigasi platform">
+    <a class="rb-topnav-link" href="/">Platform 1</a>
+  </nav>
+</header>
+
+<!-- ─── SHELL ─── -->
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="rbSidebar">
+    <div class="sidebar-inner">
+      <div class="rb-sidebar-head">
+        <span class="rb-sidebar-label">Kategori</span>
+      </div>
+      <div id="rbCategoryList"></div>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <main class="content" id="rbContent">
+
+    <div id="rbLoadingState" class="state-view hidden">
+      <div class="loader">
+        <div class="loader-ring"></div>
+      </div>
+      <p>Memuat…</p>
+    </div>
+
+    <div id="rbErrorState" class="state-view hidden">
+      <div class="state-icon error-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <p id="rbErrorMsg">Terjadi kesalahan.</p>
+      <button class="btn-retry" id="rbRetryBtn">Coba lagi</button>
+    </div>
+
+    <div id="rbEmptyState" class="state-view hidden">
+      <div class="state-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+      </div>
+      <p>Tidak ada video ditemukan.</p>
+    </div>
+
+    <div id="rbGrid" class="rb-grid"></div>
+
+    <div id="rbPagination" class="pagination hidden"></div>
+
+  </main>
+</div>
+
+<!-- ─── PLAYER MODAL ─── -->
+<div id="rbPlayerModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-backdrop" id="rbModalBackdrop"></div>
+  <div class="modal-panel">
+    <div class="modal-top">
+      <div class="modal-meta">
+        <h2 id="rbVideoTitle" class="modal-title">—</h2>
+        <span id="rbVideoSub" class="modal-sub">Platform 2 — RuangBokep</span>
+      </div>
+      <button class="modal-close" id="rbModalClose" title="Tutup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="video-stage rb-iframe-stage">
+      <div id="rbPlayerLoading" class="rb-player-loader">
+        <div class="loader-ring"></div>
+        <p>Memuat player…</p>
+      </div>
+      <iframe
+        id="rbVideoFrame"
+        class="rb-player-frame hidden"
+        allowfullscreen
+        allow="autoplay; fullscreen; picture-in-picture"
+        referrerpolicy="no-referrer-when-downgrade"
+        frameborder="0"
+        scrolling="no"
+      ></iframe>
+    </div>
+  </div>
+</div>
+
+<div id="toast" aria-live="polite"></div>
+
+<script src="/config.js"></script>
+<script src="/rb.js"></script>
+
+<!-- ─── Adsterra: Popunder ─── -->
+<script src="https://pl28418540.effectivecpmnetwork.com/e2/23/51/e223516a3660ad6a4214cb47e436c599.js"></script>
+<!-- ─── Adsterra: Social Bar ─── -->
+<script src="https://pl28427857.effectivecpmnetwork.com/96/e9/ff/96e9ff95727320b49c1ea1aa80add9b6.js"></script>
+</body>
+</html>
