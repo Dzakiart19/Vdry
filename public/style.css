@@ -696,7 +696,18 @@ body {
   .video-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .folder-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 
-  .modal { padding: 0; align-items: flex-end; }
-  .modal-panel { border-radius: var(--radius-lg) var(--radius-lg) 0 0; max-width: 100%; }
-  .video-stage video { max-height: 50vh; }
+  /* Modal — tetap di tengah, bukan bottom sheet */
+  .modal {
+    padding: 12px;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-panel {
+    border-radius: var(--radius-lg);
+    max-width: 100%;
+    max-height: 92dvh;
+    overflow-y: auto;
+  }
+  .modal-title { font-size: 13px; }
+  .video-stage video { max-height: 52vw; min-height: 180px; }
 }
