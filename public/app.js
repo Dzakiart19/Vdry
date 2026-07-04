@@ -94,11 +94,14 @@ const App = (() => {
     if (name) el[name].classList.remove('hidden');
   }
 
+  /* ──────── Backend base URL ──────── */
+  const API = (window.BACKEND_URL || '').replace(/\/$/, '');
+
   /* ──────── Thumb proxy ──────── */
   function thumbSrc(raw) {
     if (!raw) return '';
     return raw.startsWith('https://i.xpvid.cc/')
-      ? '/proxy/thumb?url=' + encodeURIComponent(raw)
+      ? API + '/proxy/thumb?url=' + encodeURIComponent(raw)
       : raw;
   }
 
@@ -123,7 +126,7 @@ const App = (() => {
     document.querySelector('.content')?.scrollTo({ top: 0, behavior: 'smooth' });
 
     try {
-      const resp = await fetch(`/api/folder/${id}?p=${page}`);
+      const resp = await fetch(`${API}/api/folder/${id}?p=${page}`);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
@@ -438,14 +441,14 @@ const App = (() => {
     document.body.style.overflow = 'hidden';
 
     try {
-      const resp = await fetch(`/api/video/${id}`);
+      const resp = await fetch(`${API}/api/video/${id}`);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
 
       el.title.textContent = data.title || name;
       el.sub.textContent   = '';
-      el.video.src = `/proxy/stream/${id}`;
+      el.video.src = `${API}/proxy/stream/${id}`;
       el.video.load();
       el.video.play().catch(() => {});
     } catch (err) {
@@ -480,7 +483,7 @@ const App = (() => {
     el.addInput.disabled = true;
 
     try {
-      const resp = await fetch(`/api/folder/${id}?p=1`);
+      const resp = await fetch(`${API}/api/folder/${id}?p=1`);
       const data = resp.ok ? await resp.json() : null;
       const name = data?.title || id;
       addSaved(id, name);
@@ -506,7 +509,7 @@ const App = (() => {
 
   async function silentRefresh() {
     try {
-      const resp = await fetch(`/api/folder/${currentFolder}?p=${currentPage}`);
+      const resp = await fetch(`${API}/api/folder/${currentFolder}?p=${currentPage}`);
       if (!resp.ok) return;
       const data = await resp.json();
       if (data.error) return;

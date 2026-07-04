@@ -3,6 +3,7 @@ const axios   = require('axios');
 const cheerio = require('cheerio');
 const stream  = require('stream');
 const path    = require('path');
+const cors    = require('cors');
 
 const app  = express();
 const PORT = 5000;
@@ -51,6 +52,26 @@ function allowedStreamUrl(raw) {
     return u.protocol === 'https:' && STREAM_HOSTS.has(u.hostname);
   } catch { return false; }
 }
+
+/* ── CORS — izinkan Firebase Hosting & dev ── */
+app.use(cors({
+  origin(origin, cb) {
+    // Izinkan: tanpa origin (curl/Postman), localhost, *.replit.dev, *.web.app, *.firebaseapp.com
+    if (!origin) return cb(null, true);
+    const ok = [
+      /^http:\/\/localhost/,
+      /\.replit\.dev$/,
+      /\.replit\.app$/,
+      /\.web\.app$/,
+      /\.firebaseapp\.com$/,
+    ].some(r => r.test(origin));
+    cb(ok ? null : new Error('CORS: origin tidak diizinkan'), ok);
+  },
+  methods: ['GET', 'HEAD'],
+  allowedHeaders: ['Range', 'Content-Type'],
+  exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length', 'Content-Type'],
+  credentials: false,
+}));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
