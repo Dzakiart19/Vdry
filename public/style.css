@@ -1255,12 +1255,15 @@ body {
 }
 .rb-player-loader {
   position: absolute;
+  inset: 0;                  /* cover seluruh video-stage */
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   color: var(--text2);
   font-size: 13px;
+  background: #000;          /* solid black agar video di bawah tidak tembus */
   z-index: 2;
 }
 

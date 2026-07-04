@@ -297,16 +297,22 @@
     const video   = els.videoEl;
     const session = playerSession;
 
+    // ⚠️ MOBILE FIX: tampilkan <video> SEBELUM attachMedia.
+    // Kalau video masih display:none saat HLS attach, Android Chrome tidak
+    // mengalokasikan GPU surface → audio jalan tapi video hitam.
+    // rb-player-loader (z-index:2, background solid) tetap menutupinya selama buffering.
+    video.classList.remove('hidden');
+
     const onReady = () => {
       if (session !== playerSession) return;
       els.playerLoading.classList.add('hidden');
-      video.classList.remove('hidden');
+      // video sudah visible dari awal — langsung play
       video.play().catch(() => {});
     };
 
     const onFatalError = () => {
       if (session !== playerSession) return;
-      destroyHls();
+      destroyHls(); // destroyHls sudah tambahkan .hidden ke video
       els.playerLoading.classList.add('hidden');
       showToast('Stream expired — klik video lagi untuk reload');
     };
@@ -315,14 +321,16 @@
       const hls = new Hls({ enableWorker: false, startLevel: -1 });
       hlsInstance = hls;
       hls.loadSource(m3u8Url);
-      hls.attachMedia(video);
+      hls.attachMedia(video); // video sudah visible → GPU surface dialokasikan
       hls.on(Hls.Events.MANIFEST_PARSED, onReady);
       hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) onFatalError(); });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Native HLS (Safari / iOS)
       video.src = m3u8Url;
       video.addEventListener('loadedmetadata', onReady,      { once: true });
       video.addEventListener('error',          onFatalError, { once: true });
     } else {
+      video.classList.add('hidden');
       els.playerLoading.classList.add('hidden');
       showToast('Browser tidak mendukung HLS playback');
     }
