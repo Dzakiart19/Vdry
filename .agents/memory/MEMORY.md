@@ -1,0 +1,1 @@
+- [Platform 2 Architecture](rb-platform2-architecture.md) — ad-free HLS playback via PackerJS decode of putarvid embeds; CDN has CORS *.

@@ -36,11 +36,31 @@
     modalClose:   $('rbModalClose'),
     videoTitle:   $('rbVideoTitle'),
     videoSub:     $('rbVideoSub'),
-    videoFrame:   $('rbVideoFrame'),
+    videoEl:      $('rbVideoEl'),      // native <video> — tanpa iklan
+    videoFrame:   $('rbVideoFrame'),   // fallback iframe
     playerLoading:$('rbPlayerLoading'),
     retryBtn:     $('rbRetryBtn'),
     toast:        $('toast'),
   };
+
+  /* ── Player session tracking (prevents stale responses after modal close) ── */
+  let hlsInstance  = null;
+  let playerSession = 0; // incremented on each openPlayer call
+
+  function destroyHls() {
+    if (hlsInstance) {
+      hlsInstance.destroy();
+      hlsInstance = null;
+    }
+    if (els.videoEl) {
+      els.videoEl.pause();
+      els.videoEl.removeAttribute('src');
+      els.videoEl.load();
+      els.videoEl.classList.add('hidden');
+    }
+    els.videoFrame.src = '';
+    els.videoFrame.classList.add('hidden');
+  }
 
   /* ── Toast ── */
   let toastTimer;
@@ -289,28 +309,80 @@
 
   /* ── Open player modal ── */
   async function openPlayer(slug) {
-    els.videoTitle.textContent  = 'Memuat…';
-    els.videoSub.textContent    = 'Platform 2 — RuangBokep';
-    els.videoFrame.classList.add('hidden');
-    els.videoFrame.src          = '';
+    const session = ++playerSession; // guard against stale async responses
+
+    els.videoTitle.textContent = 'Memuat…';
+    els.videoSub.textContent   = 'Platform 2 — RuangBokep';
     els.playerLoading.classList.remove('hidden');
+    destroyHls();
     openModal();
 
     try {
       const data = await apiFetch(`/api/rb/video/${encodeURIComponent(slug)}`);
+
+      // Modal sudah ditutup sebelum response datang — buang hasilnya
+      if (session !== playerSession) return;
+
       els.videoTitle.textContent = data.title || slug;
 
-      els.videoFrame.onload = () => {
-        els.playerLoading.classList.add('hidden');
-        els.videoFrame.classList.remove('hidden');
-      };
-      els.videoFrame.src = data.embedUrl;
+      if (data.m3u8Url) {
+        // ── Native HLS — tanpa iklan, tanpa iframe ──
+        playHls(data.m3u8Url, slug);
+      } else if (data.embedUrl) {
+        // ── Fallback iframe (hanya jika m3u8 gagal di-resolve) ──
+        els.videoFrame.onload = () => {
+          els.playerLoading.classList.add('hidden');
+          els.videoFrame.classList.remove('hidden');
+        };
+        els.videoFrame.src = data.embedUrl;
+      } else {
+        throw new Error('Sumber video tidak ditemukan');
+      }
     } catch (e) {
+      if (session !== playerSession) return;
       console.error('openPlayer:', e.message);
       els.playerLoading.classList.add('hidden');
-      els.videoFrame.classList.add('hidden');
       els.videoTitle.textContent = 'Gagal memuat video';
       showToast(e.message || 'Gagal memuat video');
+    }
+  }
+
+  /* ── HLS playback — uses HLS.js (all browsers) or native (Safari) ── */
+  function playHls(m3u8Url, slug) {
+    const video   = els.videoEl;
+    const session = playerSession; // capture current session
+
+    const onReady = () => {
+      if (session !== playerSession) return; // stale
+      els.playerLoading.classList.add('hidden');
+      video.classList.remove('hidden');
+      video.play().catch(() => {});
+    };
+
+    const onFatalError = () => {
+      if (session !== playerSession) return;
+      destroyHls();
+      els.playerLoading.classList.add('hidden');
+      showToast('Stream expired — klik video lagi untuk reload');
+    };
+
+    if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+      const hls = new Hls({ enableWorker: false, startLevel: -1 });
+      hlsInstance = hls;
+      hls.loadSource(m3u8Url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, onReady);
+      hls.on(Hls.Events.ERROR, (_, d) => {
+        if (d.fatal) onFatalError();
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Native HLS — Safari / iOS
+      video.src = m3u8Url;
+      video.addEventListener('loadedmetadata', onReady,       { once: true });
+      video.addEventListener('error',          onFatalError,  { once: true });
+    } else {
+      els.playerLoading.classList.add('hidden');
+      showToast('Browser tidak mendukung HLS playback');
     }
   }
 
@@ -321,11 +393,10 @@
   }
 
   function closeModal() {
+    destroyHls();
+    els.playerLoading.classList.remove('hidden');
     els.modal.classList.add('hidden');
     document.body.style.overflow = '';
-    els.videoFrame.src   = '';
-    els.videoFrame.classList.add('hidden');
-    els.playerLoading.classList.remove('hidden');
   }
 
   els.modalClose.addEventListener('click', closeModal);

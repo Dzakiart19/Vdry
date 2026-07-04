@@ -119,11 +119,20 @@
         </svg>
       </button>
     </div>
-    <div class="video-stage rb-iframe-stage">
+    <div class="video-stage rb-video-stage">
       <div id="rbPlayerLoading" class="rb-player-loader">
         <div class="loader-ring"></div>
-        <p>Memuat player…</p>
+        <p>Memuat video…</p>
       </div>
+      <!-- Native video — tanpa iklan, tanpa iframe pihak ketiga -->
+      <video
+        id="rbVideoEl"
+        class="rb-player-video hidden"
+        controls
+        playsinline
+        preload="none"
+      ></video>
+      <!-- Fallback iframe hanya jika m3u8 tidak bisa di-resolve -->
       <iframe
         id="rbVideoFrame"
         class="rb-player-frame hidden"
@@ -139,6 +148,8 @@
 
 <div id="toast" aria-live="polite"></div>
 
+<!-- HLS.js — untuk play stream m3u8 native tanpa iframe/ads -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
 <script src="/config.js"></script>
 <script src="/rb.js"></script>
 

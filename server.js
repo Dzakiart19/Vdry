@@ -333,7 +333,7 @@ const rbHeaders = {
 app.get('/api/rb/categories', async (_req, res) => {
   try {
     const { data } = await ax.get(
-      `${RB_BASE}/wp-json/wp/v2/categories?per_page=30&_fields=id,name,slug,count&orderby=count&order=desc`,
+      `${RB_BASE}/wp-json/wp/v2/categories?per_page=100&_fields=id,name,slug,count&orderby=count&order=desc`,
       { headers: { ...rbHeaders, Accept: 'application/json' } }
     );
     res.json(data.filter(c => c.slug !== 'uncategorized' && c.count > 0));
@@ -394,7 +394,50 @@ app.get('/api/rb/posts', async (req, res) => {
   }
 });
 
-/* ── RB: Single video — resolve putarvid embed URL ── */
+/* ── Safe PackerJS decoder — ONLY string replacements, no code execution ── */
+function unpackPacker(html) {
+  const m = html.match(/\('([\s\S]*?)',\s*(\d+),\s*(\d+),\s*'([\s\S]*?)'\.split\('\|'\)\)/);
+  if (!m) return null;
+  let p = m[1];
+  const a = parseInt(m[2]);
+  let c = parseInt(m[3]);
+  const k = m[4].split('|');
+  while (c--) {
+    if (k[c]) p = p.replace(new RegExp('\\b' + c.toString(a) + '\\b', 'g'), k[c]);
+  }
+  return p;
+}
+
+/* ── Resolve putarvid embed → raw m3u8 URL (strips ads completely) ── */
+async function resolveRbVideoUrl(embedUrl) {
+  try {
+    const parsed = new URL(embedUrl);
+    // Strict allowlist — only putarvid.com and its own subdomains
+    if (parsed.hostname !== 'putarvid.com' && !parsed.hostname.endsWith('.putarvid.com')) return null;
+    if (parsed.protocol !== 'https:') return null;
+  } catch { return null; }
+
+  try {
+    const { data: html } = await ax.get(embedUrl, {
+      headers: {
+        'User-Agent':      UA,
+        'Referer':         `${RB_BASE}/`,
+        'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      timeout: 18000,
+    });
+    const decoded = unpackPacker(html);
+    if (!decoded) return null;
+    const m = decoded.match(/file:"(https?:\/\/[^"]+\.m3u8[^"]*)"/);
+    return m ? m[1] : null;
+  } catch (err) {
+    console.error('resolveRbVideoUrl:', err.message);
+    return null;
+  }
+}
+
+/* ── RB: Single video — resolve to clean m3u8, no ads ── */
 app.get('/api/rb/video/:slug', async (req, res) => {
   const slug = req.params.slug;
   if (!/^[a-z0-9-]+$/i.test(slug)) return apiError(res, 400, 'Invalid slug');
@@ -403,16 +446,24 @@ app.get('/api/rb/video/:slug', async (req, res) => {
     const { data: html } = await ax.get(`${RB_BASE}/${slug}/`, { headers: rbHeaders });
     const $ = cheerio.load(html);
 
-    const embedUrl = $('iframe[src*="putarvid"]').first().attr('src')
-                  || $('iframe[src*="streamruby"]').first().attr('src')
-                  || $('iframe').first().attr('src')
-                  || '';
-
     const title = $('h1.entry-title, h2.entry-title, .entry-title, h1').first().text().trim() || slug;
     const thumb = $('meta[property="og:image"]').attr('content') || '';
 
+    // Use structured-data meta as primary source (most reliable, no JS lazy-load)
+    const embedUrl = $('meta[itemprop="embedURL"]').attr('content')
+                  || $('IFRAME[SRC*="putarvid"]').first().attr('SRC')
+                  || $('iframe[src*="putarvid"]').first().attr('src')
+                  || '';
+
     if (!embedUrl) return apiError(res, 404, 'Player tidak ditemukan');
 
+    // Decode putarvid packed JS → extract raw m3u8 (removes ALL ads)
+    const m3u8Url = await resolveRbVideoUrl(embedUrl);
+    if (m3u8Url) {
+      return res.json({ slug, title, thumb, m3u8Url });
+    }
+
+    // Fallback: return embed URL (user sees ads, but video still plays)
     res.json({ slug, title, thumb, embedUrl });
   } catch (err) {
     console.error('rb video error:', err.message);
