@@ -57,7 +57,7 @@ Jalankan di terminal (laptop/PC kamu, bukan di Replit):
 npm install -g firebase-tools
 
 # Login ke akun Google
-firebase login
+firebase login --no-localhost
 
 # Masuk ke folder project (download dari Replit atau clone dari GitHub)
 cd path/ke/folder/vidorey
