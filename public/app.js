@@ -1,91 +1,126 @@
-/* ════════════════════════════════════════
-   XPVid Browser — Frontend App
-   ════════════════════════════════════════ */
+/* ════════════════════════════════════════════
+   VIDOREY — SPA Engine
+   • History API navigation (back/forward works)
+   • Live scrape — no static data
+   • Auto-refresh every 3 min
+════════════════════════════════════════════ */
 
 const DEFAULT_FOLDER = 'e2bo9hcw9pe';
-const STORAGE_KEY    = 'xpvid_saved_folders';
+const STORAGE_KEY    = 'vidorey_saved_v2';
 
 const App = (() => {
-  /* ─── state ─── */
+
+  /* ──────── State ──────── */
   let currentFolder = DEFAULT_FOLDER;
   let currentPage   = 1;
   let currentData   = null;
   let breadcrumbs   = [{ id: DEFAULT_FOLDER, name: 'Home' }];
   let retryFn       = null;
+  let refreshTimer  = null;
 
-  /* ─── saved folders (localStorage) ─── */
+  /* ──────── DOM ──────── */
+  const $  = id => document.getElementById(id);
+  const el = {
+    loading:    $('loadingState'),
+    error:      $('errorState'),
+    errorMsg:   $('errorMsg'),
+    empty:      $('emptyState'),
+    main:       $('mainGrid'),
+    pagination: $('pagination'),
+    folderList: $('folderList'),
+    breadcrumb: $('breadcrumb'),
+    modal:      $('playerModal'),
+    backdrop:   $('modalBackdrop'),
+    video:      $('videoPlayer'),
+    title:      $('videoTitle'),
+    sub:        $('videoSubtitle'),
+    addInput:   $('addFolderInput'),
+    addBtn:     $('addFolderBtn'),
+    brand:      $('brandHome'),
+  };
+
+  /* ──────── Saved folders (localStorage) ──────── */
   function getSaved() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
     catch { return []; }
   }
-  function setSaved(arr) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
-  }
+  function setSaved(arr) { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
   function addSaved(id, name) {
     const arr = getSaved();
-    if (arr.find(f => f.id === id)) return false; // sudah ada
+    if (arr.find(f => f.id === id)) return false;
     arr.push({ id, name: name || id });
     setSaved(arr);
     return true;
   }
-  function removeSaved(id) {
-    setSaved(getSaved().filter(f => f.id !== id));
-  }
+  function removeSaved(id) { setSaved(getSaved().filter(f => f.id !== id)); }
 
-  /* ─── parse folder ID dari link atau ID mentah ─── */
+  /* ──────── Parse input ──────── */
   function parseInput(raw) {
-    raw = raw.trim();
-    // URL: https://xpvid.cc/f/abc123
+    raw = (raw || '').trim();
     const m = raw.match(/\/f\/([a-z0-9]+)/i);
     if (m) return m[1];
-    // ID murni
     if (/^[a-z0-9]+$/i.test(raw)) return raw;
     return null;
   }
 
-  /* ─── DOM refs ─── */
-  const $  = id => document.getElementById(id);
-  const el = {
-    loading:      $('loadingState'),
-    error:        $('errorState'),
-    errorMsg:     $('errorMsg'),
-    empty:        $('emptyState'),
-    grid:         $('videoGrid'),
-    pagination:   $('pagination'),
-    sidebar:      $('folderList'),
-    breadcrumb:   $('breadcrumb'),
-    modal:        $('playerModal'),
-    video:        $('videoPlayer'),
-    videoTitle:   $('videoTitle'),
-    videoSub:     $('videoSubtitle'),
-    addInput:     $('addFolderInput'),
-    addBtn:       $('addFolderBtn'),
+  /* ──────── History API ──────── */
+  function pushNav(folderId, page, crumbs) {
+    const url = folderId === DEFAULT_FOLDER
+      ? '/'
+      : `/?f=${folderId}${page > 1 ? '&p=' + page : ''}`;
+    history.pushState({ folderId, page, breadcrumbs: crumbs }, '', url);
+  }
 
-  };
+  function replaceNav(folderId, page, crumbs) {
+    const url = folderId === DEFAULT_FOLDER
+      ? '/'
+      : `/?f=${folderId}${page > 1 ? '&p=' + page : ''}`;
+    history.replaceState({ folderId, page, breadcrumbs: crumbs }, '', url);
+  }
 
-  /* ─── helpers ─── */
+  window.addEventListener('popstate', e => {
+    if (e.state) {
+      breadcrumbs = e.state.breadcrumbs || [{ id: DEFAULT_FOLDER, name: 'Home' }];
+      loadFolder(e.state.folderId || DEFAULT_FOLDER, e.state.page || 1, false);
+    } else {
+      breadcrumbs = [{ id: DEFAULT_FOLDER, name: 'Home' }];
+      loadFolder(DEFAULT_FOLDER, 1, false);
+    }
+  });
+
+  /* ──────── Show/hide states ──────── */
   function showState(name) {
     ['loading', 'error', 'empty'].forEach(s => el[s].classList.add('hidden'));
     if (name) el[name].classList.remove('hidden');
   }
 
-  function thumbUrl(raw) {
+  /* ──────── Thumb proxy ──────── */
+  function thumbSrc(raw) {
     if (!raw) return '';
-    if (raw.startsWith('https://i.xpvid.cc/')) {
-      return '/proxy/thumb?url=' + encodeURIComponent(raw);
-    }
-    return raw;
+    return raw.startsWith('https://i.xpvid.cc/')
+      ? '/proxy/thumb?url=' + encodeURIComponent(raw)
+      : raw;
   }
 
-  /* ─── load folder ─── */
-  async function loadFolder(id, page = 1) {
+  /* ──────── Escape HTML ──────── */
+  function esc(str) {
+    return String(str || '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  /* ══════════════════════════════════
+     LOAD FOLDER
+  ══════════════════════════════════ */
+  async function loadFolder(id, page = 1, pushHistory = true) {
     currentFolder = id;
     currentPage   = page;
-
-    showState('loading');
-    el.grid.innerHTML       = '';
+    el.main.innerHTML = '';
     el.pagination.classList.add('hidden');
-    el.sidebar.innerHTML    = '';
+    showState('loading');
+
+    // Scroll to top
+    document.querySelector('.content')?.scrollTo({ top: 0, behavior: 'smooth' });
 
     try {
       const resp = await fetch(`/api/folder/${id}?p=${page}`);
@@ -93,236 +128,252 @@ const App = (() => {
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
       currentData = data;
-      renderFolder(data);
+
+      if (pushHistory) pushNav(id, page, breadcrumbs);
+
+      renderAll(data);
+      scheduleRefresh();
     } catch (err) {
       retryFn = () => loadFolder(id, page);
-      el.errorMsg.textContent = err.message || 'Gagal memuat folder.';
+      el.errorMsg.textContent = 'Gagal memuat folder. Periksa koneksi internet.';
       showState('error');
     }
   }
 
-  /* ─── render ─── */
-  function renderFolder(data) {
-    showState(null); // hapus loading/error/empty dulu
-    renderBreadcrumb(data);
+  /* ══════════════════════════════════
+     RENDER ALL
+  ══════════════════════════════════ */
+  function renderAll(data) {
+    showState(null);
+    renderBreadcrumb();
     renderSidebar(data.folders || []);
-    renderFolderCards(data.folders || []);
-    renderGrid(data.videos || []);
+    renderMain(data);
     renderPagination(data);
   }
 
-  function renderBreadcrumb(data) {
+  /* ── Breadcrumb ── */
+  function renderBreadcrumb() {
     el.breadcrumb.innerHTML = '';
-
-    // Always show root
     breadcrumbs.forEach((bc, i) => {
-      const span = document.createElement('span');
-      span.className = 'bc-item';
-      span.textContent = bc.name || bc.id;
-      span.dataset.id  = bc.id;
+      const isLast = i === breadcrumbs.length - 1;
 
-      if (i < breadcrumbs.length - 1) {
-        span.addEventListener('click', () => {
-          breadcrumbs = breadcrumbs.slice(0, i + 1);
-          loadFolder(bc.id);
-        });
-        el.breadcrumb.appendChild(span);
-
+      if (i > 0) {
         const sep = document.createElement('span');
         sep.className = 'bc-sep';
         sep.textContent = '/';
         el.breadcrumb.appendChild(sep);
-      } else {
-        el.breadcrumb.appendChild(span);
       }
+
+      const span = document.createElement('span');
+      span.className = 'bc-item';
+      span.textContent = bc.name || bc.id;
+
+      if (!isLast) {
+        span.addEventListener('click', () => {
+          breadcrumbs = breadcrumbs.slice(0, i + 1);
+          loadFolder(bc.id);
+        });
+      }
+
+      el.breadcrumb.appendChild(span);
     });
   }
 
-  function folderIcon() {
-    return `<svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
-    </svg>`;
-  }
-
+  /* ── Sidebar ── */
   function renderSidebar(subFolders) {
-    el.sidebar.innerHTML = '';
-
+    el.folderList.innerHTML = '';
     const saved = getSaved();
 
-    /* ── Saved folders section ── */
-    if (saved.length > 0) {
-      const label = document.createElement('div');
-      label.className = 'sidebar-section-label';
-      label.textContent = 'Tersimpan';
-      el.sidebar.appendChild(label);
-
-      saved.forEach(f => {
-        const item = document.createElement('div');
-        item.className = 'folder-item';
-
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = f.name || f.id;
-
-        const delBtn = document.createElement('button');
-        delBtn.className = 'folder-del-btn';
-        delBtn.title = 'Hapus';
-        delBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-        delBtn.addEventListener('click', e => {
-          e.stopPropagation();
-          removeSaved(f.id);
-          renderSidebar(subFolders);
-          // Refresh home cards jika lagi di home
-          if (currentFolder === DEFAULT_FOLDER) renderSavedCards();
-        });
-
-        item.innerHTML = folderIcon();
-        item.appendChild(nameSpan);
-        item.appendChild(delBtn);
-
-        item.addEventListener('click', () => {
-          breadcrumbs = [{ id: DEFAULT_FOLDER, name: 'Home' }, { id: f.id, name: f.name || f.id }];
-          loadFolder(f.id);
-        });
-
-        el.sidebar.appendChild(item);
-      });
-    }
-
-    if (subFolders.length === 0 && saved.length === 0) {
-      const msg = document.createElement('div');
-      msg.style.cssText = 'padding:10px;font-size:12px;color:var(--muted2)';
+    if (saved.length === 0 && subFolders.length === 0) {
+      const msg = document.createElement('p');
+      msg.className = 'sb-empty';
       msg.textContent = 'Belum ada folder tersimpan.';
-      el.sidebar.appendChild(msg);
+      el.folderList.appendChild(msg);
       return;
     }
 
-    /* ── Subfolder section ── */
+    // Saved section
+    if (saved.length > 0) {
+      const lbl = document.createElement('div');
+      lbl.className = 'sb-label';
+      lbl.textContent = 'Tersimpan';
+      el.folderList.appendChild(lbl);
+
+      saved.forEach(f => {
+        const item = makeSidebarItem(f.name || f.id, () => {
+          breadcrumbs = [{ id: DEFAULT_FOLDER, name: 'Home' }, { id: f.id, name: f.name || f.id }];
+          loadFolder(f.id);
+        }, f.id === currentFolder);
+
+        // Delete button
+        const del = document.createElement('button');
+        del.className = 'folder-del';
+        del.title = 'Hapus';
+        del.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>`;
+        del.addEventListener('click', e => {
+          e.stopPropagation();
+          removeSaved(f.id);
+          renderSidebar(currentData?.folders || []);
+          if (currentFolder === DEFAULT_FOLDER) renderMain(currentData);
+        });
+        item.appendChild(del);
+
+        el.folderList.appendChild(item);
+      });
+    }
+
+    // Subfolder section
     if (subFolders.length > 0) {
-      const label = document.createElement('div');
-      label.className = 'sidebar-section-label';
-      label.textContent = 'Subfolder';
-      el.sidebar.appendChild(label);
+      const lbl = document.createElement('div');
+      lbl.className = 'sb-label';
+      lbl.textContent = 'Subfolder';
+      el.folderList.appendChild(lbl);
 
       subFolders.forEach(f => {
-        const item = document.createElement('div');
-        item.className = 'folder-item';
-        item.innerHTML = `${folderIcon()}<span>${escHtml(f.name || f.id)}</span>`;
-        item.addEventListener('click', () => {
+        const item = makeSidebarItem(f.name || f.id, () => {
           breadcrumbs.push({ id: f.id, name: f.name || f.id });
           loadFolder(f.id);
-        });
-        el.sidebar.appendChild(item);
+        }, f.id === currentFolder);
+        el.folderList.appendChild(item);
       });
     }
   }
 
-  /* Buat satu folder card element */
-  function makeFolderCard(f, onClick) {
+  function makeSidebarItem(label, onClick, active = false) {
+    const item = document.createElement('div');
+    item.className = 'folder-item' + (active ? ' active' : '');
+
+    item.innerHTML = `
+      <svg class="fi-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+      </svg>
+      <span class="fi-name">${esc(label)}</span>`;
+
+    item.addEventListener('click', onClick);
+    return item;
+  }
+
+  /* ── Main content area ── */
+  function renderMain(data) {
+    el.main.innerHTML = '';
+
+    const saved      = getSaved();
+    const folders    = data?.folders || [];
+    const videos     = data?.videos  || [];
+    const isHome     = currentFolder === DEFAULT_FOLDER;
+
+    // ── Saved cards (only on home) ──
+    if (isHome && saved.length > 0) {
+      el.main.appendChild(makeSectionHeading('Tersimpan'));
+      const grid = makeFolderGrid();
+
+      saved.forEach(f => {
+        grid.appendChild(makeFolderCard(f.name || f.id, () => {
+          breadcrumbs = [{ id: DEFAULT_FOLDER, name: 'Home' }, { id: f.id, name: f.name || f.id }];
+          loadFolder(f.id);
+        }));
+      });
+
+      const wrap = document.createElement('div');
+      wrap.id = 'savedSection';
+      wrap.appendChild(grid);
+      el.main.appendChild(wrap);
+    }
+
+    // ── Subfolder cards ──
+    if (folders.length > 0) {
+      el.main.appendChild(makeSectionHeading('Folder'));
+      const grid = makeFolderGrid();
+
+      folders.forEach(f => {
+        grid.appendChild(makeFolderCard(f.name || f.id, () => {
+          breadcrumbs.push({ id: f.id, name: f.name || f.id });
+          loadFolder(f.id);
+        }));
+      });
+
+      const wrap = document.createElement('div');
+      wrap.id = 'folderSection';
+      wrap.appendChild(grid);
+      el.main.appendChild(wrap);
+    }
+
+    // ── Video cards ──
+    if (videos.length > 0) {
+      const heading = makeSectionHeading(`Video · ${videos.length} file${data.totalPages > 1 ? ` · Hal. ${data.page}/${data.totalPages}` : ''}`);
+      el.main.appendChild(heading);
+
+      const grid = document.createElement('div');
+      grid.className = 'video-grid';
+      grid.id = 'videoSection';
+
+      videos.forEach(v => grid.appendChild(makeVideoCard(v)));
+      el.main.appendChild(grid);
+    }
+
+    // ── Empty ──
+    if (folders.length === 0 && videos.length === 0 && !(isHome && getSaved().length > 0)) {
+      showState('empty');
+    }
+  }
+
+  function makeSectionHeading(text) {
+    const h = document.createElement('div');
+    h.className = 'section-heading';
+    h.textContent = text;
+    return h;
+  }
+
+  function makeFolderGrid() {
+    const g = document.createElement('div');
+    g.className = 'folder-grid';
+    return g;
+  }
+
+  function makeFolderCard(label, onClick) {
     const card = document.createElement('div');
     card.className = 'folder-card';
     card.innerHTML = `
       <svg viewBox="0 0 24 24" fill="currentColor">
         <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
       </svg>
-      <span>${escHtml(f.name || f.id)}</span>`;
+      <span>${esc(label)}</span>`;
     card.addEventListener('click', onClick);
     return card;
   }
 
-  /* Render saved-folder cards di home (section teratas) */
-  function renderSavedCards() {
-    const old = document.getElementById('savedCards');
-    if (old) old.remove();
+  function makeVideoCard(v) {
+    const card = document.createElement('div');
+    card.className = 'video-card';
 
-    const saved = getSaved();
-    if (!saved.length) return;
+    const src = thumbSrc(v.thumb);
+    const thumbHtml = src
+      ? `<img src="${esc(src)}" alt="" loading="lazy"
+           onerror="this.parentElement.innerHTML='<div class=\\'no-thumb\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\'><path d=\\'M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z\\'/></svg></div>'">`
+      : `<div class="no-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+           <path d="M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+         </svg></div>`;
 
-    const wrap = document.createElement('div');
-    wrap.id = 'savedCards';
-    wrap.innerHTML = `<div class="section-label">Folder Tersimpan</div>`;
-
-    const grid = document.createElement('div');
-    grid.className = 'folder-card-grid';
-
-    saved.forEach(f => {
-      const card = makeFolderCard(f, () => {
-        breadcrumbs = [{ id: DEFAULT_FOLDER, name: 'Home' }, { id: f.id, name: f.name || f.id }];
-        loadFolder(f.id);
-      });
-      grid.appendChild(card);
-    });
-
-    wrap.appendChild(grid);
-
-    // Sisipkan paling atas, sebelum folderCards / videoGrid
-    const ref = document.getElementById('folderCards') || el.grid;
-    ref.parentNode.insertBefore(wrap, ref);
-  }
-
-  function renderFolderCards(folders) {
-    const old = document.getElementById('folderCards');
-    if (old) old.remove();
-    if (!folders.length) return;
-
-    const wrap = document.createElement('div');
-    wrap.id = 'folderCards';
-    wrap.innerHTML = `<div class="section-label">Subfolder</div>`;
-
-    const grid = document.createElement('div');
-    grid.className = 'folder-card-grid';
-
-    folders.forEach(f => {
-      const card = makeFolderCard(f, () => {
-        breadcrumbs.push({ id: f.id, name: f.name || f.id });
-        loadFolder(f.id);
-      });
-      grid.appendChild(card);
-    });
-
-    wrap.appendChild(grid);
-    el.grid.parentNode.insertBefore(wrap, el.grid);
-
-    // Jika di home, tampilkan saved cards di atasnya
-    if (currentFolder === DEFAULT_FOLDER) renderSavedCards();
-  }
-
-  function renderGrid(videos) {
-    el.grid.innerHTML = '';
-
-    const filtered = videos;
-
-    if (filtered.length === 0) {
-      // Hanya tampilkan empty kalau juga tidak ada folder cards
-      if (!document.getElementById('folderCards')) showState('empty');
-      return;
-    }
-
-    showState(null);
-
-    filtered.forEach(v => {
-      const card = document.createElement('div');
-      card.className = 'video-card';
-
-      const thumbSrc = thumbUrl(v.thumb);
-      card.innerHTML = `
-        <div class="thumb-wrap">
-          ${thumbSrc
-            ? `<img src="${escHtml(thumbSrc)}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'no-thumb\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\'><path d=\\'M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z\\'/></svg></div>'">`
-            : `<div class="no-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg></div>`
-          }
-          <div class="play-icon">
+    card.innerHTML = `
+      <div class="thumb-wrap">
+        ${thumbHtml}
+        <div class="play-overlay">
+          <div class="play-btn-circle">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
           </div>
         </div>
-        <div class="card-body">
-          <div class="card-title">${escHtml(v.name || v.id)}</div>
-        </div>`;
+      </div>
+      <div class="card-body">
+        <div class="card-title">${esc(v.name || v.id)}</div>
+      </div>`;
 
-      card.addEventListener('click', () => openPlayer(v.id, v.name || v.id));
-      el.grid.appendChild(card);
-    });
+    card.addEventListener('click', () => openPlayer(v.id, v.name || v.id));
+    return card;
   }
 
+  /* ── Pagination ── */
   function renderPagination(data) {
     el.pagination.innerHTML = '';
     if (!data.totalPages || data.totalPages <= 1) {
@@ -331,38 +382,56 @@ const App = (() => {
     }
 
     el.pagination.classList.remove('hidden');
+    const cur = data.page;
+    const tot = data.totalPages;
 
     // Prev
-    const prev = pageBtn('‹', data.page <= 1);
-    if (data.page > 1) prev.addEventListener('click', () => loadFolder(currentFolder, data.page - 1));
+    const prev = pgBtn(cur <= 1, '←');
+    if (cur > 1) prev.addEventListener('click', () => loadFolder(currentFolder, cur - 1));
     el.pagination.appendChild(prev);
 
-    // Pages
-    for (let i = 1; i <= data.totalPages; i++) {
-      const btn = pageBtn(i, false);
-      if (i === data.page) btn.classList.add('active');
-      else btn.addEventListener('click', () => loadFolder(currentFolder, i));
-      el.pagination.appendChild(btn);
-    }
+    // Pages — smart truncation
+    const pages = buildPageRange(cur, tot);
+    pages.forEach(p => {
+      if (p === '…') {
+        const sep = document.createElement('span');
+        sep.className = 'pg-sep';
+        sep.textContent = '…';
+        el.pagination.appendChild(sep);
+      } else {
+        const btn = pgBtn(false, p);
+        if (p === cur) btn.classList.add('active');
+        else btn.addEventListener('click', () => loadFolder(currentFolder, p));
+        el.pagination.appendChild(btn);
+      }
+    });
 
     // Next
-    const next = pageBtn('›', data.page >= data.totalPages);
-    if (data.page < data.totalPages) next.addEventListener('click', () => loadFolder(currentFolder, data.page + 1));
+    const next = pgBtn(cur >= tot, '→');
+    if (cur < tot) next.addEventListener('click', () => loadFolder(currentFolder, cur + 1));
     el.pagination.appendChild(next);
   }
 
-  function pageBtn(label, disabled) {
-    const btn = document.createElement('div');
-    btn.className = 'page-btn';
-    btn.textContent = label;
-    if (disabled) btn.classList.add('active'); // reuse style for disabled arrows
-    return btn;
+  function pgBtn(disabled, label) {
+    const b = document.createElement('div');
+    b.className = 'pg-btn' + (disabled ? ' disabled' : '');
+    b.textContent = label;
+    return b;
   }
 
-  /* ─── player ─── */
+  function buildPageRange(cur, tot) {
+    if (tot <= 7) return Array.from({ length: tot }, (_, i) => i + 1);
+    if (cur <= 3) return [1, 2, 3, 4, '…', tot];
+    if (cur >= tot - 2) return [1, '…', tot-3, tot-2, tot-1, tot];
+    return [1, '…', cur-1, cur, cur+1, '…', tot];
+  }
+
+  /* ══════════════════════════════════
+     VIDEO PLAYER
+  ══════════════════════════════════ */
   async function openPlayer(id, name) {
-    el.videoTitle.textContent = name || id;
-    el.videoSub.textContent   = 'Memuat video…';
+    el.title.textContent = name || id;
+    el.sub.textContent   = 'Memuat…';
     el.video.removeAttribute('src');
     el.video.load();
     el.modal.classList.remove('hidden');
@@ -374,15 +443,13 @@ const App = (() => {
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
 
-      el.videoTitle.textContent = data.title || name;
-      el.videoSub.textContent   = 'Klik play untuk memutar';
-
-      // Use proxy stream (handles Referer)
+      el.title.textContent = data.title || name;
+      el.sub.textContent   = '';
       el.video.src = `/proxy/stream/${id}`;
       el.video.load();
       el.video.play().catch(() => {});
     } catch (err) {
-      el.videoSub.textContent = '⚠️ Gagal: ' + (err.message || 'error');
+      el.sub.textContent = '⚠ Gagal memuat video.';
     }
   }
 
@@ -394,18 +461,17 @@ const App = (() => {
     document.body.style.overflow = '';
   }
 
-  function retry() {
-    if (retryFn) retryFn();
-  }
+  function retry() { if (retryFn) retryFn(); }
 
-  /* ─── Add Folder ─── */
-  async function doAddFolder() {
+  /* ══════════════════════════════════
+     ADD FOLDER
+  ══════════════════════════════════ */
+  async function doAdd() {
     const raw = el.addInput.value.trim();
     if (!raw) return;
-
     const id = parseInput(raw);
     if (!id) {
-      el.addInput.style.borderColor = '#e05';
+      el.addInput.style.borderColor = 'var(--rose)';
       setTimeout(() => el.addInput.style.borderColor = '', 1200);
       return;
     }
@@ -414,48 +480,28 @@ const App = (() => {
     el.addInput.disabled = true;
 
     try {
-      // Fetch nama folder dari API
       const resp = await fetch(`/api/folder/${id}?p=1`);
       const data = resp.ok ? await resp.json() : null;
       const name = data?.title || id;
-
       addSaved(id, name);
-      el.addInput.value = '';
-      renderSidebar(currentData?.folders || []);
-      if (currentFolder === DEFAULT_FOLDER) renderSavedCards();
     } catch {
-      // Simpan dengan ID saja kalau fetch gagal
       addSaved(id, id);
-      el.addInput.value = '';
-      renderSidebar(currentData?.folders || []);
-      if (currentFolder === DEFAULT_FOLDER) renderSavedCards();
     } finally {
+      el.addInput.value = '';
       el.addBtn.disabled = false;
       el.addInput.disabled = false;
       el.addInput.focus();
+      renderSidebar(currentData?.folders || []);
+      if (currentFolder === DEFAULT_FOLDER) renderMain(currentData);
     }
   }
 
-  el.addBtn.addEventListener('click', doAddFolder);
-  el.addInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') doAddFolder();
-  });
-
-  /* ─── keyboard ─── */
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closePlayer();
-  });
-
-  /* ─── Auto-refresh ─── */
-  const REFRESH_MS = 3 * 60 * 1000; // 3 menit
-  let refreshTimer = null;
-
+  /* ══════════════════════════════════
+     AUTO-REFRESH (3 min)
+  ══════════════════════════════════ */
   function scheduleRefresh() {
     clearTimeout(refreshTimer);
-    refreshTimer = setTimeout(() => {
-      // Refresh folder yang sedang aktif (tanpa reset breadcrumb)
-      silentRefresh();
-    }, REFRESH_MS);
+    refreshTimer = setTimeout(silentRefresh, 3 * 60 * 1000);
   }
 
   async function silentRefresh() {
@@ -465,47 +511,63 @@ const App = (() => {
       const data = await resp.json();
       if (data.error) return;
 
-      const prevVideoIds  = new Set((currentData?.videos  || []).map(v => v.id));
-      const prevFolderIds = new Set((currentData?.folders || []).map(f => f.id));
+      const prevV = new Set((currentData?.videos  || []).map(v => v.id));
+      const prevF = new Set((currentData?.folders || []).map(f => f.id));
+      const newV  = (data.videos  || []).filter(v => !prevV.has(v.id)).length;
+      const newF  = (data.folders || []).filter(f => !prevF.has(f.id)).length;
 
-      const newVideos  = (data.videos  || []).filter(v => !prevVideoIds.has(v.id));
-      const newFolders = (data.folders || []).filter(f => !prevFolderIds.has(f.id));
-
-      if (newVideos.length > 0 || newFolders.length > 0) {
+      if (newV + newF > 0) {
         currentData = data;
-        renderFolder(data);
-        showToast(`${newVideos.length + newFolders.length} konten baru ditemukan!`);
+        renderAll(data);
+        showToast(`${newV + newF} konten baru ditemukan`);
       }
-    } catch { /* abaikan error saat refresh background */ }
+    } catch { /* silent */ }
     finally { scheduleRefresh(); }
   }
 
+  /* ══════════════════════════════════
+     TOAST
+  ══════════════════════════════════ */
   function showToast(msg) {
-    let t = document.getElementById('toast');
-    if (!t) {
-      t = document.createElement('div');
-      t.id = 'toast';
-      document.body.appendChild(t);
-    }
+    const t = $('toast');
     t.textContent = msg;
     t.classList.add('show');
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+    clearTimeout(t._t);
+    t._t = setTimeout(() => t.classList.remove('show'), 3200);
   }
 
-  /* ─── init ─── */
-  loadFolder(DEFAULT_FOLDER);
-  scheduleRefresh();
+  /* ══════════════════════════════════
+     EVENT LISTENERS
+  ══════════════════════════════════ */
+  el.addBtn.addEventListener('click', doAdd);
+  el.addInput.addEventListener('keydown', e => { if (e.key === 'Enter') doAdd(); });
+  el.backdrop.addEventListener('click', closePlayer);
+  el.brand.addEventListener('click', () => {
+    breadcrumbs = [{ id: DEFAULT_FOLDER, name: 'Home' }];
+    loadFolder(DEFAULT_FOLDER);
+  });
+  document.getElementById('modalClose').addEventListener('click', closePlayer);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlayer(); });
 
-  /* ─── utils ─── */
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
+  /* ══════════════════════════════════
+     INIT — resume from URL
+  ══════════════════════════════════ */
+  (() => {
+    const params   = new URLSearchParams(location.search);
+    const initId   = params.get('f') || DEFAULT_FOLDER;
+    const initPage = parseInt(params.get('p')) || 1;
+
+    if (initId !== DEFAULT_FOLDER) {
+      breadcrumbs = [
+        { id: DEFAULT_FOLDER, name: 'Home' },
+        { id: initId, name: initId },
+      ];
+    }
+
+    replaceNav(initId, initPage, breadcrumbs);
+    loadFolder(initId, initPage, false);
+    scheduleRefresh();
+  })();
 
   return { openPlayer, closePlayer, retry, loadFolder };
 })();
