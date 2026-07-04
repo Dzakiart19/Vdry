@@ -24,6 +24,7 @@
   const $ = id => document.getElementById(id);
   const els = {
     catList:      $('rbCategoryList'),
+    mobileCats:   $('rbMobileCats'),
     grid:         $('rbGrid'),
     pagination:   $('rbPagination'),
     loading:      $('rbLoadingState'),
@@ -88,10 +89,11 @@
     }
   }
 
-  /* ── Render categories sidebar ── */
+  /* ── Render categories sidebar (desktop) + mobile bar ── */
   function renderCategories(cats) {
     if (!cats.length) { els.catList.innerHTML = ''; return; }
 
+    // Desktop sidebar
     let html = `<div class="rb-cat-item ${!state.activeSlug ? 'active' : ''}"
                      data-slug="" tabindex="0">
                   <span class="rb-cat-dot"></span>
@@ -112,24 +114,47 @@
     els.catList.innerHTML = html;
 
     els.catList.querySelectorAll('.rb-cat-item').forEach(el => {
-      el.addEventListener('click', () => {
-        const slug = el.dataset.slug;
-        if (slug === state.activeSlug) return;
-        state.activeSlug = slug || null;
-        state.page       = 1;
-        updateCategoryActive();
-        loadPosts();
-      });
+      el.addEventListener('click', () => selectCategory(el.dataset.slug || null));
       el.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click();
       });
     });
+
+    // Mobile horizontal bar
+    renderMobileCats(cats);
+  }
+
+  function renderMobileCats(cats) {
+    if (!els.mobileCats) return;
+    let html = `<button class="rb-mobile-cat-btn ${!state.activeSlug ? 'active' : ''}" data-slug="">Terbaru</button>`;
+    cats.forEach(c => {
+      html += `<button class="rb-mobile-cat-btn ${state.activeSlug === c.slug ? 'active' : ''}"
+                       data-slug="${escHtml(c.slug)}">${escHtml(c.name)}</button>`;
+    });
+    els.mobileCats.innerHTML = html;
+    els.mobileCats.querySelectorAll('.rb-mobile-cat-btn').forEach(btn => {
+      btn.addEventListener('click', () => selectCategory(btn.dataset.slug || null));
+    });
+  }
+
+  function selectCategory(slug) {
+    if (slug === state.activeSlug) return;
+    state.activeSlug = slug || null;
+    state.page       = 1;
+    updateCategoryActive();
+    loadPosts();
   }
 
   function updateCategoryActive() {
+    const cur = state.activeSlug || '';
     els.catList.querySelectorAll('.rb-cat-item').forEach(el => {
-      el.classList.toggle('active', el.dataset.slug === (state.activeSlug || ''));
+      el.classList.toggle('active', el.dataset.slug === cur);
     });
+    if (els.mobileCats) {
+      els.mobileCats.querySelectorAll('.rb-mobile-cat-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.slug === cur);
+      });
+    }
   }
 
   /* ── Load posts ── */
@@ -314,12 +339,7 @@
   els.retryBtn.addEventListener('click', loadPosts);
 
   /* ── Brand home ── */
-  els.brandHome.addEventListener('click', () => {
-    state.activeSlug = null;
-    state.page       = 1;
-    updateCategoryActive();
-    loadPosts();
-  });
+  els.brandHome.addEventListener('click', () => selectCategory(null));
 
   /* ── Escape helper ── */
   function escHtml(s) {

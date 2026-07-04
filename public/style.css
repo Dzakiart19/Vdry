@@ -694,15 +694,25 @@ body {
 @media (max-width: 768px) {
   :root { --sidebar-w: 0px; }
 
-  .brand { flex: 0 0 auto; border-right: none; padding: 0 16px; }
+  /* ── Topbar: sidebar tersembunyi, breadcrumb tidak menelan tombol nav ── */
+  .brand { flex: 0 0 auto; border-right: none; padding: 0 14px; }
   .sidebar { display: none; }
+  .breadcrumb { flex: 1; min-width: 0; overflow: hidden; }
 
-  .content { padding: 20px 16px 48px; }
+  /* Teks singkat di mobile (P1 / P2) */
+  .rb-topnav-full  { display: none; }
+  .rb-topnav-short { display: inline; }
+  .rb-topnav { padding-right: 8px; }
+  .rb-topnav-link  { padding: 5px 10px; }
 
-  .video-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-  .folder-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  /* ── Content ── */
+  .content { padding: 16px 12px 56px; }
 
-  /* Modal — tetap di tengah, bukan bottom sheet */
+  /* ── Grid: 2 kolom di mobile ── */
+  .folder-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .video-grid  { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  /* ── Modal ── */
   .modal {
     padding: 12px;
     align-items: center;
@@ -716,6 +726,52 @@ body {
   }
   .modal-title { font-size: 13px; }
   .video-stage video { max-height: 52vw; min-height: 180px; }
+}
+
+/* ── Mobile: kategori RB horizontal scroll (sidebar tersembunyi) ── */
+.rb-mobile-cats { display: none; } /* Hidden di desktop */
+
+@media (max-width: 768px) {
+  /* Sticky di dalam .content scroll container */
+  .rb-mobile-cats {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin: -16px -12px 16px; /* Kompensasi padding content */
+  }
+  .rb-mobile-cats::-webkit-scrollbar { display: none; }
+
+  .rb-mobile-cat-btn {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 99px;
+    color: var(--text2);
+    font-size: 12px;
+    font-family: var(--font);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .rb-mobile-cat-btn.active {
+    background: var(--rose-dim);
+    border-color: var(--rose);
+    color: var(--rose);
+    font-weight: 600;
+  }
+  .rb-mobile-cat-btn:hover:not(.active) {
+    background: var(--surface2);
+    color: var(--text);
+  }
 }
 
 /* ── Welcome Popup ── */
@@ -897,7 +953,8 @@ body {
   align-items: center;
   gap: 4px;
   margin-left: auto;
-  padding-right: 8px;
+  padding-right: 12px;
+  flex-shrink: 0; /* Jangan biarkan tergeser oleh breadcrumb */
 }
 .rb-topnav-link {
   font-size: 12px;
@@ -908,12 +965,17 @@ body {
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   transition: color .15s, border-color .15s, background .15s;
+  white-space: nowrap;
 }
 .rb-topnav-link:hover {
   color: var(--text);
   border-color: var(--rose);
   background: var(--rose-dim);
 }
+
+/* Teks penuh di desktop, singkat di mobile */
+.rb-topnav-short { display: none; }
+.rb-topnav-full  { display: inline; }
 
 /* ── RB: Sidebar header ── */
 .rb-sidebar-head {

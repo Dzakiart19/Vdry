@@ -23,14 +23,17 @@
   </a>
 
   <nav class="rb-topnav" aria-label="Navigasi platform">
-    <a class="rb-topnav-link" href="/">Platform 1</a>
+    <a class="rb-topnav-link" href="/">
+      <span class="rb-topnav-full">Platform 1</span>
+      <span class="rb-topnav-short">P1</span>
+    </a>
   </nav>
 </header>
 
 <!-- ─── SHELL ─── -->
 <div class="shell">
 
-  <!-- Sidebar -->
+  <!-- Sidebar (desktop only) -->
   <aside class="sidebar" id="rbSidebar">
     <div class="sidebar-inner">
       <div class="rb-sidebar-head">
@@ -42,6 +45,9 @@
 
   <!-- Content -->
   <main class="content" id="rbContent">
+
+  <!-- Mobile: horizontal category bar (sticky, inside scroll container) -->
+  <div class="rb-mobile-cats" id="rbMobileCats"></div>
 
     <div id="rbLoadingState" class="state-view hidden">
       <div class="loader">
