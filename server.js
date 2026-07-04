@@ -7,7 +7,7 @@ const path    = require('path');
 const cors    = require('cors');
 
 const app  = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const BASE = 'https://xpvid.cc';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36';
@@ -608,8 +608,18 @@ app.get('/api/rb/video/:slug', async (req, res) => {
       return res.json({ slug, title, thumb, m3u8Url: `/proxy/rb/hls/${slug}` });
     }
 
-    // Fallback: return embed URL (user sees ads, but video still plays)
-    res.json({ slug, title, thumb, embedUrl });
+    // Fallback: return embed URL only if it's a trusted putarvid domain
+    let safeEmbedUrl = null;
+    try {
+      const u = new URL(embedUrl);
+      if (u.protocol === 'https:' && (u.hostname === 'putarvid.com' || u.hostname.endsWith('.putarvid.com'))) {
+        safeEmbedUrl = embedUrl;
+      }
+    } catch { /* invalid URL — drop it */ }
+    if (safeEmbedUrl) {
+      return res.json({ slug, title, thumb, embedUrl: safeEmbedUrl });
+    }
+    apiError(res, 404, 'Sumber video tidak dapat diakses');
   } catch (err) {
     console.error('rb video error:', err.message);
     if (err.response?.status === 404) return apiError(res, 404, 'Video tidak ditemukan');
@@ -648,10 +658,14 @@ app.get('/proxy/rb/hls/:slug', async (req, res) => {
     if (!m3u8Url) return apiError(res, 404, 'Stream tidak ditemukan');
 
     // Fetch master manifest dari CDN (dengan header yang benar)
-    const { data: manifest } = await axSegment.get(m3u8Url, {
+    const manifestResp = await axSegment.get(m3u8Url, {
       headers: { 'User-Agent': UA, 'Referer': 'https://putarvid.com/', 'Origin': 'https://putarvid.com', 'Accept-Encoding': 'gzip, deflate' },
       timeout: 15000,
     });
+    if (manifestResp.status < 200 || manifestResp.status >= 300) {
+      return apiError(res, 502, 'CDN menolak manifest stream');
+    }
+    const manifest = manifestResp.data;
 
     const baseUrl = m3u8Url.substring(0, m3u8Url.lastIndexOf('/') + 1);
     const rewritten = rewriteM3u8(String(manifest), baseUrl);
@@ -679,6 +693,12 @@ app.get('/proxy/rb/seg', async (req, res) => {
     });
 
     const ct = (upstream.headers['content-type'] || '').toLowerCase();
+
+    // Reject non-2xx from CDN early
+    if (upstream.status < 200 || upstream.status >= 300) {
+      upstream.data.destroy();
+      return res.status(upstream.status < 500 ? 404 : 502).end();
+    }
 
     // Sub-manifest (variant playlist) — rewrite URL-nya juga
     if (ct.includes('mpegurl') || raw.includes('.m3u8')) {
