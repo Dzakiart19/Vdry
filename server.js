@@ -37,10 +37,13 @@ const axNoRedirect = axios.create({
 
 // Dedicated instance for ruangbokep.ws — keepAlive:false prevents ECONNRESET
 // ("aborted") when WordPress closes a keep-alive socket between requests.
+// family:4 forces IPv4 — on autoscale, dual-stack egress can make putarvid's
+// IP-detection embed a garbled address (e.g. "0.2") into the CDN token,
+// which then never matches the real requesting IP on segment fetch.
 const axRb = axios.create({
   timeout:      25000,
   maxRedirects: 5,
-  httpsAgent:   new https.Agent({ keepAlive: false }),
+  httpsAgent:   new https.Agent({ keepAlive: false, family: 4 }),
 });
 
 // Retry wrapper: catches transient network errors (ECONNRESET, ETIMEDOUT, aborted)
@@ -570,9 +573,12 @@ function rewriteM3u8(content, baseUrl, slug) {
   }).join('\n');
 }
 
-/* ── Axios instance tanpa redirect untuk segment proxy ── */
+/* ── Axios instance tanpa redirect untuk segment proxy ──
+   family:4 forces IPv4 — sama alasan seperti axRb di atas: mencegah
+   putarvid/streamruby salah mendeteksi IP requester lewat jalur IPv6. ── */
 const axSegment = axios.create({
   timeout: 20000, maxRedirects: 5, validateStatus: s => s < 500,
+  httpsAgent: new https.Agent({ family: 4 }),
 });
 
 // Retry wrapper untuk manifest/segment CDN — CDN streamruby/putarvid kadang
