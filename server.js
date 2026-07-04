@@ -327,7 +327,7 @@ const rbHeaders = {
   'User-Agent':      UA,
   'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
   'Accept-Language': 'en-US,en;q=0.9',
-  'Accept-Encoding': 'gzip, deflate, br',
+  'Accept-Encoding': 'gzip, deflate',   // NO brotli — axios tidak support br decompression reliably
   'Referer':         `${RB_BASE}/`,
   'Cache-Control':   'no-cache',
 };
@@ -377,17 +377,22 @@ app.get('/api/rb/posts', async (req, res) => {
       if (slug && title) posts.push({ slug, title, thumb });
     });
 
-    // Detect total pages
-    const nums = [];
-    $('a.page-numbers').each((_, el) => {
-      const n = parseInt($(el).text().trim());
-      if (n && !isNaN(n)) nums.push(n);
+    // Detect total pages — site uses .pagination ul li a structure
+    // "Last" button href contains the actual total page count
+    let totalPages = 1;
+    $('.pagination ul li a').each((_, el) => {
+      if ($(el).text().trim() === 'Last') {
+        const m = ($(el).attr('href') || '').match(/\/page\/(\d+)\//);
+        if (m) { totalPages = parseInt(m[1]); return false; }
+      }
     });
-    // Also try "Pages: X" or "X of Y" patterns
-    const ofMatch = $('[class*="page"]').text().match(/of\s+(\d+)/i);
-    if (ofMatch) nums.push(parseInt(ofMatch[1]));
-
-    const totalPages = nums.length ? Math.max(...nums) : 1;
+    // Fallback: use max numbered page button
+    if (totalPages === 1) {
+      $('.pagination ul li a').each((_, el) => {
+        const n = parseInt($(el).text().trim());
+        if (n && !isNaN(n) && n > totalPages) totalPages = n;
+      });
+    }
 
     res.json({ posts, page, totalPages, category: cat || null });
   } catch (err) {
@@ -403,9 +408,10 @@ function isAllowedRbCdnUrl(raw) {
     const u = new URL(raw);
     if (u.protocol !== 'https:') return false;
     return (
-      u.hostname === 'putarvid.com'        ||
-      u.hostname.endsWith('.putarvid.com') ||
-      u.hostname.endsWith('.b-cdn.net')    ||
+      u.hostname === 'putarvid.com'         ||
+      u.hostname.endsWith('.putarvid.com')  ||
+      u.hostname.endsWith('.streamruby.net') ||  // putarvid stream CDN
+      u.hostname.endsWith('.b-cdn.net')     ||
       u.hostname.endsWith('.bunnycdn.com')
     );
   } catch { return false; }
@@ -434,8 +440,23 @@ function rewriteM3u8(content, baseUrl) {
   }).join('\n');
 }
 
-/* ── Cache m3u8 yang sudah di-resolve (TTL 5 menit) ── */
+/* ── Axios instance tanpa redirect untuk segment proxy ── */
+const axSegment = axios.create({
+  timeout: 20000, maxRedirects: 0, validateStatus: s => s < 400,
+});
+
+/* ── Cache m3u8 yang sudah di-resolve (TTL 5 menit, max 500 entries) ── */
 const m3u8Cache = new Map(); // slug → { url, expires }
+function m3u8CacheSet(slug, url) {
+  if (m3u8Cache.size >= 500) {
+    // Evict satu expired entry dulu, fallback ke FIFO
+    for (const [k, v] of m3u8Cache) {
+      if (v.expires <= Date.now()) { m3u8Cache.delete(k); break; }
+    }
+    if (m3u8Cache.size >= 500) m3u8Cache.delete(m3u8Cache.keys().next().value);
+  }
+  m3u8Cache.set(slug, { url, expires: Date.now() + 5 * 60 * 1000 });
+}
 
 /* ── Safe PackerJS decoder — ONLY string replacements, no code execution ── */
 function unpackPacker(html) {
@@ -467,7 +488,7 @@ async function resolveRbVideoUrl(embedUrl) {
         'Referer':         `${RB_BASE}/`,
         'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Encoding': 'gzip, deflate',
       },
       timeout: 18000,
     });
@@ -503,9 +524,9 @@ app.get('/api/rb/video/:slug', async (req, res) => {
 
     // Decode putarvid packed JS → extract raw m3u8 (removes ALL ads)
     const m3u8Url = await resolveRbVideoUrl(embedUrl);
-    if (m3u8Url) {
+    if (m3u8Url && isAllowedRbCdnUrl(m3u8Url)) {
       // Cache URL yang sudah di-resolve (dipakai oleh /proxy/rb/hls/:slug)
-      m3u8Cache.set(slug, { url: m3u8Url, expires: Date.now() + 5 * 60 * 1000 });
+      m3u8CacheSet(slug, m3u8Url);
       // Return proxy URL — browser tidak pernah akses CDN langsung
       return res.json({ slug, title, thumb, m3u8Url: `/proxy/rb/hls/${slug}` });
     }
@@ -539,9 +560,10 @@ app.get('/proxy/rb/hls/:slug', async (req, res) => {
                     || $('iframe[src*="putarvid"]').first().attr('src')
                     || '';
       if (embedUrl) {
-        m3u8Url = await resolveRbVideoUrl(embedUrl);
-        if (m3u8Url) {
-          m3u8Cache.set(slug, { url: m3u8Url, expires: Date.now() + 5 * 60 * 1000 });
+        const resolved = await resolveRbVideoUrl(embedUrl);
+        if (resolved && isAllowedRbCdnUrl(resolved)) {
+          m3u8Url = resolved;
+          m3u8CacheSet(slug, m3u8Url);
         }
       }
     }
@@ -549,8 +571,8 @@ app.get('/proxy/rb/hls/:slug', async (req, res) => {
     if (!m3u8Url) return apiError(res, 404, 'Stream tidak ditemukan');
 
     // Fetch master manifest dari CDN (dengan header yang benar)
-    const { data: manifest } = await ax.get(m3u8Url, {
-      headers: { 'User-Agent': UA, 'Referer': 'https://putarvid.com/', 'Origin': 'https://putarvid.com' },
+    const { data: manifest } = await axSegment.get(m3u8Url, {
+      headers: { 'User-Agent': UA, 'Referer': 'https://putarvid.com/', 'Origin': 'https://putarvid.com', 'Accept-Encoding': 'gzip, deflate' },
       timeout: 15000,
     });
 
@@ -573,7 +595,7 @@ app.get('/proxy/rb/seg', async (req, res) => {
   if (!raw || !isAllowedRbCdnUrl(raw)) return res.status(400).end();
 
   try {
-    const upstream = await ax.get(raw, {
+    const upstream = await axSegment.get(raw, {
       headers: { 'User-Agent': UA, 'Referer': 'https://putarvid.com/', 'Origin': 'https://putarvid.com' },
       responseType: 'stream',
       timeout: 20000,
