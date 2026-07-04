@@ -507,12 +507,16 @@ function postsCacheSet(key, data) {
 
 /* ── Safe PackerJS decoder — ONLY string replacements, no code execution ── */
 function unpackPacker(html) {
-  const m = html.match(/\('([\s\S]*?)',\s*(\d+),\s*(\d+),\s*'([\s\S]*?)'\.split\('\|'\)\)/);
+  // Anchor ke `}(` — brace penutup function body IIFE packer, supaya tidak
+  // salah match `(` yang ada di dalam konten packed itu sendiri.
+  // Support single- atau double-quoted string (beberapa versi putarvid beda).
+  const re = /\}\s*\((['"])([\s\S]*?)\1,\s*(\d+),\s*(\d+),\s*(['"])([\s\S]*?)\5\.split\(['"]\|['"]\)\)/;
+  const m = html.match(re);
   if (!m) return null;
-  let p = m[1];
-  const a = parseInt(m[2]);
-  let c = parseInt(m[3]);
-  const k = m[4].split('|');
+  let p = m[2];           // packed string (captured in group 2)
+  const a = parseInt(m[3]);
+  let c = parseInt(m[4]);
+  const k = m[6].split('|'); // keyword list (captured in group 6)
   while (c--) {
     if (k[c]) p = p.replace(new RegExp('\\b' + c.toString(a) + '\\b', 'g'), k[c]);
   }
