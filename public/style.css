@@ -1078,6 +1078,52 @@ body {
   font-size: 13px;
 }
 
+/* ── RB: Pagination ── */
+.page-btn {
+  min-width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  font-size: 13px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+  user-select: none;
+  vertical-align: middle;
+}
+.page-btn:hover:not(.active):not(:disabled) {
+  background: var(--surface2);
+  border-color: var(--border2);
+  color: var(--text);
+}
+.page-btn.active {
+  background: var(--rose-dim);
+  border-color: var(--rose);
+  color: var(--rose);
+  font-weight: 600;
+  cursor: default;
+}
+.page-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.page-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 34px;
+  color: var(--muted);
+  font-size: 14px;
+  user-select: none;
+}
+
 /* ── RB: Responsive ── */
 @media (max-width: 600px) {
   .rb-grid {

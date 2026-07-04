@@ -8,6 +8,14 @@
     ],
     "rewrites": [
       {
+        "source": "/rb",
+        "destination": "/rb.html"
+      },
+      {
+        "source": "/rb/**",
+        "destination": "/rb.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

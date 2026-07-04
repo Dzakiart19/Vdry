@@ -44,11 +44,11 @@
 
   /* ── Toast ── */
   let toastTimer;
-  function showToast(msg, type = 'info') {
+  function showToast(msg) {
     clearTimeout(toastTimer);
     els.toast.textContent = msg;
-    els.toast.className   = `toast-show toast-${type}`;
-    toastTimer = setTimeout(() => { els.toast.className = ''; }, 3200);
+    els.toast.classList.add('show');
+    toastTimer = setTimeout(() => els.toast.classList.remove('show'), 3200);
   }
 
   /* ── State views ── */
@@ -286,7 +286,7 @@
       els.playerLoading.classList.add('hidden');
       els.videoFrame.classList.add('hidden');
       els.videoTitle.textContent = 'Gagal memuat video';
-      showToast(e.message || 'Gagal memuat video', 'error');
+      showToast(e.message || 'Gagal memuat video');
     }
   }
 
