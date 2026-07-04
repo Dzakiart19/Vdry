@@ -14,21 +14,40 @@
 
 <!-- ─── TOPBAR ─── -->
 <header class="topbar">
-  <a class="brand" href="javascript:void(0)" id="brandHome">
-    <div class="brand-icon">
-      <img src="/logo.png" alt="Vidorey" class="brand-logo-img" />
+
+  <!-- Platform Switcher -->
+  <div class="brand ps-wrapper" id="platformSwitcher">
+    <button class="ps-trigger" id="psTrigger" aria-haspopup="listbox" aria-expanded="false">
+      <div class="brand-icon">
+        <img src="/logo.png" alt="Vidorey" class="brand-logo-img" />
+      </div>
+      <span class="brand-name">Vidorey</span>
+      <svg class="ps-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+    <div class="ps-menu hidden" id="psMenu" role="listbox">
+      <a class="ps-item ps-active" href="/" role="option" aria-selected="true">
+        <div class="ps-avatar">V</div>
+        <div class="ps-info">
+          <span class="ps-name">Vidorey</span>
+          <span class="ps-desc">xpvid.cc · folder browser</span>
+        </div>
+        <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </a>
+      <a class="ps-item" href="/rb" role="option">
+        <div class="ps-avatar ps-avatar-rb">R</div>
+        <div class="ps-info">
+          <span class="ps-name">RuangBokep</span>
+          <span class="ps-desc">Video harian · kategori</span>
+        </div>
+      </a>
     </div>
-    <span class="brand-name">Vidorey</span>
-  </a>
+  </div>
 
   <nav class="breadcrumb" id="breadcrumb" aria-label="Navigasi folder"></nav>
-
-  <nav class="rb-topnav" aria-label="Navigasi platform">
-    <a class="rb-topnav-link" href="/rb">
-      <span class="rb-topnav-full">Platform 2</span>
-      <span class="rb-topnav-short">P2</span>
-    </a>
-  </nav>
 </header>
 
 <!-- ─── SHELL ─── -->
@@ -197,6 +216,19 @@
   popup.addEventListener('click', function (e) {
     if (e.target === popup) closePopup();
   });
+})();
+</script>
+
+<!-- ─── Platform Switcher ─── -->
+<script>
+(function () {
+  var trigger = document.getElementById('psTrigger');
+  var menu    = document.getElementById('psMenu');
+  function open()  { menu.classList.remove('hidden'); trigger.setAttribute('aria-expanded','true'); }
+  function close() { menu.classList.add('hidden');    trigger.setAttribute('aria-expanded','false'); }
+  trigger.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.contains('hidden') ? open() : close(); });
+  document.addEventListener('click', close);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
 })();
 </script>
 

@@ -39,7 +39,6 @@
     videoFrame:   $('rbVideoFrame'),
     playerLoading:$('rbPlayerLoading'),
     retryBtn:     $('rbRetryBtn'),
-    brandHome:    $('rbBrandHome'),
     toast:        $('toast'),
   };
 
@@ -338,8 +337,7 @@
   /* ── Retry ── */
   els.retryBtn.addEventListener('click', loadPosts);
 
-  /* ── Brand home ── */
-  els.brandHome.addEventListener('click', () => selectCategory(null));
+  /* Brand click digantikan platform switcher dropdown di topbar */
 
   /* ── Escape helper ── */
   function escHtml(s) {

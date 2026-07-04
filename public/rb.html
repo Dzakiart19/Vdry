@@ -14,20 +14,39 @@
 
 <!-- ─── TOPBAR ─── -->
 <header class="topbar">
-  <a class="brand" href="javascript:void(0)" id="rbBrandHome">
-    <div class="brand-icon">
-      <img src="/logo.png" alt="Vidorey" class="brand-logo-img" />
-    </div>
-    <span class="brand-name">Vidorey</span>
-    <span class="rb-platform-badge">Platform 2</span>
-  </a>
 
-  <nav class="rb-topnav" aria-label="Navigasi platform">
-    <a class="rb-topnav-link" href="/">
-      <span class="rb-topnav-full">Platform 1</span>
-      <span class="rb-topnav-short">P1</span>
-    </a>
-  </nav>
+  <!-- Platform Switcher -->
+  <div class="brand ps-wrapper" id="platformSwitcher">
+    <button class="ps-trigger" id="psTrigger" aria-haspopup="listbox" aria-expanded="false">
+      <div class="brand-icon">
+        <img src="/logo.png" alt="Vidorey" class="brand-logo-img" />
+      </div>
+      <span class="brand-name">Vidorey</span>
+      <svg class="ps-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+    <div class="ps-menu hidden" id="psMenu" role="listbox">
+      <a class="ps-item" href="/" role="option">
+        <div class="ps-avatar">V</div>
+        <div class="ps-info">
+          <span class="ps-name">Vidorey</span>
+          <span class="ps-desc">xpvid.cc · folder browser</span>
+        </div>
+      </a>
+      <a class="ps-item ps-active" href="/rb" role="option" aria-selected="true">
+        <div class="ps-avatar ps-avatar-rb">R</div>
+        <div class="ps-info">
+          <span class="ps-name">RuangBokep</span>
+          <span class="ps-desc">Video harian · kategori</span>
+        </div>
+        <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
 </header>
 
 <!-- ─── SHELL ─── -->
@@ -122,6 +141,19 @@
 
 <script src="/config.js"></script>
 <script src="/rb.js"></script>
+
+<!-- ─── Platform Switcher ─── -->
+<script>
+(function () {
+  var trigger = document.getElementById('psTrigger');
+  var menu    = document.getElementById('psMenu');
+  function open()  { menu.classList.remove('hidden'); trigger.setAttribute('aria-expanded','true'); }
+  function close() { menu.classList.add('hidden');    trigger.setAttribute('aria-expanded','false'); }
+  trigger.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.contains('hidden') ? open() : close(); });
+  document.addEventListener('click', close);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+})();
+</script>
 
 <!-- ─── Adsterra: Popunder ─── -->
 <script src="https://pl28418540.effectivecpmnetwork.com/e2/23/51/e223516a3660ad6a4214cb47e436c599.js"></script>

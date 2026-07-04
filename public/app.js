@@ -36,7 +36,6 @@ const App = (() => {
     sub:        $('videoSubtitle'),
     addInput:   $('addFolderInput'),
     addBtn:     $('addFolderBtn'),
-    brand:      $('brandHome'),
   };
 
   /* ──────── Saved folders (localStorage) ──────── */
@@ -545,10 +544,6 @@ const App = (() => {
   el.addBtn.addEventListener('click', doAdd);
   el.addInput.addEventListener('keydown', e => { if (e.key === 'Enter') doAdd(); });
   el.backdrop.addEventListener('click', closePlayer);
-  el.brand.addEventListener('click', () => {
-    breadcrumbs = [{ id: DEFAULT_FOLDER, name: 'Home' }];
-    loadFolder(DEFAULT_FOLDER);
-  });
   document.getElementById('modalClose').addEventListener('click', closePlayer);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlayer(); });
 
