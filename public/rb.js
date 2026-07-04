@@ -331,14 +331,14 @@
   /* ── Modal controls ── */
   function openModal() {
     els.modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
   }
 
   function closeModal() {
     destroyHls();
     els.playerLoading.classList.remove('hidden');
     els.modal.classList.add('hidden');
-    document.body.style.overflow = '';
+    document.body.classList.remove('modal-open');
   }
 
   els.modalClose.addEventListener('click', closeModal);

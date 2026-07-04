@@ -1,1 +1,2 @@
 - [Platform 2 Architecture](rb-platform2-architecture.md) — ad-free HLS playback via PackerJS decode of putarvid embeds; CDN has CORS *.
+- [RB Layout Scroll Fix](rb-layout-scroll-fix.md) — rb.html must override body overflow:hidden and use natural page scroll; modal uses body.modal-open class.
