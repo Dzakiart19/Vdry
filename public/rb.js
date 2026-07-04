@@ -345,9 +345,15 @@
   }
 
   /* ── Modal controls ── */
+  // Tracks apakah kita sudah push history state untuk modal ini
+  let modalHistoryPushed = false;
+
   function openModal() {
     els.modal.classList.remove('hidden');
     document.body.classList.add('modal-open');
+    // Push state supaya tombol Back browser menutup modal, bukan navigasi ke P1
+    history.pushState({ rbModal: true }, '', '/rb');
+    modalHistoryPushed = true;
   }
 
   function closeModal() {
@@ -355,7 +361,25 @@
     els.playerLoading.classList.remove('hidden');
     els.modal.classList.add('hidden');
     document.body.classList.remove('modal-open');
+
+    // Jika modal dibuka via tombol UI (bukan popstate), hapus state history yang kita push
+    if (modalHistoryPushed) {
+      modalHistoryPushed = false;
+      history.back(); // hapus state { rbModal: true } dari history stack
+    }
   }
+
+  // Tangkap tombol Back browser: jika state rbModal → tutup modal, tetap di /rb
+  window.addEventListener('popstate', e => {
+    if (!els.modal.classList.contains('hidden')) {
+      // Modal masih terbuka saat popstate — artinya user tekan Back
+      modalHistoryPushed = false; // state sudah di-pop oleh browser
+      destroyHls();
+      els.playerLoading.classList.remove('hidden');
+      els.modal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    }
+  });
 
   els.modalClose.addEventListener('click', closeModal);
   els.modalBackdrop.addEventListener('click', closeModal);
