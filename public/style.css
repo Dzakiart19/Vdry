@@ -85,12 +85,18 @@ body {
 
 .brand-icon {
   width: 28px; height: 28px;
-  background: var(--rose);
   border-radius: 7px;
   display: flex; align-items: center; justify-content: center;
   flex: 0 0 28px;
+  overflow: hidden;
 }
-.brand-icon svg { width: 14px; height: 14px; color: #fff; }
+.brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 7px;
+  display: block;
+}
 
 .brand-name {
   font-size: 15px;
@@ -755,16 +761,9 @@ body {
   width: 48px;
   height: 48px;
   border-radius: var(--radius);
-  background: var(--rose-dim);
-  border: 1px solid var(--rose-glow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
   flex-shrink: 0;
-  color: var(--rose);
 }
-
-.welcome-icon svg { width: 24px; height: 24px; }
 
 .welcome-title {
   font-size: 17px;
