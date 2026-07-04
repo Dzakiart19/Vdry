@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════
-   Vidorey — Platform 2 (RuangBokep)
+   Vidorey 2 — Platform 2
    No sidebar · No categories · With search
 ═══════════════════════════════════════ */
 
@@ -116,16 +116,29 @@
       state.page = 1;
       els.searchInput.value = '';
       updateSearchHeading();
-      loadPosts();
+      loadPosts(true); // push → Back bisa kembali ke hasil sebelum clear
     });
   }
 
+  /* ── History helpers untuk pagination & search ── */
+  // pushNav = true  → user action (pagination/search) → push ke history stack
+  // pushNav = false → restore from popstate / init → tidak push (hindari duplikasi)
+  function saveNav(push) {
+    const s = { rbPage: state.page, rbQ: state.searchQuery };
+    if (push) {
+      history.pushState(s, '', '/rb');
+    } else {
+      history.replaceState(s, '', '/rb');
+    }
+  }
+
   /* ── Load posts ── */
-  async function loadPosts() {
+  async function loadPosts(pushNav = false) {
     if (state.loading) return;
     state.loading = true;
     showState('loading');
     updateSearchHeading();
+    saveNav(pushNav); // simpan state ke history SEBELUM fetch
 
     const q    = state.searchQuery;
     const page = state.page;
@@ -234,7 +247,7 @@
         const p = parseInt(btn.dataset.page);
         if (p !== state.page) {
           state.page = p;
-          loadPosts();
+          loadPosts(true); // push ke history → Back HP kembali ke halaman sebelumnya
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       });
@@ -260,7 +273,7 @@
     if (q === state.searchQuery) return;
     state.searchQuery = q;
     state.page = 1;
-    loadPosts();
+    loadPosts(true); // push → Back bisa kembali ke hasil sebelum search
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
@@ -269,7 +282,7 @@
     const session = ++playerSession;
 
     els.videoTitle.textContent = 'Memuat…';
-    els.videoSub.textContent   = 'Platform 2 — RuangBokep';
+    els.videoSub.textContent   = 'Vidorey 2';
     els.playerLoading.classList.remove('hidden');
     destroyHls();
     openModal();
@@ -377,15 +390,27 @@
     }
   }
 
-  // Tangkap tombol Back browser saat modal sedang terbuka
+  // Tangkap tombol Back/Forward browser
   window.addEventListener('popstate', e => {
     if (!els.modal.classList.contains('hidden')) {
-      // User menekan Back saat modal terbuka → tutup modal, tetap di /rb
+      // User menekan Back saat modal terbuka → tutup modal saja, tetap di /rb
       modalHistoryPushed = false;
       _doCloseModal();
-      // Pastikan URL kembali ke /rb (bukan /rb#player)
-      history.replaceState(null, '', '/rb');
+      history.replaceState(e.state || null, '', '/rb');
+      return;
     }
+
+    // Modal tertutup: restore halaman/search dari history state
+    const s = e.state;
+    if (s && typeof s.rbPage !== 'undefined') {
+      // Ada state Vidorey 2 → muat ulang halaman/search yang disimpan
+      state.page        = s.rbPage  || 1;
+      state.searchQuery = s.rbQ     || '';
+      els.searchInput.value = state.searchQuery;
+      loadPosts(false); // false = jangan push lagi (sudah ada di history)
+    }
+    // Jika tidak ada state rbPage sama sekali (misal entry paling awal), biarkan
+    // browser melanjutkan navigasinya secara alami ke halaman sebelumnya.
   });
 
   els.modalClose.addEventListener('click', closeModal);
@@ -395,7 +420,7 @@
   });
 
   /* ── Retry ── */
-  els.retryBtn.addEventListener('click', loadPosts);
+  els.retryBtn.addEventListener('click', () => loadPosts(false));
 
   /* ── Escape helper ── */
   function escHtml(s) {
@@ -408,6 +433,7 @@
   }
 
   /* ── Init ── */
-  loadPosts();
+  // replaceState (bukan push) agar entry pertama punya state yang bisa di-restore
+  loadPosts(false);
 
 })();
