@@ -214,7 +214,7 @@
   function renderPosts(posts) {
     els.grid.innerHTML = posts.map(p => {
       const rawThumb = p.thumb || '';
-      const thumb = rawThumb ? `/proxy/rb/thumb?url=${encodeURIComponent(rawThumb)}` : '';
+      const thumb = rawThumb ? `${API}/proxy/rb/thumb?url=${encodeURIComponent(rawThumb)}` : '';
       const title = escHtml(p.title);
       const slug  = escHtml(p.slug);
 

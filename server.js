@@ -325,8 +325,11 @@ app.get('/proxy/thumb', async (req, res) => {
 const RB_BASE = 'https://ruangbokep.ws';
 const rbHeaders = {
   'User-Agent':      UA,
+  'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
   'Accept-Language': 'en-US,en;q=0.9',
+  'Accept-Encoding': 'gzip, deflate, br',
   'Referer':         `${RB_BASE}/`,
+  'Cache-Control':   'no-cache',
 };
 
 /* ── RB: Categories ── */
@@ -394,6 +397,46 @@ app.get('/api/rb/posts', async (req, res) => {
   }
 });
 
+/* ── RB CDN allowlist untuk HLS proxy ── */
+function isAllowedRbCdnUrl(raw) {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== 'https:') return false;
+    return (
+      u.hostname === 'putarvid.com'        ||
+      u.hostname.endsWith('.putarvid.com') ||
+      u.hostname.endsWith('.b-cdn.net')    ||
+      u.hostname.endsWith('.bunnycdn.com')
+    );
+  } catch { return false; }
+}
+
+/* ── Resolve relative URL terhadap base ── */
+function resolveUrl(url, base) {
+  try { return new URL(url, base).href; } catch { return url; }
+}
+
+/* ── Rewrite semua URL dalam m3u8 manifest → /proxy/rb/seg?url=... ── */
+function rewriteM3u8(content, baseUrl) {
+  return content.split('\n').map(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return line;
+    if (trimmed.startsWith('#')) {
+      // Rewrite URI= attribute di dalam tag (e.g. #EXT-X-KEY:URI="...")
+      return line.replace(/URI="([^"]+)"/g, (_, uri) => {
+        const abs = resolveUrl(uri, baseUrl);
+        return `URI="/proxy/rb/seg?url=${encodeURIComponent(abs)}"`;
+      });
+    }
+    // Baris URL (segment atau sub-manifest)
+    const abs = resolveUrl(trimmed, baseUrl);
+    return `/proxy/rb/seg?url=${encodeURIComponent(abs)}`;
+  }).join('\n');
+}
+
+/* ── Cache m3u8 yang sudah di-resolve (TTL 5 menit) ── */
+const m3u8Cache = new Map(); // slug → { url, expires }
+
 /* ── Safe PackerJS decoder — ONLY string replacements, no code execution ── */
 function unpackPacker(html) {
   const m = html.match(/\('([\s\S]*?)',\s*(\d+),\s*(\d+),\s*'([\s\S]*?)'\.split\('\|'\)\)/);
@@ -424,6 +467,7 @@ async function resolveRbVideoUrl(embedUrl) {
         'Referer':         `${RB_BASE}/`,
         'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
       },
       timeout: 18000,
     });
@@ -460,7 +504,10 @@ app.get('/api/rb/video/:slug', async (req, res) => {
     // Decode putarvid packed JS → extract raw m3u8 (removes ALL ads)
     const m3u8Url = await resolveRbVideoUrl(embedUrl);
     if (m3u8Url) {
-      return res.json({ slug, title, thumb, m3u8Url });
+      // Cache URL yang sudah di-resolve (dipakai oleh /proxy/rb/hls/:slug)
+      m3u8Cache.set(slug, { url: m3u8Url, expires: Date.now() + 5 * 60 * 1000 });
+      // Return proxy URL — browser tidak pernah akses CDN langsung
+      return res.json({ slug, title, thumb, m3u8Url: `/proxy/rb/hls/${slug}` });
     }
 
     // Fallback: return embed URL (user sees ads, but video still plays)
@@ -472,6 +519,104 @@ app.get('/api/rb/video/:slug', async (req, res) => {
   }
 });
 
+/* ── RB: HLS manifest proxy — browser tidak pernah akses CDN langsung ── */
+app.get('/proxy/rb/hls/:slug', async (req, res) => {
+  const slug = req.params.slug;
+  if (!/^[a-z0-9-]+$/i.test(slug)) return apiError(res, 400, 'Invalid slug');
+
+  try {
+    // Cek cache dulu
+    let m3u8Url = null;
+    const cached = m3u8Cache.get(slug);
+    if (cached && cached.expires > Date.now()) {
+      m3u8Url = cached.url;
+    } else {
+      // Re-resolve jika cache expired
+      const { data: html } = await ax.get(`${RB_BASE}/${slug}/`, { headers: rbHeaders });
+      const $ = cheerio.load(html);
+      const embedUrl = $('meta[itemprop="embedURL"]').attr('content')
+                    || $('IFRAME[SRC*="putarvid"]').first().attr('SRC')
+                    || $('iframe[src*="putarvid"]').first().attr('src')
+                    || '';
+      if (embedUrl) {
+        m3u8Url = await resolveRbVideoUrl(embedUrl);
+        if (m3u8Url) {
+          m3u8Cache.set(slug, { url: m3u8Url, expires: Date.now() + 5 * 60 * 1000 });
+        }
+      }
+    }
+
+    if (!m3u8Url) return apiError(res, 404, 'Stream tidak ditemukan');
+
+    // Fetch master manifest dari CDN (dengan header yang benar)
+    const { data: manifest } = await ax.get(m3u8Url, {
+      headers: { 'User-Agent': UA, 'Referer': 'https://putarvid.com/', 'Origin': 'https://putarvid.com' },
+      timeout: 15000,
+    });
+
+    const baseUrl = m3u8Url.substring(0, m3u8Url.lastIndexOf('/') + 1);
+    const rewritten = rewriteM3u8(String(manifest), baseUrl);
+
+    res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.send(rewritten);
+  } catch (err) {
+    console.error('hls proxy error:', err.message);
+    apiError(res, 502, 'Gagal memuat manifest stream');
+  }
+});
+
+/* ── RB: HLS segment / sub-manifest proxy ── */
+app.get('/proxy/rb/seg', async (req, res) => {
+  const raw = req.query.url;
+  if (!raw || !isAllowedRbCdnUrl(raw)) return res.status(400).end();
+
+  try {
+    const upstream = await ax.get(raw, {
+      headers: { 'User-Agent': UA, 'Referer': 'https://putarvid.com/', 'Origin': 'https://putarvid.com' },
+      responseType: 'stream',
+      timeout: 20000,
+    });
+
+    const ct = (upstream.headers['content-type'] || '').toLowerCase();
+
+    // Sub-manifest (variant playlist) — rewrite URL-nya juga
+    if (ct.includes('mpegurl') || raw.includes('.m3u8')) {
+      let body = '';
+      upstream.data.on('data', chunk => { body += chunk.toString(); });
+      upstream.data.on('end', () => {
+        const baseUrl = raw.substring(0, raw.lastIndexOf('/') + 1);
+        const rewritten = rewriteM3u8(body, baseUrl);
+        res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'no-store');
+        res.send(rewritten);
+      });
+      upstream.data.on('error', () => { if (!res.headersSent) res.status(502).end(); });
+      return;
+    }
+
+    // Segment binary (TS / AAC / key)
+    res.status(upstream.status);
+    const forward = ['content-type', 'content-length', 'cache-control'];
+    forward.forEach(h => { if (upstream.headers[h]) res.setHeader(h, upstream.headers[h]); });
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    req.on('close', () => upstream.data.destroy());
+    upstream.data.on('error', err => {
+      console.error('seg stream error:', err.message);
+      if (!res.headersSent) res.status(502).end();
+    });
+    stream.pipeline(upstream.data, res, err => {
+      if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') console.error('seg pipeline:', err.message);
+    });
+  } catch (err) {
+    console.error('seg proxy error:', err.message);
+    if (!res.headersSent) res.status(502).end();
+  }
+});
+
 /* ── RB: Thumbnail proxy ── */
 app.get('/proxy/rb/thumb', async (req, res) => {
   const raw = req.query.url;
@@ -479,7 +624,8 @@ app.get('/proxy/rb/thumb', async (req, res) => {
 
   let parsed;
   try { parsed = new URL(raw); } catch { return res.status(400).end(); }
-  const allowed = ['ruangbokep.ws', 'img.streamruby.com'];
+  // WordPress sering serve thumbnail dari i0/i1/i2.wp.com (Jetpack CDN)
+  const allowed = ['ruangbokep.ws', 'img.streamruby.com', 'i0.wp.com', 'i1.wp.com', 'i2.wp.com'];
   if (!allowed.some(h => parsed.hostname === h || parsed.hostname.endsWith('.' + h))) {
     return res.status(400).end();
   }
