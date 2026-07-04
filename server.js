@@ -867,11 +867,8 @@ app.get('/proxy/rb/hls/:slug', async (req, res) => {
     }
 
     if (manifestResp.status < 200 || manifestResp.status >= 300) {
-      console.error('[debug hls] CDN reject status:', manifestResp.status,
-        'url:', m3u8Url,
-        'headers:', JSON.stringify(manifestResp.headers || {}),
-        'body:', String(manifestResp.data).slice(0, 300));
-      return apiError(res, 502, `CDN menolak manifest stream (status=${manifestResp.status})`);
+      console.error('hls proxy: CDN reject status', manifestResp.status, 'slug', slug);
+      return apiError(res, 502, 'CDN menolak manifest stream');
     }
     const manifest = manifestResp.data;
 
@@ -911,9 +908,7 @@ async function handleRbSeg(raw, slugHint, req, res, isRetry) {
 
     // Reject non-2xx from CDN early — coba self-heal sekali sebelum menyerah
     if (upstream.status < 200 || upstream.status >= 300) {
-      console.error('[debug seg] CDN reject status:', upstream.status,
-        'isRetry:', isRetry, 'url:', raw,
-        'headers:', JSON.stringify(upstream.headers || {}));
+      console.error('seg proxy: CDN reject status', upstream.status, 'isRetry', isRetry);
       upstream.data.destroy();
       if (!isRetry && slugHint && [401, 403, 500, 502, 503].includes(upstream.status)) {
         const fresh = await reresolveUrl(slugHint, raw, true).catch(() => null);
