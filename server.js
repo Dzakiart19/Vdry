@@ -346,15 +346,23 @@ app.get('/api/rb/categories', async (_req, res) => {
   }
 });
 
-/* ── RB: Post listing (with optional category) ── */
+/* ── RB: Post listing (homepage / kategori / search) ── */
 app.get('/api/rb/posts', async (req, res) => {
   const page = Math.max(1, parseInt(req.query.p) || 1);
   const cat  = (req.query.cat || '').replace(/[^a-z0-9-]/gi, '');
+  const q    = (req.query.q  || '').trim().substring(0, 150);
 
   try {
-    const url = cat
-      ? (page > 1 ? `${RB_BASE}/${cat}/page/${page}/` : `${RB_BASE}/${cat}/`)
-      : (page > 1 ? `${RB_BASE}/page/${page}/` : `${RB_BASE}/`);
+    let url;
+    if (q) {
+      // Search — WordPress /?s= format
+      const enc = encodeURIComponent(q);
+      url = page > 1 ? `${RB_BASE}/page/${page}/?s=${enc}` : `${RB_BASE}/?s=${enc}`;
+    } else if (cat) {
+      url = page > 1 ? `${RB_BASE}/${cat}/page/${page}/` : `${RB_BASE}/${cat}/`;
+    } else {
+      url = page > 1 ? `${RB_BASE}/page/${page}/` : `${RB_BASE}/`;
+    }
 
     const { data: html } = await ax.get(url, { headers: rbHeaders });
     const $ = cheerio.load(html);

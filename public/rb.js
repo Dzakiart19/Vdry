@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════
    Vidorey — Platform 2 (RuangBokep)
-   Completely isolated from Platform 1
+   No sidebar · No categories · With search
 ═══════════════════════════════════════ */
 
 (function () {
@@ -11,47 +11,42 @@
 
   /* ── State ── */
   const state = {
-    categories:   [],
-    activeSlug:   null,
-    page:         1,
-    totalPages:   1,
-    loading:      false,
-    lastSlug:     null,
-    lastPage:     null,
+    page:        1,
+    totalPages:  1,
+    loading:     false,
+    searchQuery: '',   // '' = homepage listing
   };
 
   /* ── DOM refs ── */
   const $ = id => document.getElementById(id);
   const els = {
-    catList:      $('rbCategoryList'),
-    mobileCats:   $('rbMobileCats'),
-    grid:         $('rbGrid'),
-    pagination:   $('rbPagination'),
-    loading:      $('rbLoadingState'),
-    error:        $('rbErrorState'),
-    errorMsg:     $('rbErrorMsg'),
-    empty:        $('rbEmptyState'),
-    modal:        $('rbPlayerModal'),
-    modalBackdrop:$('rbModalBackdrop'),
-    modalClose:   $('rbModalClose'),
-    videoTitle:   $('rbVideoTitle'),
-    videoSub:     $('rbVideoSub'),
-    videoEl:      $('rbVideoEl'),      // native <video> — tanpa iklan
-    videoFrame:   $('rbVideoFrame'),   // fallback iframe
-    playerLoading:$('rbPlayerLoading'),
-    retryBtn:     $('rbRetryBtn'),
-    toast:        $('toast'),
+    searchForm:    $('rbSearchForm'),
+    searchInput:   $('rbSearchInput'),
+    searchHeading: $('rbSearchHeading'),
+    grid:          $('rbGrid'),
+    pagination:    $('rbPagination'),
+    loading:       $('rbLoadingState'),
+    error:         $('rbErrorState'),
+    errorMsg:      $('rbErrorMsg'),
+    empty:         $('rbEmptyState'),
+    modal:         $('rbPlayerModal'),
+    modalBackdrop: $('rbModalBackdrop'),
+    modalClose:    $('rbModalClose'),
+    videoTitle:    $('rbVideoTitle'),
+    videoSub:      $('rbVideoSub'),
+    videoEl:       $('rbVideoEl'),
+    videoFrame:    $('rbVideoFrame'),
+    playerLoading: $('rbPlayerLoading'),
+    retryBtn:      $('rbRetryBtn'),
+    toast:         $('toast'),
   };
 
-  /* ── Player session tracking (prevents stale responses after modal close) ── */
-  let hlsInstance  = null;
-  let playerSession = 0; // incremented on each openPlayer call
+  /* ── Player session tracking ── */
+  let hlsInstance   = null;
+  let playerSession = 0;
 
   function destroyHls() {
-    if (hlsInstance) {
-      hlsInstance.destroy();
-      hlsInstance = null;
-    }
+    if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
     if (els.videoEl) {
       els.videoEl.pause();
       els.videoEl.removeAttribute('src');
@@ -86,7 +81,7 @@
     els.empty.classList.add('hidden');
   }
 
-  /* ── Fetch helpers ── */
+  /* ── Fetch helper ── */
   async function apiFetch(path) {
     const r = await fetch(`${API}${path}`);
     if (!r.ok) {
@@ -96,84 +91,25 @@
     return r.json();
   }
 
-  /* ── Load categories ── */
-  async function loadCategories() {
-    try {
-      const data = await apiFetch('/api/rb/categories');
-      state.categories = data;
-      renderCategories(data);
-    } catch (e) {
-      console.error('loadCategories:', e.message);
-      els.catList.innerHTML = '<p class="rb-cat-error">Gagal memuat kategori</p>';
+  /* ── Search heading ── */
+  function updateSearchHeading() {
+    const q = state.searchQuery;
+    if (!q) {
+      els.searchHeading.classList.remove('visible');
+      els.searchHeading.innerHTML = '';
+      return;
     }
-  }
-
-  /* ── Render categories sidebar (desktop) + mobile bar ── */
-  function renderCategories(cats) {
-    if (!cats.length) { els.catList.innerHTML = ''; return; }
-
-    // Desktop sidebar
-    let html = `<div class="rb-cat-item ${!state.activeSlug ? 'active' : ''}"
-                     data-slug="" tabindex="0">
-                  <span class="rb-cat-dot"></span>
-                  <span class="rb-cat-name">Terbaru</span>
-                </div>`;
-
-    cats.forEach(c => {
-      const active = state.activeSlug === c.slug;
-      const count  = c.count > 999 ? Math.floor(c.count / 1000) + 'k' : c.count;
-      html += `<div class="rb-cat-item ${active ? 'active' : ''}"
-                    data-slug="${escHtml(c.slug)}" tabindex="0">
-                 <span class="rb-cat-dot"></span>
-                 <span class="rb-cat-name">${escHtml(c.name)}</span>
-                 <span class="rb-cat-count">${count}</span>
-               </div>`;
+    els.searchHeading.classList.add('visible');
+    els.searchHeading.innerHTML =
+      `Hasil pencarian untuk <strong>"${escHtml(q)}"</strong>` +
+      `<button class="rb-search-clear" id="rbSearchClear">✕ Hapus</button>`;
+    document.getElementById('rbSearchClear').addEventListener('click', () => {
+      state.searchQuery = '';
+      state.page = 1;
+      els.searchInput.value = '';
+      updateSearchHeading();
+      loadPosts();
     });
-
-    els.catList.innerHTML = html;
-
-    els.catList.querySelectorAll('.rb-cat-item').forEach(el => {
-      el.addEventListener('click', () => selectCategory(el.dataset.slug || null));
-      el.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click();
-      });
-    });
-
-    // Mobile horizontal bar
-    renderMobileCats(cats);
-  }
-
-  function renderMobileCats(cats) {
-    if (!els.mobileCats) return;
-    let html = `<button class="rb-mobile-cat-btn ${!state.activeSlug ? 'active' : ''}" data-slug="">Terbaru</button>`;
-    cats.forEach(c => {
-      html += `<button class="rb-mobile-cat-btn ${state.activeSlug === c.slug ? 'active' : ''}"
-                       data-slug="${escHtml(c.slug)}">${escHtml(c.name)}</button>`;
-    });
-    els.mobileCats.innerHTML = html;
-    els.mobileCats.querySelectorAll('.rb-mobile-cat-btn').forEach(btn => {
-      btn.addEventListener('click', () => selectCategory(btn.dataset.slug || null));
-    });
-  }
-
-  function selectCategory(slug) {
-    if (slug === state.activeSlug) return;
-    state.activeSlug = slug || null;
-    state.page       = 1;
-    updateCategoryActive();
-    loadPosts();
-  }
-
-  function updateCategoryActive() {
-    const cur = state.activeSlug || '';
-    els.catList.querySelectorAll('.rb-cat-item').forEach(el => {
-      el.classList.toggle('active', el.dataset.slug === cur);
-    });
-    if (els.mobileCats) {
-      els.mobileCats.querySelectorAll('.rb-mobile-cat-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.slug === cur);
-      });
-    }
   }
 
   /* ── Load posts ── */
@@ -181,16 +117,16 @@
     if (state.loading) return;
     state.loading = true;
     showState('loading');
+    updateSearchHeading();
 
-    const cat  = state.activeSlug || '';
+    const q    = state.searchQuery;
     const page = state.page;
+    let qs = `p=${page}`;
+    if (q) qs += `&q=${encodeURIComponent(q)}`;
 
     try {
-      const data = await apiFetch(`/api/rb/posts?p=${page}${cat ? `&cat=${encodeURIComponent(cat)}` : ''}`);
-
+      const data = await apiFetch(`/api/rb/posts?${qs}`);
       state.totalPages = data.totalPages || 1;
-      state.lastSlug   = cat;
-      state.lastPage   = page;
 
       hideStates();
 
@@ -248,10 +184,7 @@
     const total = state.totalPages;
     const cur   = state.page;
 
-    if (total <= 1) {
-      els.pagination.classList.add('hidden');
-      return;
-    }
+    if (total <= 1) { els.pagination.classList.add('hidden'); return; }
 
     const pages = buildPageList(cur, total);
     let html = '';
@@ -280,7 +213,12 @@
       </button>`;
     }
 
-    els.pagination.innerHTML  = html;
+    // Last button (jika tidak ada di buildPageList)
+    if (cur < total - 1 && pages[pages.length - 1] !== total) {
+      html += `<button class="page-btn" data-page="${total}">Last</button>`;
+    }
+
+    els.pagination.innerHTML = html;
     els.pagination.classList.remove('hidden');
 
     els.pagination.querySelectorAll('[data-page]').forEach(btn => {
@@ -297,7 +235,7 @@
 
   function buildPageList(cur, total) {
     if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-    const pages = new Set([1, total, cur, cur - 1, cur + 1].filter(p => p >= 1 && p <= total));
+    const pages = new Set([1, 2, cur - 1, cur, cur + 1, total - 1, total].filter(p => p >= 1 && p <= total));
     const sorted = [...pages].sort((a, b) => a - b);
     const result = [];
     sorted.forEach((p, i) => {
@@ -307,9 +245,20 @@
     return result;
   }
 
+  /* ── Search form ── */
+  els.searchForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const q = els.searchInput.value.trim();
+    if (q === state.searchQuery) return;
+    state.searchQuery = q;
+    state.page = 1;
+    loadPosts();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
   /* ── Open player modal ── */
   async function openPlayer(slug) {
-    const session = ++playerSession; // guard against stale async responses
+    const session = ++playerSession;
 
     els.videoTitle.textContent = 'Memuat…';
     els.videoSub.textContent   = 'Platform 2 — RuangBokep';
@@ -319,17 +268,13 @@
 
     try {
       const data = await apiFetch(`/api/rb/video/${encodeURIComponent(slug)}`);
-
-      // Modal sudah ditutup sebelum response datang — buang hasilnya
       if (session !== playerSession) return;
 
       els.videoTitle.textContent = data.title || slug;
 
       if (data.m3u8Url) {
-        // ── Native HLS — tanpa iklan, tanpa iframe ──
         playHls(data.m3u8Url, slug);
       } else if (data.embedUrl) {
-        // ── Fallback iframe (hanya jika m3u8 gagal di-resolve) ──
         els.videoFrame.onload = () => {
           els.playerLoading.classList.add('hidden');
           els.videoFrame.classList.remove('hidden');
@@ -347,13 +292,13 @@
     }
   }
 
-  /* ── HLS playback — uses HLS.js (all browsers) or native (Safari) ── */
+  /* ── HLS playback ── */
   function playHls(m3u8Url, slug) {
     const video   = els.videoEl;
-    const session = playerSession; // capture current session
+    const session = playerSession;
 
     const onReady = () => {
-      if (session !== playerSession) return; // stale
+      if (session !== playerSession) return;
       els.playerLoading.classList.add('hidden');
       video.classList.remove('hidden');
       video.play().catch(() => {});
@@ -372,14 +317,11 @@
       hls.loadSource(m3u8Url);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, onReady);
-      hls.on(Hls.Events.ERROR, (_, d) => {
-        if (d.fatal) onFatalError();
-      });
+      hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) onFatalError(); });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Native HLS — Safari / iOS
       video.src = m3u8Url;
-      video.addEventListener('loadedmetadata', onReady,       { once: true });
-      video.addEventListener('error',          onFatalError,  { once: true });
+      video.addEventListener('loadedmetadata', onReady,      { once: true });
+      video.addEventListener('error',          onFatalError, { once: true });
     } else {
       els.playerLoading.classList.add('hidden');
       showToast('Browser tidak mendukung HLS playback');
@@ -408,8 +350,6 @@
   /* ── Retry ── */
   els.retryBtn.addEventListener('click', loadPosts);
 
-  /* Brand click digantikan platform switcher dropdown di topbar */
-
   /* ── Escape helper ── */
   function escHtml(s) {
     return String(s)
@@ -421,11 +361,6 @@
   }
 
   /* ── Init ── */
-  async function init() {
-    await loadCategories();
-    await loadPosts();
-  }
-
-  init();
+  loadPosts();
 
 })();
