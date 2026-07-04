@@ -4,112 +4,120 @@
 
 ```
 User
- ├── Firebase Hosting  →  index.html, style.css, app.js, config.js
+ ├── Firebase Hosting  →  index.html, style.css, app.js, config.js, logo.png
  └── Replit Backend    →  /api/*, /proxy/*, /health
 ```
 
----
-
-## Langkah 1 — Deploy Replit Backend dulu
-
-**Wajib dilakukan sebelum Firebase**, karena kamu perlu URL Replit production.
-
-1. Di Replit, klik **Publish / Deploy**
-2. Tunggu hingga selesai
-3. Catat URL production-nya, contoh: `https://vidorey.username.replit.app`
+| Komponen | Host | URL |
+|---|---|---|
+| Frontend | Firebase Hosting | https://vidorey.web.app |
+| Backend | Replit Autoscale | https://vdry--dzeckbpf2oq61.replit.app |
 
 ---
 
-## Langkah 2 — Setup Firebase Project
+## Setup Awal (Sekali Saja)
 
-1. Buka [console.firebase.google.com](https://console.firebase.google.com)
-2. Klik **Add project** → beri nama (misal: `vidorey`)
-3. Setelah project dibuat, catat **Project ID** (contoh: `vidorey-abc12`)
-
----
-
-## Langkah 3 — Update config di Replit
-
-### Edit `public/config.js`
-
-```js
-window.BACKEND_URL = 'https://vidorey.username.replit.app'; // ← URL Replit kamu
-```
-
-### Edit `.firebaserc`
-
-```json
-{
-  "projects": {
-    "default": "vidorey-abc12"   // ← Project ID Firebase kamu
-  }
-}
-```
-
----
-
-## Langkah 4 — Install Firebase CLI & Deploy
-
-Jalankan di terminal (laptop/PC kamu, bukan di Replit):
+### 1. Install semua dependencies
 
 ```bash
-# Install Firebase CLI (sekali saja)
-npm install -g firebase-tools
+bash install.sh
+```
 
-# Login ke akun Google
+Script ini akan install:
+- Node.js dependencies (`express`, `axios`, `cheerio`, `cors`)
+- Firebase Tools (global)
+
+### 2. Login ke Firebase
+
+```bash
 firebase login --no-localhost
-
-# Masuk ke folder project (download dari Replit atau clone dari GitHub)
-cd path/ke/folder/vidorey
-
-# Deploy ke Firebase Hosting
-firebase deploy --only hosting
 ```
 
-Setelah selesai, Firebase akan kasih URL seperti:
+Ikuti instruksi di terminal, buka link yang diberikan di browser.
+
+---
+
+## Deploy Frontend ke Firebase
+
+Gunakan script yang sudah tersedia:
+
+```bash
+bash deploy.sh
 ```
-Hosting URL: https://vidorey-abc12.web.app
+
+Script ini otomatis:
+1. Update `public/config.js` dengan backend URL Replit
+2. Deploy semua file `public/` ke Firebase Hosting
+
+### Jika backend URL Replit berubah
+
+```bash
+bash deploy.sh https://url-baru.replit.app
 ```
 
 ---
 
-## File yang diupload ke Firebase Hosting
+## Deploy Backend ke Replit
 
-Firebase hanya upload isi folder `public/`:
-- `index.html`
-- `style.css`
-- `app.js`
-- `config.js`  ← berisi URL backend Replit
+1. Di Replit, klik tombol **Publish**
+2. Tunggu proses selesai
+3. Jika URL berubah, jalankan ulang `bash deploy.sh https://url-baru.replit.app`
 
 ---
 
-## Cara Update Frontend
+## File yang di-deploy ke Firebase Hosting
+
+Hanya isi folder `public/`:
+
+```
+public/
+├── index.html    — Halaman utama SPA
+├── style.css     — Tampilan dark theme
+├── app.js        — Logika frontend
+├── config.js     — URL backend Replit (auto-update oleh deploy.sh)
+└── logo.png      — Logo Vidorey
+```
+
+---
+
+## Update Frontend
 
 Setiap ada perubahan di `public/`:
 
 ```bash
-firebase deploy --only hosting
+bash deploy.sh
 ```
 
-Setiap ada perubahan di `server.js` (backend) → cukup redeploy di Replit.
+Setiap ada perubahan di `server.js` (backend) → cukup **Publish ulang di Replit**.
 
 ---
 
-## Troubleshooting CORS
+## Konfigurasi Project
 
-Jika ada error CORS di browser, pastikan domain Firebase kamu sudah masuk allowlist.
-Backend Replit sudah dikonfigurasi untuk mengizinkan:
+| File | Isi |
+|---|---|
+| `.firebaserc` | Project ID: `vidorey` |
+| `firebase.json` | Public dir: `public/`, rewrite ke `index.html` |
+| `public/config.js` | `window.BACKEND_URL` — URL backend Replit |
+
+---
+
+## Troubleshooting
+
+### CORS Error
+Backend sudah dikonfigurasi untuk mengizinkan domain berikut:
 - `*.web.app`
 - `*.firebaseapp.com`
 - `*.replit.dev`
 - `*.replit.app`
 - `localhost`
 
----
+### Replit deployment gagal start
+Pastikan build command sudah dikonfigurasi:
+- **Build:** `npm install --production`
+- **Run:** `node server.js`
 
-## Cronjob `/health`
-
-URL untuk cronjob (pakai URL Replit, bukan Firebase):
+### Health Check
 ```
-https://vidorey.username.replit.app/health
+https://vdry--dzeckbpf2oq61.replit.app/health
 ```
