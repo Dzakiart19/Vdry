@@ -74,7 +74,7 @@ function allowedThumbUrl(raw) {
     const u = new URL(raw);
     if (u.protocol !== 'https:') return false;
     if (THUMB_HOSTS.has(u.hostname)) return true;
-    console.warn(`[cdn-alert] P1 thumbnail domain baru terdeteksi: "${u.hostname}" — tambahkan ke THUMB_HOSTS jika legit`);
+    logCdnAlert(`[cdn-alert] P1 thumbnail domain baru terdeteksi: "${u.hostname}" — tambahkan ke THUMB_HOSTS jika legit`);
     return false;
   } catch { return false; }
 }
@@ -85,7 +85,7 @@ function allowedStreamUrl(raw) {
     if (u.protocol !== 'https:') return false;
     if (STREAM_HOSTS.has(u.hostname)) return true;
     // Domain baru terdeteksi — log supaya bisa di-allowlist tanpa debug manual
-    console.warn(`[cdn-alert] P1 stream domain baru terdeteksi: "${u.hostname}" — tambahkan ke STREAM_HOSTS jika legit`);
+    logCdnAlert(`[cdn-alert] P1 stream domain baru terdeteksi: "${u.hostname}" — tambahkan ke STREAM_HOSTS jika legit`);
     return false;
   } catch { return false; }
 }
@@ -122,6 +122,31 @@ app.use(express.static(path.join(__dirname, 'public')));
 /* ── Health check (untuk cronjob / uptime monitor) ── */
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', ts: Date.now() });
+});
+
+/* ── Health detail — cache stats + cdn-alerts sejak server start ── */
+app.get('/health/detail', (_req, res) => {
+  const uptime = process.uptime();
+  const uptimeStr = `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`;
+  res.json({
+    status: 'ok',
+    uptime: uptimeStr,
+    startedAt: new Date(Date.now() - uptime * 1000).toISOString(),
+    memory: {
+      rss:      (process.memoryUsage().rss      / 1024 / 1024).toFixed(1) + ' MB',
+      heapUsed: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1) + ' MB',
+    },
+    caches: [
+      videoUrlCache.stats(),
+      m3u8Cache.stats(),
+      postsCache.stats(),
+      freshSessionCache.stats(),
+    ],
+    cdnAlerts: {
+      total: cdnAlerts.length,
+      items: cdnAlerts.slice().reverse(), // terbaru di atas
+    },
+  });
 });
 
 /* ═══════════════════════════════════════
@@ -549,7 +574,7 @@ function isAllowedRbCdnUrl(raw) {
       u.hostname.endsWith('.b-cdn.net')     ||
       u.hostname.endsWith('.bunnycdn.com')
     );
-    if (!ok) console.warn(`[cdn-alert] P2 CDN domain baru terdeteksi: "${u.hostname}" — tambahkan ke isAllowedRbCdnUrl jika legit`);
+    if (!ok) logCdnAlert(`[cdn-alert] P2 CDN domain baru terdeteksi: "${u.hostname}" — tambahkan ke isAllowedRbCdnUrl jika legit`);
     return ok;
   } catch { return false; }
 }
@@ -607,14 +632,25 @@ async function axSegmentGet(url, config = {}, retries = 2) {
   throw lastErr;
 }
 
+/* ── CDN Alert buffer — ditangkap oleh logCdnAlert(), dibaca oleh /health/detail ── */
+const cdnAlerts = [];
+const CDN_ALERT_MAX = 100;
+function logCdnAlert(msg) {
+  console.warn(msg);
+  if (cdnAlerts.length >= CDN_ALERT_MAX) cdnAlerts.shift();
+  cdnAlerts.push({ ts: new Date().toISOString(), msg });
+}
+
 /* ── Generic cache helper — reusable untuk semua in-memory cache ── */
-function makeCache(maxSize, defaultTtlMs) {
+function makeCache(maxSize, defaultTtlMs, name = '') {
   const store = new Map();
+  let hits = 0, misses = 0;
   return {
     get(key) {
       const entry = store.get(key);
-      if (!entry) return null;
-      if (entry.expires <= Date.now()) { store.delete(key); return null; }
+      if (!entry) { misses++; return null; }
+      if (entry.expires <= Date.now()) { store.delete(key); misses++; return null; }
+      hits++;
       return entry.value;
     },
     set(key, value, ttlMs = defaultTtlMs) {
@@ -629,6 +665,9 @@ function makeCache(maxSize, defaultTtlMs) {
     },
     del(key) { store.delete(key); },
     has(key) { return this.get(key) !== null; },
+    stats() {
+      return { name, size: store.size, maxSize, hits, misses, hitRate: hits + misses > 0 ? ((hits / (hits + misses)) * 100).toFixed(1) + '%' : 'n/a' };
+    },
   };
 }
 
@@ -636,10 +675,10 @@ function makeCache(maxSize, defaultTtlMs) {
    Mencegah double HTTP call ke embed.php: /api/video/:id dan
    /proxy/stream/:id keduanya butuh URL yang sama — cukup fetch sekali.
 ──────────────────────────────────────────────────────────────────────── */
-const videoUrlCache = makeCache(300, 5 * 60 * 1000); // id → mp4Url
+const videoUrlCache = makeCache(300, 5 * 60 * 1000, 'p1_videoUrl'); // id → mp4Url
 
 /* ── Cache m3u8 yang sudah di-resolve (TTL 5 menit, max 500 entries) ── */
-const m3u8Cache = makeCache(500, 5 * 60 * 1000); // slug → m3u8Url
+const m3u8Cache = makeCache(500, 5 * 60 * 1000, 'p2_m3u8'); // slug → m3u8Url
 // Shim agar kode lama yang pakai m3u8CacheSet/m3u8Cache.get tetap bekerja
 function m3u8CacheSet(slug, url) { m3u8Cache.set(slug, url); }
 
@@ -649,7 +688,7 @@ function m3u8CacheSet(slug, url) { m3u8Cache.set(slug, url); }
    Empty result di-cache 30 detik, error di-cache 20 detik — mencegah
    upstream di-pukul terus-menerus saat halaman memang kosong/error.
 ──────────────────────────────────────────────────────────────────────── */
-const postsCache = makeCache(200, 3 * 60 * 1000); // key → result
+const postsCache = makeCache(200, 3 * 60 * 1000, 'p2_posts'); // key → result
 function postsCacheKey(page, cat, q) { return `${page}:${cat || ''}:${q || ''}`; }
 function postsCacheGet(key) { return postsCache.get(key); }
 function postsCacheSet(key, data, ttlMs = 3 * 60 * 1000) { postsCache.set(key, data, ttlMs); }
@@ -775,7 +814,7 @@ app.get('/api/rb/video/:slug', async (req, res) => {
    supaya tokennya cocok dengan IP instance saat ini.
    `freshSessionCache` menyimpan hasil resolve+fetch sesaat (TTL pendek)
    supaya banyak segment yang gagal berurutan cukup memicu SATU re-resolve. */
-const freshSessionCache = makeCache(100, 20 * 1000); // slug → { masterUrl, masterContent, subs }
+const freshSessionCache = makeCache(100, 20 * 1000, 'p2_freshSession'); // slug → { masterUrl, masterContent, subs }
 
 function basenameNoQuery(u) {
   try { return new URL(u).pathname.split('/').pop(); } catch { return String(u).split('/').pop(); }
