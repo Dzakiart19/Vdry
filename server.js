@@ -72,7 +72,10 @@ function apiError(res, status, msg) {
 function allowedThumbUrl(raw) {
   try {
     const u = new URL(raw);
-    return u.protocol === 'https:' && THUMB_HOSTS.has(u.hostname);
+    if (u.protocol !== 'https:') return false;
+    if (THUMB_HOSTS.has(u.hostname)) return true;
+    console.warn(`[cdn-alert] P1 thumbnail domain baru terdeteksi: "${u.hostname}" — tambahkan ke THUMB_HOSTS jika legit`);
+    return false;
   } catch { return false; }
 }
 
@@ -918,7 +921,7 @@ async function handleRbSeg(raw, slugHint, req, res, isRetry) {
       upstream.data.destroy();
       if (!isRetry && slugHint && [401, 403, 500, 502, 503].includes(upstream.status)) {
         const fresh = await reresolveUrl(slugHint, raw, true).catch(() => null);
-        if (fresh && fresh !== raw) return handleRbSeg(fresh, slugHint, req, res, true);
+        if (fresh && fresh !== raw && isAllowedRbCdnUrl(fresh)) return handleRbSeg(fresh, slugHint, req, res, true);
       }
       return res.status(upstream.status < 500 ? 404 : 502).end();
     }
