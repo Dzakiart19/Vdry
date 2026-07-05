@@ -79,7 +79,11 @@ function allowedThumbUrl(raw) {
 function allowedStreamUrl(raw) {
   try {
     const u = new URL(raw);
-    return u.protocol === 'https:' && STREAM_HOSTS.has(u.hostname);
+    if (u.protocol !== 'https:') return false;
+    if (STREAM_HOSTS.has(u.hostname)) return true;
+    // Domain baru terdeteksi — log supaya bisa di-allowlist tanpa debug manual
+    console.warn(`[cdn-alert] P1 stream domain baru terdeteksi: "${u.hostname}" — tambahkan ke STREAM_HOSTS jika legit`);
+    return false;
   } catch { return false; }
 }
 
@@ -535,13 +539,15 @@ function isAllowedRbCdnUrl(raw) {
   try {
     const u = new URL(raw);
     if (u.protocol !== 'https:') return false;
-    return (
+    const ok = (
       u.hostname === 'putarvid.com'         ||
       u.hostname.endsWith('.putarvid.com')  ||
       u.hostname.endsWith('.streamruby.net') ||  // putarvid stream CDN
       u.hostname.endsWith('.b-cdn.net')     ||
       u.hostname.endsWith('.bunnycdn.com')
     );
+    if (!ok) console.warn(`[cdn-alert] P2 CDN domain baru terdeteksi: "${u.hostname}" — tambahkan ke isAllowedRbCdnUrl jika legit`);
+    return ok;
   } catch { return false; }
 }
 
