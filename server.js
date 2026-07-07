@@ -356,9 +356,11 @@ app.get('/proxy/stream/:id', async (req, res) => {
 
     res.status(upstream.status);
 
+    // Selalu set accept-ranges — CDN kadang tidak mengirimnya tapi stream tetap support Range
+    res.setHeader('accept-ranges', 'bytes');
     const forward = [
       'content-type', 'content-length', 'content-range',
-      'accept-ranges', 'cache-control', 'last-modified', 'etag',
+      'cache-control', 'last-modified', 'etag',
     ];
     forward.forEach(h => {
       if (upstream.headers[h]) res.setHeader(h, upstream.headers[h]);
