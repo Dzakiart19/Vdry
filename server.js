@@ -20,7 +20,7 @@ const baseHeaders = {
 
 /* ── Strict allowlists ── */
 const THUMB_HOSTS  = new Set(['i.xpvid.cc']);
-const STREAM_HOSTS = new Set(['vidoycdn.b-cdn.net', 'cache.cdnvdy.com']);
+const STREAM_HOSTS = new Set(['vidoycdn.b-cdn.net', 'cache.cdnvdy.com', 'cache.overfetch.video']);
 
 /* ── Axios instances ── */
 const ax = axios.create({
