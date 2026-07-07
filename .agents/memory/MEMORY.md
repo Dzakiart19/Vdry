@@ -1,3 +1,4 @@
 - [Platform 2 Architecture](rb-platform2-architecture.md) — ad-free HLS via PackerJS decode; strict putarvid allowlist on embed fallback; scraper-alert log pattern.
 - [Vidorey Caching Strategy](vidorey-caching-strategy.md) — makeCache helper; videoUrlCache stores {src,title,thumb} + evict-on-CDN-4xx; postsCache sentinel values (_error/_status:404).
 - [RB Layout Scroll Fix](rb-layout-scroll-fix.md) — rb.html must override body overflow:hidden and use natural page scroll; modal uses body.modal-open class.
+- [P1 Cross-Origin Video](p1-crossorigin-video.md) — never use crossorigin attr on <video>; set video.src immediately (parallel title fetch); *.overfetch.video allowlist for DoodStream CDN.
