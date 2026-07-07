@@ -1047,6 +1047,60 @@ app.get('/rb', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'rb.ht
 app.get('/rb/*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'rb.html')));
 
 /* ═══════════════════════════════════════
+   PLATFORM 1 — EMBED PLAYER PAGE
+   Halaman minimal yang serve <video> same-origin ke /proxy/stream/:id.
+   Dimuat lewat <iframe> oleh Firebase frontend supaya tidak ada
+   cross-origin video issue (Android Chrome block cross-origin <video>
+   bahkan dengan CORS header yang benar).
+═══════════════════════════════════════ */
+app.get('/embed/:id', (req, res) => {
+  const id = req.params.id;
+  if (!/^[a-z0-9]+$/i.test(id)) return res.status(400).send('Invalid ID');
+
+  // Helmet set X-Frame-Options: SAMEORIGIN secara global.
+  // Hapus supaya Firebase (cross-origin) bisa embed halaman ini dalam iframe.
+  res.removeHeader('X-Frame-Options');
+  // frame-ancestors — hanya izinkan origin yang diketahui (Firebase + Replit)
+  res.setHeader('Content-Security-Policy', [
+    "frame-ancestors 'self'",
+    'https://vidorey.web.app',
+    'https://vidorey.firebaseapp.com',
+    'https://*.replit.app',
+    'https://*.replit.dev',
+    'http://localhost:*',
+  ].join(' '));
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #000;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    video {
+      width: 100%; height: 100%;
+      display: block;
+      background: #000;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <video controls playsinline autoplay preload="auto" src="/proxy/stream/${id}">
+    Browser tidak mendukung video HTML5.
+  </video>
+</body>
+</html>`);
+});
+
+/* ═══════════════════════════════════════
    SPA FALLBACK
 ═══════════════════════════════════════ */
 app.get('*', (req, res) => {

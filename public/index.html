@@ -175,9 +175,9 @@
       </button>
     </div>
     <div class="video-stage">
-      <video id="videoPlayer" controls playsinline preload="metadata" crossorigin="anonymous">
-        <p>Browser tidak mendukung video HTML5.</p>
-      </video>
+      <!-- iframe — video jalan same-origin di Replit, tidak ada cross-origin issue -->
+      <iframe id="videoPlayer" allowfullscreen allow="autoplay; fullscreen"
+              frameborder="0" scrolling="no"></iframe>
     </div>
   </div>
 </div>

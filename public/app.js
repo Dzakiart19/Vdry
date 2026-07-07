@@ -83,9 +83,7 @@ const App = (() => {
     if (!el.modal.classList.contains('hidden')) {
       modalHistoryPushed = false;
       el.modal.classList.add('hidden');
-      el.video.pause();
-      el.video.removeAttribute('src');
-      el.video.load();
+      el.video.src = ''; // stop iframe playback
       document.body.style.overflow = '';
       // Bersihkan URL dari #player, restore state folder yang sedang aktif
       replaceNav(currentFolder, currentPage, breadcrumbs);
@@ -96,6 +94,10 @@ const App = (() => {
     if (e.state && !e.state.modal) {
       breadcrumbs = e.state.breadcrumbs || [{ id: DEFAULT_FOLDER, name: 'Home' }];
       loadFolder(e.state.folderId || DEFAULT_FOLDER, e.state.page || 1, false);
+    } else if (e.state && e.state.modal) {
+      // Forward ke #player saat modal sudah tutup — normalize URL ke folder aktif
+      // supaya tidak ada entry #player menggantung di history stack.
+      replaceNav(currentFolder, currentPage, breadcrumbs);
     } else if (!e.state) {
       breadcrumbs = [{ id: DEFAULT_FOLDER, name: 'Home' }];
       loadFolder(DEFAULT_FOLDER, 1, false);
@@ -456,20 +458,21 @@ const App = (() => {
   async function openPlayer(id, name) {
     el.title.textContent = name || id;
     el.sub.textContent   = 'Memuat…';
-    el.video.removeAttribute('src');
-    el.video.load();
+    el.video.src = ''; // reset iframe
     el.modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 
-    // Push state #player (URL berbeda dari URL folder) supaya Back HP menutup modal,
-    // bukan keluar dari folder. Pakai replaceNav URL + '#player' agar URL tetap
-    // mencerminkan folder aktif (bukan kehilangan ?f= param).
+    // Push state #player supaya Back HP menutup modal, bukan keluar folder.
     const folderUrl = currentFolder === DEFAULT_FOLDER
       ? '/'
       : `/?f=${currentFolder}${currentPage > 1 ? '&p=' + currentPage : ''}`;
     history.pushState({ modal: true }, '', folderUrl + '#player');
     modalHistoryPushed = true;
 
+    // Muat iframe embed sekarang — video mulai load tanpa tunggu API title
+    el.video.src = `${API}/embed/${id}`;
+
+    // Fetch title di background (pre-warm cache + update judul modal)
     try {
       const resp = await fetchWithTimeout(`${API}/api/video/${id}`);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -478,19 +481,14 @@ const App = (() => {
 
       el.title.textContent = data.title || name;
       el.sub.textContent   = '';
-      el.video.src = `${API}/proxy/stream/${id}`;
-      el.video.load();
-      el.video.play().catch(() => {});
     } catch (err) {
-      el.sub.textContent = '⚠ Gagal memuat video.';
+      el.sub.textContent = '⚠ Gagal memuat info video.';
     }
   }
 
   function closePlayer() {
     el.modal.classList.add('hidden');
-    el.video.pause();
-    el.video.removeAttribute('src');
-    el.video.load();
+    el.video.src = ''; // stop iframe playback
     document.body.style.overflow = '';
 
     // Ganti entry #player dengan URL folder yang bersih — BUKAN history.back()
