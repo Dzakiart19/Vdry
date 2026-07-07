@@ -29,9 +29,8 @@ Navigasi antar platform via tombol di kanan atas topbar.
 4. `/proxy/rb/thumb?url=` → proxy thumbnail dari ruangbokep.ws & streamruby
 
 ## Deployment
-- **Backend**: Replit (node server.js, port 5000)
-- **Frontend**: Firebase Hosting (vidorey.web.app) — deploy via `bash deploy.sh`
-- `public/config.js` — `window.BACKEND_URL` diisi otomatis oleh deploy.sh
+- **Full-stack**: Replit — backend + frontend serve dari satu server (port 5000)
+- `public/config.js` — `window.BACKEND_URL` selalu `''` (relatif, tidak perlu diubah)
 
 ## User Preferences
 - Dark theme (Obsidian Archive design system)

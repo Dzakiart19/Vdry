@@ -106,8 +106,6 @@ app.use(cors({
       /^http:\/\/localhost/,
       /\.replit\.dev$/,
       /\.replit\.app$/,
-      /\.web\.app$/,
-      /\.firebaseapp\.com$/,
     ].some(r => r.test(origin));
     cb(ok ? null : new Error('CORS: origin tidak diizinkan'), ok);
   },
