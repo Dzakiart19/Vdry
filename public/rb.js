@@ -294,7 +294,7 @@
       els.videoTitle.textContent = data.title || slug;
 
       if (data.m3u8Url) {
-        playHls(data.m3u8Url, slug);
+        playHls(API + data.m3u8Url, slug);
       } else if (data.embedUrl) {
         els.videoFrame.onload = () => {
           els.playerLoading.classList.add('hidden');
