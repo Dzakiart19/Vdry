@@ -97,10 +97,10 @@ app.use(helmet({
   crossOriginOpenerPolicy:  false, // Adsterra popunder perlu window.opener
 }));
 
-/* ── CORS — izinkan Firebase Hosting & dev ── */
+/* ── CORS ── */
 app.use(cors({
   origin(origin, cb) {
-    // Izinkan: tanpa origin (curl/Postman), localhost, *.replit.dev, *.web.app, *.firebaseapp.com
+    // Izinkan: tanpa origin (curl/Postman), localhost, *.replit.dev, *.replit.app
     if (!origin) return cb(null, true);
     const ok = [
       /^http:\/\/localhost/,
