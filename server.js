@@ -92,9 +92,10 @@ function allowedStreamUrl(raw) {
 
 /* ── Security headers ── */
 app.use(helmet({
-  contentSecurityPolicy:    false, // dihandle manual karena proxy inline script
+  contentSecurityPolicy:     false, // dihandle manual karena proxy inline script
   crossOriginEmbedderPolicy: false, // video HLS butuh cross-origin resource
-  crossOriginOpenerPolicy:  false, // Adsterra popunder perlu window.opener
+  crossOriginOpenerPolicy:   false, // Adsterra popunder perlu window.opener
+  crossOriginResourcePolicy: false, // Firebase frontend beda origin — allow cross-origin load (img, video)
 }));
 
 /* ── CORS ── */
