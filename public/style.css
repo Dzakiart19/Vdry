@@ -760,12 +760,11 @@ body {
   background: #000;
   line-height: 0;
 }
-.video-stage iframe {
+.video-stage video {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  max-height: 60vh;
   display: block;
-  border: none;
-  background: #000;
+  outline: none;
 }
 
 /* ════════════════════════════════════
@@ -832,7 +831,7 @@ body {
     overflow-y: auto;
   }
   .modal-title { font-size: 13px; }
-  .video-stage iframe { aspect-ratio: 16 / 9; min-height: 180px; }
+  .video-stage video { max-height: 52vw; min-height: 180px; }
 }
 
 /* ── Mobile: kategori RB horizontal scroll (sidebar tersembunyi) ── */

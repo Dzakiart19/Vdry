@@ -83,7 +83,9 @@ const App = (() => {
     if (!el.modal.classList.contains('hidden')) {
       modalHistoryPushed = false;
       el.modal.classList.add('hidden');
-      el.video.src = ''; // stop iframe playback
+      el.video.pause();
+      el.video.removeAttribute('src');
+      el.video.load();
       document.body.style.overflow = '';
       // Bersihkan URL dari #player, restore state folder yang sedang aktif
       replaceNav(currentFolder, currentPage, breadcrumbs);
@@ -458,7 +460,8 @@ const App = (() => {
   async function openPlayer(id, name) {
     el.title.textContent = name || id;
     el.sub.textContent   = 'Memuat…';
-    el.video.src = ''; // reset iframe
+    el.video.removeAttribute('src');
+    el.video.load();
     el.modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 
@@ -469,10 +472,6 @@ const App = (() => {
     history.pushState({ modal: true }, '', folderUrl + '#player');
     modalHistoryPushed = true;
 
-    // Muat iframe embed sekarang — video mulai load tanpa tunggu API title
-    el.video.src = `${API}/embed/${id}`;
-
-    // Fetch title di background (pre-warm cache + update judul modal)
     try {
       const resp = await fetchWithTimeout(`${API}/api/video/${id}`);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -481,14 +480,20 @@ const App = (() => {
 
       el.title.textContent = data.title || name;
       el.sub.textContent   = '';
+      // Tanpa crossorigin attr → browser load no-cors mode → bebas cross-origin
+      el.video.src = `${API}/proxy/stream/${id}`;
+      el.video.load();
+      el.video.play().catch(() => {});
     } catch (err) {
-      el.sub.textContent = '⚠ Gagal memuat info video.';
+      el.sub.textContent = '⚠ Gagal memuat video.';
     }
   }
 
   function closePlayer() {
     el.modal.classList.add('hidden');
-    el.video.src = ''; // stop iframe playback
+    el.video.pause();
+    el.video.removeAttribute('src');
+    el.video.load();
     document.body.style.overflow = '';
 
     // Ganti entry #player dengan URL folder yang bersih — BUKAN history.back()

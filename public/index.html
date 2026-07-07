@@ -175,9 +175,10 @@
       </button>
     </div>
     <div class="video-stage">
-      <!-- iframe — video jalan same-origin di Replit, tidak ada cross-origin issue -->
-      <iframe id="videoPlayer" allowfullscreen allow="autoplay; fullscreen"
-              frameborder="0" scrolling="no"></iframe>
+      <!-- TANPA crossorigin attr — browser load video no-cors mode, bebas cross-origin -->
+      <video id="videoPlayer" controls playsinline preload="metadata">
+        <p>Browser tidak mendukung video HTML5.</p>
+      </video>
     </div>
   </div>
 </div>
