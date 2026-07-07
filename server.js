@@ -84,6 +84,8 @@ function allowedStreamUrl(raw) {
     const u = new URL(raw);
     if (u.protocol !== 'https:') return false;
     if (STREAM_HOSTS.has(u.hostname)) return true;
+    // overfetch.video punya banyak subdomain (cache, meiva, dll) — izinkan semua
+    if (u.hostname.endsWith('.overfetch.video')) return true;
     // Domain baru terdeteksi — log supaya bisa di-allowlist tanpa debug manual
     logCdnAlert(`[cdn-alert] P1 stream domain baru terdeteksi: "${u.hostname}" — tambahkan ke STREAM_HOSTS jika legit`);
     return false;
