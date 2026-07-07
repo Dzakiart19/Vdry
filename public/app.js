@@ -459,9 +459,7 @@ const App = (() => {
   ══════════════════════════════════ */
   async function openPlayer(id, name) {
     el.title.textContent = name || id;
-    el.sub.textContent   = 'Memuat…';
-    el.video.removeAttribute('src');
-    el.video.load();
+    el.sub.textContent   = '';
     el.modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 
@@ -472,21 +470,17 @@ const App = (() => {
     history.pushState({ modal: true }, '', folderUrl + '#player');
     modalHistoryPushed = true;
 
-    try {
-      const resp = await fetchWithTimeout(`${API}/api/video/${id}`);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      if (data.error) throw new Error(data.error);
+    // Mulai load video SEKARANG — jangan tunggu API title selesai dulu.
+    // /proxy/stream/:id resolve URL-nya sendiri di server.
+    el.video.src = `${API}/proxy/stream/${id}`;
+    el.video.load();
+    el.video.play().catch(() => {});
 
-      el.title.textContent = data.title || name;
-      el.sub.textContent   = '';
-      // Tanpa crossorigin attr → browser load no-cors mode → bebas cross-origin
-      el.video.src = `${API}/proxy/stream/${id}`;
-      el.video.load();
-      el.video.play().catch(() => {});
-    } catch (err) {
-      el.sub.textContent = '⚠ Gagal memuat video.';
-    }
+    // Fetch title di background — update begitu dapat, tidak blokir playback.
+    fetchWithTimeout(`${API}/api/video/${id}`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => { if (data?.title) el.title.textContent = data.title; })
+      .catch(() => {});
   }
 
   function closePlayer() {
