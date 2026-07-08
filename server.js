@@ -6,6 +6,7 @@ const cheerio = require('cheerio');
 const stream  = require('stream');
 const path    = require('path');
 const cors    = require('cors');
+const crypto  = require('crypto');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -153,6 +154,8 @@ app.use((req, _res, next) => {
   else if (p.startsWith('/api/folder/'))    pushMonitorEvent('folder',   { id: p.split('/')[3] || '?', ip, ua });
   else if (p.startsWith('/api/rb/video/'))  pushMonitorEvent('rb_video', { id: p.split('/')[4] || '?', ip, ua });
   else if (p.startsWith('/api/rb/posts'))   pushMonitorEvent('rb_posts', { ip, ua });
+  else if (p.startsWith('/api/yb/video/'))  pushMonitorEvent('yb_video', { id: p.split('/')[4] || '?', ip, ua });
+  else if (p.startsWith('/api/yb/posts'))   pushMonitorEvent('yb_posts', { ip, ua });
   next();
 });
 
@@ -1092,6 +1095,453 @@ app.get('/proxy/rb/thumb', async (req, res) => {
 app.get('/rb', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'rb.html')));
 app.get('/rb/*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'rb.html')));
 
+/* ═══════════════════════════════════════════════════════════════════════
+   PLATFORM 3 — YoBokep (yobokep.com)
+   WordPress + WP REST API listing · Dua embed provider:
+     1. bysezejataos.com → /api/videos/{code} + AES-256-GCM decrypt → *.r66nv9ed.com HLS
+     2. streamhls.to     → POST /dl?op=embed  + parse JWPlayer HTML  → *.savefiles.com HLS
+   Kedua provider ditangani oleh satu fungsi resolveYbVideoUrl() — if/else domain.
+═══════════════════════════════════════════════════════════════════════ */
+
+const YB_BASE = 'https://yobokep.com';
+
+/* ── Axios instance untuk semua request P3 (family:4 → hindari IPv6 garble di savefiles.com) ── */
+const axYb = axios.create({
+  timeout: 25000,
+  maxRedirects: 5,
+  httpsAgent: new https.Agent({ keepAlive: false, family: 4 }),
+});
+
+/* ── Axios instance untuk CDN proxy (stream) — family:4, validateStatus lebih longgar ── */
+const axYbSeg = axios.create({
+  timeout: 20000,
+  maxRedirects: 5,
+  validateStatus: s => s < 500,
+  httpsAgent: new https.Agent({ family: 4 }),
+});
+
+/* ── Retry wrapper untuk scrape yobokep / bysezejataos ── */
+async function axYbGet(url, config = {}, retries = 2) {
+  let lastErr;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await axYb.get(url, config);
+    } catch (err) {
+      lastErr = err;
+      // HTTP 4xx = situs menjawab dengan error definitif — jangan retry
+      if (err.response?.status >= 400 && err.response?.status < 500) throw err;
+      if (i < retries) await new Promise(r => setTimeout(r, 800 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
+/* ── CDN allowlist Platform 3 ── */
+const YB_CDN_ALLOWED_EXT = new Set(['.ts', '.m3u8', '.m3u', '.aac', '.mp4', '.m4s', '.key', '.init']);
+
+function isAllowedYbCdnUrl(raw) {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== 'https:') return false;
+    const hostOk = (
+      u.hostname.endsWith('.r66nv9ed.com')   ||  // bysezejataos CDN (SprintCDN) — p=0, not IP-locked
+      u.hostname.endsWith('.savefiles.com')  ||  // streamhls.to CDN — i= token, family:4 required
+      u.hostname === 'savefiles.com'
+    );
+    const ext = u.pathname.substring(u.pathname.lastIndexOf('.')).toLowerCase();
+    const extOk = YB_CDN_ALLOWED_EXT.has(ext) || u.pathname.endsWith('.m3u8');
+    const ok = hostOk && extOk;
+    if (!hostOk) logCdnAlert(`[cdn-alert] P3 CDN domain baru terdeteksi: "${u.hostname}" — tambahkan ke isAllowedYbCdnUrl jika legit`);
+    if (hostOk && !extOk) logCdnAlert(`[cdn-alert] P3 path ekstensi tidak dikenal: "${u.pathname}" dari "${u.hostname}"`);
+    return ok;
+  } catch { return false; }
+}
+
+/* ── Caches Platform 3 ── */
+const ybM3u8Cache  = makeCache(500, 3 * 60 * 1000, 'p3_m3u8');  // slug → m3u8Url (TTL 3 mnt)
+const ybPostsCache = makeCache(200, 3 * 60 * 1000, 'p3_posts'); // key  → result
+function ybPostsCacheKey(page, q) { return `${page}:${q || ''}`; }
+
+/* ── Rewrite m3u8 manifest — proxy semua URL ke /proxy/yb/seg ── */
+function rewriteYbM3u8(content, baseUrl, slug) {
+  const suffix = slug ? `&_s=${encodeURIComponent(slug)}` : '';
+  return content.split('\n').map(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return line;
+    if (trimmed.startsWith('#')) {
+      return line.replace(/URI="([^"]+)"/g, (_, uri) => {
+        const abs = resolveUrl(uri, baseUrl);
+        return `URI="/proxy/yb/seg?url=${encodeURIComponent(abs)}${suffix}"`;
+      });
+    }
+    const abs = resolveUrl(trimmed, baseUrl);
+    return `/proxy/yb/seg?url=${encodeURIComponent(abs)}${suffix}`;
+  }).join('\n');
+}
+
+/* ── AES-256-GCM decryptor untuk bysezejataos.com ─────────────────────
+   API /api/videos/{code} mengembalikan playback terenkripsi.
+   Algoritma key assembly (reverse-engineered dari videoPagesBundle JS):
+     vi() map: version N → [N^0, (31-N)^0] = [N, 31-N]  (1-based indices)
+     Ki(version, count) → [i, s] = vi()[version]
+     key = concat(base64url_decode(key_parts[i-1]), base64url_decode(key_parts[s-1]))
+   Contoh version "11": indices = [11, 20] → 0-based [10, 19] → 16+16 = 32 bytes ── */
+function ybB64uDecode(s) {
+  return Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+}
+
+function byseKeyIndices(version) {
+  const v = typeof version === 'string' ? parseInt(version.trim()) : Number(version);
+  if (!v || v < 1 || v > 20) return null;
+  return [v - 1, 30 - v];  // 0-based indices ke key_parts array
+}
+
+function byseDecryptPlayback(playback) {
+  const { iv, payload, key_parts, version } = playback;
+  if (!iv || !payload || !Array.isArray(key_parts) || key_parts.length < 30) {
+    throw new Error('byse: data playback tidak lengkap');
+  }
+  const idx = byseKeyIndices(version);
+  if (!idx) throw new Error(`byse: versi tidak dikenal "${version}"`);
+  const [i1, i2] = idx;
+  const keyBuf  = Buffer.concat([ybB64uDecode(key_parts[i1]), ybB64uDecode(key_parts[i2])]);
+  const ivBuf   = ybB64uDecode(iv);
+  const payBuf  = ybB64uDecode(payload);
+  const authTag = payBuf.slice(-16);
+  const cipher  = payBuf.slice(0, -16);
+  const d = crypto.createDecipheriv('aes-256-gcm', keyBuf, ivBuf);
+  d.setAuthTag(authTag);
+  const plain = Buffer.concat([d.update(cipher), d.final()]).toString('utf8');
+  return JSON.parse(plain);
+}
+
+/* ── Resolve bysezejataos.com embed code → raw m3u8 URL ── */
+async function resolveByseEmbed(code) {
+  const { data } = await axYbGet(`https://bysezejataos.com/api/videos/${code}`, {
+    headers: {
+      'User-Agent': UA,
+      'Referer':    `https://bysezejataos.com/e/${code}`,
+      'Accept':     'application/json',
+    },
+    timeout: 12000,
+  });
+  if (!data || !data.playback) throw new Error('byse: respons tidak mengandung playback');
+  const decrypted = byseDecryptPlayback(data.playback);
+  const src = decrypted?.sources?.[0]?.url;
+  if (!src) throw new Error('byse: tidak ada URL sumber di payload yang terdekripsi');
+  return src;
+}
+
+/* ── Resolve streamhls.to embed code → raw m3u8 URL ───────────────────
+   streamhls.to = savefiles.com embed system.
+   i= token dikunci ke IP peminta — axYb sudah pakai family:4
+   supaya IP keluar server konsisten (IPv4, bukan garbled IPv6). ── */
+async function resolveStreamhlsEmbed(code) {
+  const { data: html } = await axYb.post(
+    'https://streamhls.to/dl',
+    `op=embed&file_code=${encodeURIComponent(code)}&auto=1&referer=https://yobokep.com/`,
+    {
+      headers: {
+        'User-Agent':   UA,
+        'Referer':      'https://yobokep.com/',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      timeout: 15000,
+    }
+  );
+  // Extract m3u8 dari JWPlayer config (sources[].file atau file: "...")
+  const m = html.match(/file:\s*["'](https?:\/\/[^"']+\.m3u8[^"']*)/);
+  if (!m) throw new Error('streamhls: m3u8 tidak ditemukan di respons embed');
+  return m[1];
+}
+
+/* ── Ambil embed URL dari halaman post yobokep.com ─────────────────────
+   Embed disimpan di data-litespeed-src (LiteSpeed defer) bukan di src.
+   Fallback ke src jika LiteSpeed sudah mengisi ulang attr. ── */
+async function fetchYbEmbedInfo(slug) {
+  const { data: html } = await axYbGet(`${YB_BASE}/${slug}/`, {
+    headers: {
+      'User-Agent':      UA,
+      'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8',
+      'Accept-Encoding': 'gzip, deflate',
+      'Referer':         `${YB_BASE}/`,
+    },
+  });
+  const $ = cheerio.load(html);
+  const title = $('h1.entry-title, h2.entry-title, .entry-title').first().text().trim()
+             || $('title').text().replace(/\s*[-–|].*$/, '').trim()
+             || slug;
+  const thumb = $('meta[property="og:image"]').attr('content') || '';
+
+  // Cari elemen dengan URL embed provider yang dikenal
+  const isEmbedUrl = s => s && (s.includes('bysezejataos.com') || s.includes('streamhls.to'));
+  const embedUrl = (() => {
+    // Priority: data-litespeed-src (LiteSpeed defer)
+    let url = '';
+    $('[data-litespeed-src]').each((_, el) => {
+      const s = $(el).attr('data-litespeed-src') || '';
+      if (isEmbedUrl(s)) { url = s; return false; }
+    });
+    if (url) return url;
+    // Fallback: src attribute (setelah LiteSpeed resolve)
+    $('iframe[src]').each((_, el) => {
+      const s = $(el).attr('src') || '';
+      if (isEmbedUrl(s)) { url = s; return false; }
+    });
+    return url;
+  })();
+
+  return { embedUrl, title, thumb };
+}
+
+/* ── Dispatch ke provider yang tepat berdasarkan hostname embed URL ── */
+async function resolveYbVideoUrl(embedUrl) {
+  try {
+    const u = new URL(embedUrl);
+    if (u.protocol !== 'https:') return null;
+    const codeMatch = u.pathname.match(/\/e\/([a-z0-9]+)/i);
+    if (!codeMatch) return null;
+    const code = codeMatch[1];
+
+    if (u.hostname === 'bysezejataos.com') {
+      return await resolveByseEmbed(code);
+    }
+    if (u.hostname === 'streamhls.to') {
+      return await resolveStreamhlsEmbed(code);
+    }
+    console.warn(`[yb] embed host tidak dikenal: "${u.hostname}"`);
+    return null;
+  } catch (err) {
+    console.error('resolveYbVideoUrl:', err.message);
+    return null;
+  }
+}
+
+/* ── YB: Post listing — via WP REST API ── */
+app.get('/api/yb/posts', async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.p) || 1);
+  const q    = (req.query.q || '').trim().substring(0, 150);
+  const cacheKey = ybPostsCacheKey(page, q);
+
+  const cached = ybPostsCache.get(cacheKey);
+  if (cached) {
+    if (cached._error)          return apiError(res, 502, 'Gagal memuat konten');
+    if (cached._status === 404) return apiError(res, 404, 'Halaman tidak ditemukan');
+    res.setHeader('X-Cache', 'HIT');
+    return res.json(cached);
+  }
+
+  try {
+    let url = `${YB_BASE}/wp-json/wp/v2/posts?per_page=20&page=${page}&_fields=slug,title,yoast_head_json`;
+    if (q) url += `&search=${encodeURIComponent(q)}`;
+
+    const resp = await axYbGet(url, {
+      headers: { 'User-Agent': UA, 'Accept': 'application/json' },
+    });
+
+    const totalPages = Math.max(1, parseInt(resp.headers['x-wp-totalpages'] || '1') || 1);
+    const posts = (resp.data || []).map(p => ({
+      slug:  p.slug,
+      title: p.title?.rendered
+               ? p.title.rendered.replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n))
+               : p.slug,
+      thumb: p.yoast_head_json?.og_image?.[0]?.url || '',
+    }));
+
+    const result = { posts, page, totalPages };
+
+    if (posts.length > 0) {
+      ybPostsCache.set(cacheKey, result);
+    } else {
+      // Cache singkat 30 detik — throttle upstream untuk halaman kosong
+      if (resp.headers['x-wp-total'] === '0' || page === 1) {
+        console.warn(`[scraper-alert] yb/posts key="${cacheKey}": 0 post ditemukan`);
+      }
+      ybPostsCache.set(cacheKey, result, 30 * 1000);
+    }
+
+    res.setHeader('X-Cache', 'MISS');
+    res.json(result);
+  } catch (err) {
+    console.error('yb posts error:', err.message);
+    if (err.response?.status === 400 || err.response?.status === 404) {
+      ybPostsCache.set(cacheKey, { _status: 404 }, 30 * 1000);
+      return apiError(res, 404, 'Halaman tidak ditemukan');
+    }
+    ybPostsCache.set(cacheKey, { _error: true }, 20 * 1000);
+    apiError(res, 502, 'Gagal memuat konten');
+  }
+});
+
+/* ── YB: Single video — resolve embed → m3u8 ── */
+app.get('/api/yb/video/:slug', async (req, res) => {
+  const slug = req.params.slug;
+  if (!/^[a-z0-9-]+$/i.test(slug)) return apiError(res, 400, 'Invalid slug');
+
+  try {
+    const { embedUrl, title, thumb } = await fetchYbEmbedInfo(slug);
+    if (!embedUrl) return apiError(res, 404, 'Player tidak ditemukan di halaman ini');
+
+    const m3u8Url = await resolveYbVideoUrl(embedUrl);
+    if (m3u8Url && isAllowedYbCdnUrl(m3u8Url)) {
+      ybM3u8Cache.set(slug, m3u8Url);
+      return res.json({ slug, title, thumb, m3u8Url: `/proxy/yb/hls/${slug}` });
+    }
+
+    apiError(res, 404, 'Sumber video tidak dapat diakses');
+  } catch (err) {
+    console.error('yb video error:', err.message);
+    if (err.response?.status === 404) return apiError(res, 404, 'Video tidak ditemukan');
+    apiError(res, 502, 'Gagal memuat video');
+  }
+});
+
+/* ── YB: HLS manifest proxy — dengan self-healing saat token expire ── */
+app.get('/proxy/yb/hls/:slug', async (req, res) => {
+  const slug = req.params.slug;
+  if (!/^[a-z0-9-]+$/i.test(slug)) return apiError(res, 400, 'Invalid slug');
+
+  /* Ambil manifest dari CDN. Jika CDN tolak (token expire) → re-resolve fresh. */
+  async function fetchManifest(url) {
+    return axYbSeg.get(url, {
+      headers: { 'User-Agent': UA, 'Referer': 'https://bysezejataos.com/' },
+      timeout: 15000,
+    });
+  }
+
+  async function reresolve() {
+    const { embedUrl } = await fetchYbEmbedInfo(slug);
+    if (!embedUrl) return null;
+    const fresh = await resolveYbVideoUrl(embedUrl);
+    if (!fresh || !isAllowedYbCdnUrl(fresh)) return null;
+    ybM3u8Cache.set(slug, fresh);
+    return fresh;
+  }
+
+  try {
+    let m3u8Url = ybM3u8Cache.get(slug);
+
+    // Cache miss → resolve sekarang
+    if (!m3u8Url) {
+      m3u8Url = await reresolve();
+      if (!m3u8Url) return apiError(res, 404, 'Stream tidak ditemukan');
+    }
+
+    let manifestResp = await fetchManifest(m3u8Url);
+
+    // CDN menolak → token expire → coba re-resolve sekali
+    if (manifestResp.status < 200 || manifestResp.status >= 300) {
+      console.warn(`yb hls: CDN reject ${manifestResp.status} slug="${slug}", re-resolving…`);
+      m3u8Url = await reresolve();
+      if (!m3u8Url) return apiError(res, 502, 'CDN menolak manifest stream');
+      manifestResp = await fetchManifest(m3u8Url);
+    }
+
+    if (manifestResp.status < 200 || manifestResp.status >= 300) {
+      return apiError(res, 502, 'CDN menolak manifest stream');
+    }
+
+    const base      = m3u8Url.substring(0, m3u8Url.lastIndexOf('/') + 1);
+    const rewritten = rewriteYbM3u8(String(manifestResp.data), base, slug);
+
+    res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.send(rewritten);
+  } catch (err) {
+    console.error('yb hls proxy error:', err.message);
+    if (!res.headersSent) apiError(res, 502, 'Gagal proxy stream');
+  }
+});
+
+/* ── YB: HLS segment proxy ── */
+app.get('/proxy/yb/seg', async (req, res) => {
+  const raw = req.query.url;
+  if (!raw || !isAllowedYbCdnUrl(raw)) return res.status(400).end();
+
+  try {
+    const upstream = await axYbSeg.get(raw, {
+      headers: { 'User-Agent': UA, 'Referer': 'https://bysezejataos.com/' },
+      responseType: 'stream',
+      timeout: 20000,
+    });
+
+    if (upstream.status < 200 || upstream.status >= 300) {
+      upstream.data.destroy();
+      return res.status(upstream.status < 500 ? 404 : 502).end();
+    }
+
+    const ct = (upstream.headers['content-type'] || '').toLowerCase();
+
+    // Sub-manifest → rewrite URL sebelum dikirim ke client
+    if (ct.includes('mpegurl') || raw.includes('.m3u8')) {
+      let body = '';
+      upstream.data.on('data', chunk => { body += chunk.toString(); });
+      upstream.data.on('end', () => {
+        const base     = raw.substring(0, raw.lastIndexOf('/') + 1);
+        const slugHint = req.query._s || null;
+        const rewritten = rewriteYbM3u8(body, base, slugHint);
+        res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'no-store');
+        res.send(rewritten);
+      });
+      upstream.data.on('error', () => { if (!res.headersSent) res.status(502).end(); });
+      return;
+    }
+
+    // Binary segment (ts, mp4, key, dll) — langsung pipe
+    res.status(upstream.status);
+    ['content-type', 'content-length', 'cache-control'].forEach(h => {
+      if (upstream.headers[h]) res.setHeader(h, upstream.headers[h]);
+    });
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    req.on('close', () => upstream.data.destroy());
+    upstream.data.on('error', err => {
+      console.error('yb seg stream error:', err.message);
+      if (!res.headersSent) res.status(502).end();
+    });
+    upstream.data.pipe(res);
+  } catch (err) {
+    console.error('yb seg error:', err.message);
+    if (!res.headersSent) res.status(502).end();
+  }
+});
+
+/* ── YB: Thumbnail proxy ── */
+const YB_THUMB_HOSTS = new Set(['yobokep.com', 'img-place.com', 'img.savefiles.com']);
+app.get('/proxy/yb/thumb', async (req, res) => {
+  const raw = req.query.url;
+  if (!raw) return res.status(400).end();
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== 'https:') return res.status(400).end();
+    const allowed = YB_THUMB_HOSTS.has(u.hostname) || u.hostname.endsWith('.yobokep.com');
+    if (!allowed) return res.status(403).end();
+  } catch { return res.status(400).end(); }
+
+  try {
+    const upstream = await axYbSeg.get(raw, {
+      headers: { 'User-Agent': UA, 'Referer': `${YB_BASE}/` },
+      responseType: 'stream',
+      timeout: 10000,
+    });
+    const ct = upstream.headers['content-type'] || 'image/jpeg';
+    res.setHeader('Content-Type', ct);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    upstream.data.pipe(res);
+  } catch (err) {
+    console.error('yb thumb error:', err.message);
+    if (!res.headersSent) res.status(502).end();
+  }
+});
+
+/* ── YB: SPA routes ── */
+app.get('/yb', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'yb.html')));
+app.get('/yb/*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'yb.html')));
+
 /* ═══════════════════════════════════════
    PLATFORM 1 — EMBED PLAYER PAGE
    Halaman minimal yang serve <video> same-origin ke /proxy/stream/:id.
@@ -1228,6 +1678,8 @@ app.get('/monitor', (req, res) => {
   .b-folder  {background:#2a2a2a;color:#a1a1aa}
   .b-rb_video{background:#3b1d5a;color:#c084fc}
   .b-rb_posts{background:#3b1d5a;color:#c084fc}
+  .b-yb_video{background:#14532d;color:#4ade80}
+  .b-yb_posts{background:#14532d;color:#4ade80}
   .ev-id{color:#d4d4d8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ev-ip{color:#71717a;font-size:.7rem;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;margin-right:6px;animation:pulse 1.5s infinite}

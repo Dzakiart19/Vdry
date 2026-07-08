@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="description" content="Vidorey — video harian terbaru, cari dan tonton langsung tanpa daftar." />
-  <title>Vidorey 2</title>
+  <meta name="description" content="Vidorey 3 — video harian terbaru dari YoBokep, cari dan tonton langsung tanpa daftar." />
+  <title>Vidorey 3</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -33,22 +33,22 @@
           <span class="ps-desc">Folder video · streaming</span>
         </div>
       </a>
-      <a class="ps-item ps-active" href="/rb" role="option" aria-selected="true">
+      <a class="ps-item" href="/rb" role="option">
         <div class="ps-avatar ps-avatar-rb">R</div>
         <div class="ps-info">
           <span class="ps-name">Vidorey 2</span>
           <span class="ps-desc">Video harian · cari &amp; tonton</span>
         </div>
-        <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
       </a>
-      <a class="ps-item" href="/yb" role="option">
+      <a class="ps-item ps-active" href="/yb" role="option" aria-selected="true">
         <div class="ps-avatar ps-avatar-yb">Y</div>
         <div class="ps-info">
           <span class="ps-name">Vidorey 3</span>
           <span class="ps-desc">YoBokep · cari &amp; tonton</span>
         </div>
+        <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
       </a>
     </div>
   </div>
@@ -56,9 +56,9 @@
 
 <!-- ─── SEARCH BAR ─── -->
 <div class="rb-searchbar">
-  <form id="rbSearchForm" autocomplete="off">
+  <form id="ybSearchForm" autocomplete="off">
     <input
-      id="rbSearchInput"
+      id="ybSearchInput"
       class="rb-search-input"
       type="search"
       placeholder="Cari video…"
@@ -75,28 +75,28 @@
 
 <!-- ─── SHELL ─── -->
 <div class="shell">
-  <main class="content" id="rbContent">
+  <main class="content" id="ybContent">
 
     <!-- Search heading -->
-    <div id="rbSearchHeading" class="rb-search-heading"></div>
+    <div id="ybSearchHeading" class="rb-search-heading"></div>
 
-    <div id="rbLoadingState" class="state-view hidden">
+    <div id="ybLoadingState" class="state-view hidden">
       <div class="loader"><div class="loader-ring"></div></div>
       <p>Memuat…</p>
     </div>
 
-    <div id="rbErrorState" class="state-view hidden">
+    <div id="ybErrorState" class="state-view hidden">
       <div class="state-icon error-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
           <line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
       </div>
-      <p id="rbErrorMsg">Terjadi kesalahan.</p>
-      <button class="btn-retry" id="rbRetryBtn">Coba lagi</button>
+      <p id="ybErrorMsg">Terjadi kesalahan.</p>
+      <button class="btn-retry" id="ybRetryBtn">Coba lagi</button>
     </div>
 
-    <div id="rbEmptyState" class="state-view hidden">
+    <div id="ybEmptyState" class="state-view hidden">
       <div class="state-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <rect x="2" y="3" width="20" height="14" rx="2"/>
@@ -107,7 +107,7 @@
       <p>Tidak ada video ditemukan.</p>
     </div>
 
-    <div id="rbGrid" class="rb-grid"></div>
+    <div id="ybGrid" class="rb-grid"></div>
 
     <!-- ─── Native Banner Ad ─── -->
     <div class="ad-native-slot">
@@ -115,40 +115,40 @@
       <div id="container-761a1a8645cd2263043bfeb6f2e87eea"></div>
     </div>
 
-    <div id="rbPagination" class="pagination hidden"></div>
+    <div id="ybPagination" class="pagination hidden"></div>
 
   </main>
 </div>
 
 <!-- ─── PLAYER MODAL ─── -->
-<div id="rbPlayerModal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-backdrop" id="rbModalBackdrop"></div>
+<div id="ybPlayerModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-backdrop" id="ybModalBackdrop"></div>
   <div class="modal-panel">
     <div class="modal-top">
       <div class="modal-meta">
-        <h2 id="rbVideoTitle" class="modal-title">—</h2>
-        <span id="rbVideoSub" class="modal-sub">Vidorey 2</span>
+        <h2 id="ybVideoTitle" class="modal-title">—</h2>
+        <span id="ybVideoSub" class="modal-sub">Vidorey 3</span>
       </div>
-      <button class="modal-close" id="rbModalClose" title="Tutup">
+      <button class="modal-close" id="ybModalClose" title="Tutup">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
     </div>
     <div class="video-stage rb-video-stage">
-      <div id="rbPlayerLoading" class="rb-player-loader">
+      <div id="ybPlayerLoading" class="rb-player-loader">
         <div class="loader-ring"></div>
         <p>Memuat video…</p>
       </div>
       <video
-        id="rbVideoEl"
+        id="ybVideoEl"
         class="rb-player-video hidden"
         controls
         playsinline
         preload="none"
       ></video>
       <iframe
-        id="rbVideoFrame"
+        id="ybVideoFrame"
         class="rb-player-frame hidden"
         allowfullscreen
         allow="autoplay; fullscreen; picture-in-picture"
@@ -164,7 +164,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
 <script src="/config.js"></script>
-<script src="/rb.js"></script>
+<script src="/yb.js"></script>
 
 <!-- ─── Platform Switcher ─── -->
 <script>

@@ -162,6 +162,11 @@ body {
   color: #c06090;
   border-color: rgba(120,40,80,.35);
 }
+.ps-avatar-yb {
+  background: rgba(20,80,50,.25);
+  color: #4ade80;
+  border-color: rgba(20,80,50,.4);
+}
 
 /* ── Item text ── */
 .ps-info { flex: 1; min-width: 0; }
