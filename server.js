@@ -1137,8 +1137,41 @@ app.get('/embed/:id', (req, res) => {
    MONITOR — real-time visitor dashboard
 ═══════════════════════════════════════ */
 function checkMonitorKey(req, res) {
-  if (!MONITOR_KEY) { res.status(503).send('Monitor key not configured (SESSION_SECRET not set).'); return false; }
-  if (req.query.key !== MONITOR_KEY) { res.status(401).send('401 — ?key= salah.'); return false; }
+  if (!MONITOR_KEY) { res.status(503).send('SESSION_SECRET belum di-set.'); return false; }
+  if (req.query.key !== MONITOR_KEY) {
+    // Tampilkan form login jika key salah / tidak ada
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.status(req.query.key ? 401 : 200).send(`<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vidorey Monitor — Login</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0d0d12;color:#e0e0e8;font-family:'Segoe UI',system-ui,sans-serif;
+       display:flex;align-items:center;justify-content:center;min-height:100vh}
+  .card{background:#14141e;border:1px solid #2a2a3a;border-radius:12px;padding:32px 28px;
+        width:100%;max-width:360px;text-align:center}
+  h1{font-size:1.1rem;color:#a78bfa;margin-bottom:6px}
+  p{font-size:.78rem;color:#52525b;margin-bottom:24px}
+  input{width:100%;padding:10px 14px;background:#0d0d12;border:1px solid #2a2a3a;
+        border-radius:8px;color:#e0e0e8;font-size:.9rem;margin-bottom:12px;outline:none}
+  input:focus{border-color:#7c3aed}
+  button{width:100%;padding:10px;background:#7c3aed;border:none;border-radius:8px;
+         color:#fff;font-size:.9rem;font-weight:600;cursor:pointer}
+  button:hover{background:#6d28d9}
+  .err{color:#f87171;font-size:.75rem;margin-bottom:12px}
+</style></head>
+<body><div class="card">
+  <h1>⬡ Vidorey Monitor</h1>
+  <p>Masukkan SESSION_SECRET untuk masuk</p>
+  ${req.query.key ? '<div class="err">⚠ Key salah, coba lagi.</div>' : ''}
+  <form method="GET" action="/monitor">
+    <input type="password" name="key" placeholder="SESSION_SECRET" autofocus autocomplete="current-password">
+    <button type="submit">Masuk</button>
+  </form>
+</div></body></html>`);
+    return false;
+  }
   return true;
 }
 
