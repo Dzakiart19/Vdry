@@ -1,12 +1,17 @@
 /* VIDOREY — Runtime Config
-   Auto-detect environment:
-   - Replit dev / preview (*.replit.dev, *.replit.app, localhost) → URL relatif ('')
-   - Firebase production (vidorey.web.app, dll) → URL Replit backend */
+   File ini JANGAN diedit manual.
+   URL backend di-inject otomatis oleh deploy.sh saat deploy ke Firebase.
+
+   - Replit dev / preview (*.replit.dev, *.replit.app, localhost)
+     → BACKEND_URL = '' (relative, langsung ke server ini)
+   - Firebase production (vidorey.web.app, dll)
+     → BACKEND_URL = URL Replit backend (di-inject deploy.sh dari REPLIT_BACKEND_URL secret)
+*/
 (function () {
   var h = window.location.hostname;
   var isReplit =
     h === 'localhost' ||
     h.endsWith('.replit.dev') ||
     h.endsWith('.replit.app');
-  window.BACKEND_URL = isReplit ? '' : 'https://vidorey--lturner686.replit.app';
+  window.BACKEND_URL = isReplit ? '' : '__REPLIT_BACKEND_URL__';
 })();
