@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   Vidorey — Tri-Platform Video Browser
-   Composition root: security middleware + mount tiga platform (terisolasi
+   Vidorey — Quad-Platform Video Browser
+   Composition root: security middleware + mount empat platform (terisolasi
    penuh satu sama lain) + monitor/health routes + SPA fallback.
-   Detail per-platform ada di lib/scrapers/{p1,rb,yb}.js
+   Detail per-platform ada di lib/scrapers/{p1,rb,yb,bk}.js
 ═══════════════════════════════════════════════════════════════════════ */
 
 const express   = require('express');
@@ -15,6 +15,7 @@ const { trackRequest, registerMonitorRoutes } = require('./lib/monitor');
 const p1 = require('./lib/scrapers/p1');
 const rb = require('./lib/scrapers/rb');
 const yb = require('./lib/scrapers/yb');
+const bk = require('./lib/scrapers/bk');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -119,19 +120,21 @@ const proxyLimiter = rateLimit({
 app.use('/api', apiLimiter);
 app.use('/proxy', proxyLimiter);
 
-/* ── Tiga platform, terisolasi penuh — tidak ada path yang overlap ── */
+/* ── Empat platform, terisolasi penuh — tidak ada path yang overlap ── */
 app.use(p1.router);
 app.use(rb.router);
 app.use(yb.router);
+app.use(bk.router);
 
-/* ── Monitor & health — cache stats digabung read-only dari ketiga platform.
+/* ── Monitor & health — cache stats digabung read-only dari semua platform.
    Urutan & daftar persis meniru server.js lama (ybFreshSessionCache sengaja
    tidak dimasukkan di sana, jadi tetap tidak dimasukkan di sini). ── */
 registerMonitorRoutes(app, {
   getCacheStats: () => [
-    p1.caches[0],                                  // videoUrlCache
-    rb.caches[0], rb.caches[1], rb.caches[2],       // m3u8Cache, postsCache, freshSessionCache
-    yb.caches[0], yb.caches[1],                     // ybM3u8Cache, ybPostsCache
+    p1.caches[0],                                   // p1: videoUrlCache
+    rb.caches[0], rb.caches[1], rb.caches[2],        // p2: m3u8Cache, postsCache, freshSessionCache
+    yb.caches[0], yb.caches[1],                      // p3: ybM3u8Cache, ybPostsCache
+    bk.caches[0], bk.caches[1], bk.caches[2],        // p4: bkPostsCache, bkVideoUrlCache, bkThumbCache
   ].map(c => c.stats()),
 });
 

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="description" content="Vidorey 3 — video harian terbaru, cari dan tonton langsung tanpa daftar." />
-  <title>Vidorey 3</title>
+  <meta name="description" content="Vidorey 4 — video harian terbaru, cari dan tonton langsung tanpa daftar." />
+  <title>Vidorey 4</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -61,30 +61,30 @@
       <span class="ps-desc">Video harian · cari &amp; tonton</span>
     </div>
   </a>
-  <a class="nav-plat-item active" href="/yb" aria-current="page">
+  <a class="nav-plat-item" href="/yb">
     <div class="ps-avatar ps-avatar-yb"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 3</span>
+      <span class="ps-desc">Video harian · cari &amp; tonton</span>
+    </div>
+  </a>
+  <a class="nav-plat-item active" href="/bk" aria-current="page">
+    <div class="ps-avatar ps-avatar-bk"><img src="/logo.png" alt="Vidorey"></div>
+    <div class="ps-info">
+      <span class="ps-name">Vidorey 4</span>
       <span class="ps-desc">Video harian · cari &amp; tonton</span>
     </div>
     <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <polyline points="20 6 9 17 4 12"/>
     </svg>
   </a>
-  <a class="nav-plat-item" href="/bk">
-    <div class="ps-avatar ps-avatar-bk"><img src="/logo.png" alt="Vidorey"></div>
-    <div class="ps-info">
-      <span class="ps-name">Vidorey 4</span>
-      <span class="ps-desc">Video harian · cari &amp; tonton</span>
-    </div>
-  </a>
 </nav>
 
 <!-- ─── SEARCH BAR ─── -->
 <div class="rb-searchbar">
-  <form id="ybSearchForm" autocomplete="off">
+  <form id="bkSearchForm" autocomplete="off">
     <input
-      id="ybSearchInput"
+      id="bkSearchInput"
       class="rb-search-input"
       type="search"
       placeholder="Cari video…"
@@ -101,28 +101,28 @@
 
 <!-- ─── SHELL ─── -->
 <div class="shell">
-  <main class="content" id="ybContent">
+  <main class="content" id="bkContent">
 
     <!-- Search heading -->
-    <div id="ybSearchHeading" class="rb-search-heading"></div>
+    <div id="bkSearchHeading" class="rb-search-heading"></div>
 
-    <div id="ybLoadingState" class="state-view hidden">
+    <div id="bkLoadingState" class="state-view hidden">
       <div class="loader"><div class="loader-ring"></div></div>
       <p>Memuat…</p>
     </div>
 
-    <div id="ybErrorState" class="state-view hidden">
+    <div id="bkErrorState" class="state-view hidden">
       <div class="state-icon error-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
           <line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
       </div>
-      <p id="ybErrorMsg">Terjadi kesalahan.</p>
-      <button class="btn-retry" id="ybRetryBtn">Coba lagi</button>
+      <p id="bkErrorMsg">Terjadi kesalahan.</p>
+      <button class="btn-retry" id="bkRetryBtn">Coba lagi</button>
     </div>
 
-    <div id="ybEmptyState" class="state-view hidden">
+    <div id="bkEmptyState" class="state-view hidden">
       <div class="state-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <rect x="2" y="3" width="20" height="14" rx="2"/>
@@ -133,7 +133,7 @@
       <p>Tidak ada video ditemukan.</p>
     </div>
 
-    <div id="ybGrid" class="rb-grid"></div>
+    <div id="bkGrid" class="rb-grid"></div>
 
     <!-- ─── Native Banner Ad ─── -->
     <div class="ad-native-slot">
@@ -155,63 +155,53 @@
       <script src="https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js"></script>
     </div>
 
-    <div id="ybPagination" class="pagination hidden"></div>
+    <div id="bkPagination" class="pagination hidden"></div>
 
   </main>
 </div>
 
 <!-- ─── PLAYER MODAL ─── -->
-<div id="ybPlayerModal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-backdrop" id="ybModalBackdrop"></div>
+<div id="bkPlayerModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-backdrop" id="bkModalBackdrop"></div>
   <div class="modal-panel">
     <div class="modal-top">
       <div class="modal-meta">
-        <h2 id="ybVideoTitle" class="modal-title">—</h2>
-        <span id="ybVideoSub" class="modal-sub">Vidorey 3</span>
+        <h2 id="bkVideoTitle" class="modal-title">—</h2>
+        <span id="bkVideoSub" class="modal-sub">Vidorey 4</span>
       </div>
-      <button class="modal-close" id="ybModalClose" title="Tutup">
+      <button class="modal-close" id="bkModalClose" title="Tutup">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
     </div>
     <div class="video-stage rb-video-stage">
-      <div id="ybPlayerLoading" class="rb-player-loader">
+      <div id="bkPlayerLoading" class="rb-player-loader">
         <div class="loader-ring"></div>
         <p>Memuat video…</p>
       </div>
       <video
-        id="ybVideoEl"
+        id="bkVideoEl"
         class="rb-player-video hidden"
         controls
         playsinline
         preload="none"
       ></video>
-      <iframe
-        id="ybVideoFrame"
-        class="rb-player-frame hidden"
-        allowfullscreen
-        allow="autoplay; fullscreen; picture-in-picture"
-        referrerpolicy="no-referrer-when-downgrade"
-        frameborder="0"
-        scrolling="no"
-      ></iframe>
     </div>
   </div>
 </div>
 
 <div id="toast" aria-live="polite"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
 <script src="/config.js"></script>
-<script src="/yb.js"></script>
+<script src="/bk.js"></script>
 
 <!-- ─── Nav Drawer ─── -->
 <script>
 (function () {
-  var burger  = document.getElementById('navBurger');
-  var drawer  = document.getElementById('navDrawer');
-  var overlay = document.getElementById('navOverlay');
+  var burger   = document.getElementById('navBurger');
+  var drawer   = document.getElementById('navDrawer');
+  var overlay  = document.getElementById('navOverlay');
   var btnClose = document.getElementById('navClose');
   function openDrawer()  { drawer.classList.add('open');    overlay.classList.add('open');    burger.setAttribute('aria-expanded','true'); }
   function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('open'); burger.setAttribute('aria-expanded','false'); }
