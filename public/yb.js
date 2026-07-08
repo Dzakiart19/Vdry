@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════
-   Vidorey 3 — Platform 3 (YoBokep)
+   Vidorey 3 — Platform 3
    No sidebar · No categories · With search
 ═══════════════════════════════════════ */
 
