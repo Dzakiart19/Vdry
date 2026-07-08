@@ -22,6 +22,22 @@ const baseHeaders = {
 const THUMB_HOSTS  = new Set(['i.xpvid.cc']);
 const STREAM_HOSTS = new Set(['vidoycdn.b-cdn.net', 'cache.cdnvdy.com', 'cache.overfetch.video']);
 
+/* ── Monitor: real-time visit log ── */
+const MONITOR_KEY = process.env.SESSION_SECRET || '';
+const MON_BUF     = 500;       // max events disimpan di memory
+const monitorLog  = [];        // circular buffer
+let   monitorSSE  = [];        // connected SSE clients
+
+function pushMonitorEvent(type, payload) {
+  const ev = { ts: Date.now(), type, ...payload };
+  monitorLog.push(ev);
+  if (monitorLog.length > MON_BUF) monitorLog.shift();
+  const msg = `data: ${JSON.stringify(ev)}\n\n`;
+  monitorSSE = monitorSSE.filter(r => {
+    try { r.write(msg); return true; } catch { return false; }
+  });
+}
+
 /* ── Axios instances ── */
 const ax = axios.create({
   timeout:      20000,
@@ -122,6 +138,20 @@ app.use(cors({
 }));
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+/* ── Monitor middleware: catat setiap request API ── */
+app.use((req, _res, next) => {
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+           || req.socket?.remoteAddress || '?';
+  const ua = (req.headers['user-agent'] || '').slice(0, 100);
+  const p  = req.path;
+  if      (p.startsWith('/proxy/stream/'))  pushMonitorEvent('stream',   { id: p.split('/')[3] || '?', ip, ua });
+  else if (p.startsWith('/api/video/'))     pushMonitorEvent('video',    { id: p.split('/')[3] || '?', ip, ua });
+  else if (p.startsWith('/api/folder/'))    pushMonitorEvent('folder',   { id: p.split('/')[3] || '?', ip, ua });
+  else if (p.startsWith('/api/rb/video/'))  pushMonitorEvent('rb_video', { id: p.split('/')[4] || '?', ip, ua });
+  else if (p.startsWith('/api/rb/posts'))   pushMonitorEvent('rb_posts', { ip, ua });
+  next();
+});
 
 /* ── Health check (untuk cronjob / uptime monitor) ── */
 app.get('/health', (_req, res) => {
@@ -1101,6 +1131,140 @@ app.get('/embed/:id', (req, res) => {
   </video>
 </body>
 </html>`);
+});
+
+/* ═══════════════════════════════════════
+   MONITOR — real-time visitor dashboard
+═══════════════════════════════════════ */
+function checkMonitorKey(req, res) {
+  if (!MONITOR_KEY) { res.status(503).send('Monitor key not configured (SESSION_SECRET not set).'); return false; }
+  if (req.query.key !== MONITOR_KEY) { res.status(401).send('401 — ?key= salah.'); return false; }
+  return true;
+}
+
+app.get('/monitor', (req, res) => {
+  if (!checkMonitorKey(req, res)) return;
+  const key = encodeURIComponent(req.query.key);
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vidorey Monitor</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d0d12;color:#e0e0e8;min-height:100vh;padding:16px}
+  h1{font-size:1.1rem;color:#a78bfa;letter-spacing:.05em;margin-bottom:12px}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .stat{background:#1a1a24;border:1px solid #2a2a3a;border-radius:8px;padding:10px 16px;min-width:110px}
+  .stat-val{font-size:1.6rem;font-weight:700;color:#c4b5fd}
+  .stat-lbl{font-size:.7rem;color:#6b6b80;margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+  #feed{display:flex;flex-direction:column;gap:4px}
+  .ev{display:grid;grid-template-columns:70px 80px 1fr 120px;gap:8px;align-items:center;
+      background:#14141e;border:1px solid #1f1f2e;border-radius:6px;padding:7px 10px;
+      font-size:.75rem;animation:fadeIn .3s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .ev-time{color:#6b6b80;font-variant-numeric:tabular-nums}
+  .badge{display:inline-block;padding:2px 7px;border-radius:99px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  .b-stream  {background:#14532d;color:#4ade80}
+  .b-video   {background:#1e3a5f;color:#60a5fa}
+  .b-folder  {background:#2a2a2a;color:#a1a1aa}
+  .b-rb_video{background:#3b1d5a;color:#c084fc}
+  .b-rb_posts{background:#3b1d5a;color:#c084fc}
+  .ev-id{color:#d4d4d8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ev-ip{color:#71717a;font-size:.7rem;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;margin-right:6px;animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  #status{font-size:.72rem;color:#52525b;margin-bottom:12px}
+</style>
+</head>
+<body>
+<h1>⬡ Vidorey Monitor</h1>
+<div id="status"><span class="dot"></span>Connecting…</div>
+<div class="stats">
+  <div class="stat"><div class="stat-val" id="s-total">0</div><div class="stat-lbl">Total Events</div></div>
+  <div class="stat"><div class="stat-val" id="s-stream">0</div><div class="stat-lbl">Streams</div></div>
+  <div class="stat"><div class="stat-val" id="s-video">0</div><div class="stat-lbl">Video Opens</div></div>
+  <div class="stat"><div class="stat-val" id="s-ip">0</div><div class="stat-lbl">Unique IPs</div></div>
+</div>
+<div id="feed"></div>
+<script>
+const KEY = '${key}';
+const feed = document.getElementById('feed');
+const MAX_ROWS = 200;
+let counts = {total:0, stream:0, video:0};
+const ips = new Set();
+
+function fmt(ts){
+  const d = new Date(ts);
+  return d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+function addRow(ev, prepend=true){
+  counts.total++;
+  if(ev.type==='stream')  counts.stream++;
+  if(ev.type==='video')   counts.video++;
+  if(ev.ip) ips.add(ev.ip);
+  document.getElementById('s-total').textContent  = counts.total;
+  document.getElementById('s-stream').textContent = counts.stream;
+  document.getElementById('s-video').textContent  = counts.video;
+  document.getElementById('s-ip').textContent     = ips.size;
+
+  const row = document.createElement('div');
+  row.className = 'ev';
+  const badge = '<span class="badge b-'+ev.type+'">'+ev.type.replace('_',' ')+'</span>';
+  const ipShort = (ev.ip||'?').split(',')[0].trim().slice(0,20);
+  row.innerHTML = '<span class="ev-time">'+fmt(ev.ts)+'</span>'
+    + badge
+    + '<span class="ev-id">'+(ev.id||'-')+'</span>'
+    + '<span class="ev-ip">'+ipShort+'</span>';
+  if(prepend) feed.prepend(row); else feed.append(row);
+  while(feed.children.length > MAX_ROWS) feed.lastChild.remove();
+}
+
+function connect(){
+  const es = new EventSource('/monitor/events?key='+KEY);
+  es.onopen = () => {
+    document.getElementById('status').innerHTML = '<span class="dot"></span>Live';
+  };
+  es.addEventListener('history', e => {
+    const data = JSON.parse(e.data);
+    // render history oldest-first (they'll be prepended so newest ends up on top)
+    data.events.slice().reverse().forEach(ev => addRow(ev, true));
+  });
+  es.addEventListener('event', e => {
+    addRow(JSON.parse(e.data), true);
+  });
+  es.onerror = () => {
+    document.getElementById('status').innerHTML = '<span style="color:#ef4444">● Disconnected — reconnecting…</span>';
+    es.close();
+    setTimeout(connect, 3000);
+  };
+}
+connect();
+</script>
+</body>
+</html>`);
+});
+
+app.get('/monitor/events', (req, res) => {
+  if (!checkMonitorKey(req, res)) return;
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  // Kirim history tersimpan sekaligus
+  res.write(`event: history\ndata: ${JSON.stringify({ events: monitorLog })}\n\n`);
+
+  // Daftarkan sebagai SSE client
+  monitorSSE.push(res);
+  const keepalive = setInterval(() => { try { res.write(': ping\n\n'); } catch {} }, 25000);
+  req.on('close', () => {
+    clearInterval(keepalive);
+    monitorSSE = monitorSSE.filter(r => r !== res);
+  });
 });
 
 /* ═══════════════════════════════════════
