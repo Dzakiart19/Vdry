@@ -9,6 +9,8 @@
     "rewrites": [
       { "source": "/rb",    "destination": "/rb.html" },
       { "source": "/rb/**", "destination": "/rb.html" },
+      { "source": "/yb",    "destination": "/yb.html" },
+      { "source": "/yb/**", "destination": "/yb.html" },
       { "source": "**",     "destination": "/index.html" }
     ],
     "headers": [

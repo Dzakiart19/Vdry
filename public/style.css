@@ -1443,6 +1443,8 @@ body.rb-page .content {
 .rb-search-clear:hover { color: var(--text); border-color: var(--surface3); }
 #rbSearchHeading { display: none; }
 #rbSearchHeading.visible { display: flex; align-items: center; gap: 4px; }
+#ybSearchHeading { display: none; }
+#ybSearchHeading.visible { display: flex; align-items: center; gap: 4px; }
 
 /* ── Pagination spacing ── */
 #rbPagination {
