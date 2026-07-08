@@ -46,6 +46,36 @@ Navigasi antar platform via tombol di kanan atas topbar.
 - `public/config.js` — `window.BACKEND_URL` hardcode ke `https://vidorey--lturner686.replit.app`
   - Replit dev: override ke `''` (relatif) berdasarkan hostname `.replit.app` / `.replit.dev` / `localhost`
 
+## Monitor — Real-Time Visitor Dashboard
+
+Route khusus di Replit backend, **tidak** ada di Firebase (Firebase hanya serve file statis).
+
+| Route | Fungsi |
+|---|---|
+| `/monitor` | Dashboard HTML (SSE-based, live event feed) |
+| `/monitor/events` | SSE stream (text/event-stream) |
+
+### Auth
+- Diproteksi dengan `SESSION_SECRET` env var sebagai key
+- Buka `/monitor` tanpa `?key=` → tampil form login (input password)
+- Submit form → redirect ke `/monitor?key=...` — bisa di-bookmark
+- Key salah → pesan error di form, bukan 401 polos
+
+### Event Types yang Ditrack
+| Badge | Trigger |
+|---|---|
+| `stream` | `/proxy/stream/:id` dipanggil (user menonton) |
+| `video` | `/api/video/:id` dipanggil (user buka player) |
+| `folder` | `/api/folder/:id` dipanggil (user browse folder) |
+| `rb_video` | `/api/rb/video/:slug` dipanggil |
+| `rb_posts` | `/api/rb/posts` dipanggil |
+
+### Implementasi
+- Buffer di memory: 500 event terakhir (`monitorLog` array)
+- SSE: koneksi terbuka push event realtime; history dikirim sekali saat connect
+- Keepalive ping setiap 25 detik agar koneksi tidak di-drop
+- Dua tombol di dashboard: **🔥 vidorey.web.app** dan **📊 Firebase Analytics** (→ analytics.google.com)
+
 ## User Preferences
 - Dark theme (Obsidian Archive design system)
 - Bahasa Indonesia untuk UI
