@@ -165,7 +165,9 @@ app.get('/health', (_req, res) => {
 });
 
 /* ── Health detail — cache stats + cdn-alerts sejak server start ── */
-app.get('/health/detail', (_req, res) => {
+app.get('/health/detail', (req, res) => {
+  if (!MONITOR_KEY || req.query.key !== MONITOR_KEY)
+    return res.status(401).json({ error: 'Unauthorized' });
   const uptime = process.uptime();
   const uptimeStr = `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`;
   res.json({
@@ -1162,9 +1164,10 @@ function isAllowedYbCdnUrl(raw) {
 }
 
 /* ── Caches Platform 3 ── */
-const ybM3u8Cache  = makeCache(500,  3 * 60 * 1000,      'p3_m3u8');   // slug → m3u8Url (TTL 3 mnt)
-const ybPostsCache = makeCache(200,  3 * 60 * 1000,      'p3_posts');  // key  → result
-const ybThumbCache = makeCache(2000, 24 * 60 * 60 * 1000,'p3_thumb');  // slug → thumbUrl (TTL 24 jam)
+const ybM3u8Cache         = makeCache(500,  3 * 60 * 1000,       'p3_m3u8');         // slug → m3u8Url (TTL 3 mnt)
+const ybPostsCache        = makeCache(200,  3 * 60 * 1000,       'p3_posts');        // key  → result
+const ybThumbCache        = makeCache(2000, 24 * 60 * 60 * 1000, 'p3_thumb');        // slug → thumbUrl (TTL 24 jam)
+const ybFreshSessionCache = makeCache(100,  20 * 1000,            'p3_freshSession'); // slug → {masterUrl, masterContent, subs}
 function ybPostsCacheKey(page, q) { return `${page}:${q || ''}`; }
 
 /* ── Rewrite m3u8 manifest — proxy semua URL ke /proxy/yb/seg ── */
@@ -1323,6 +1326,81 @@ async function resolveYbVideoUrl(embedUrl) {
   }
 }
 
+/* ── P3 Self-healing: fresh session + reresolve (mirror pola P2) ──────────
+   bysezejataos CDN: token expire (TTL) → re-resolve.
+   streamhls CDN (savefiles.com): i= token dikunci ke IP → re-resolve jika IP drift.
+   freshSessionCache (TTL 20 detik) mencegah flood re-resolve saat banyak segment
+   gagal berurutan: hanya SATU re-fetch yang terjadi per slug per window. ── */
+
+async function getYbFreshSession(slug, forceNew = false) {
+  if (!forceNew) {
+    const cached = ybFreshSessionCache.get(slug);
+    if (cached) return cached;
+  }
+  const { embedUrl } = await fetchYbEmbedInfo(slug);
+  if (!embedUrl) return null;
+  const masterUrl = await resolveYbVideoUrl(embedUrl);
+  if (!masterUrl || !isAllowedYbCdnUrl(masterUrl)) return null;
+  ybM3u8Cache.set(slug, masterUrl);
+  const session = { masterUrl, masterContent: null, subs: new Map() };
+  ybFreshSessionCache.set(slug, session);
+  return session;
+}
+
+/* Ambil URL baru (dengan token segar) untuk segment/sub-manifest targetUrl.
+   Cocokkan berdasarkan nama file (tanpa query token) — sama dengan pola P2. */
+async function reresolveYbUrl(slug, targetUrl, forceNew = false) {
+  const session = await getYbFreshSession(slug, forceNew);
+  if (!session) return null;
+
+  if (!session.masterContent) {
+    const referer = targetUrl.includes('savefiles.com') || targetUrl.includes('bysezejataos.com')
+      ? 'https://bysezejataos.com/' : `${YB_BASE}/`;
+    const r = await axYbSeg.get(session.masterUrl, {
+      headers: { 'User-Agent': UA, 'Referer': referer },
+      timeout: 15000,
+    });
+    session.masterContent = String(r.data);
+  }
+
+  const targetBase = basenameNoQuery(targetUrl);
+  const masterBase = session.masterUrl.substring(0, session.masterUrl.lastIndexOf('/') + 1);
+
+  // Cek langsung di master (untuk sub-manifest)
+  for (const line of session.masterContent.split('\n')) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const abs = t.startsWith('http') ? t : masterBase + t;
+    if (basenameNoQuery(abs) === targetBase) return abs;
+  }
+
+  // Cek di tiap sub-manifest (untuk segment TS/MP4)
+  for (const line of session.masterContent.split('\n')) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const subUrl = t.startsWith('http') ? t : masterBase + t;
+    try {
+      const subKey = basenameNoQuery(subUrl);
+      if (!session.subs.has(subKey)) {
+        const r = await axYbSeg.get(subUrl, {
+          headers: { 'User-Agent': UA, 'Referer': 'https://bysezejataos.com/' },
+          timeout: 10000,
+        });
+        session.subs.set(subKey, String(r.data));
+      }
+      const subContent = session.subs.get(subKey);
+      const subBase    = subUrl.substring(0, subUrl.lastIndexOf('/') + 1);
+      for (const sl of subContent.split('\n')) {
+        const st = sl.trim();
+        if (!st || st.startsWith('#')) continue;
+        const abs = st.startsWith('http') ? st : subBase + st;
+        if (basenameNoQuery(abs) === targetBase) return abs;
+      }
+    } catch { continue; }
+  }
+  return null;
+}
+
 /* ── YB: Post listing ──────────────────────────────────────────────────────
    Diagnosis: yobokep.com HTML listing page selalu return 24 post yang sama
    di semua /page/N/ (server-side pagination tidak berjalan — butuh JS/AJAX).
@@ -1446,7 +1524,6 @@ app.get('/proxy/yb/hls/:slug', async (req, res) => {
   const slug = req.params.slug;
   if (!/^[a-z0-9-]+$/i.test(slug)) return apiError(res, 400, 'Invalid slug');
 
-  /* Ambil manifest dari CDN. Jika CDN tolak (token expire) → re-resolve fresh. */
   async function fetchManifest(url) {
     return axYbSeg.get(url, {
       headers: { 'User-Agent': UA, 'Referer': 'https://bysezejataos.com/' },
@@ -1454,37 +1531,29 @@ app.get('/proxy/yb/hls/:slug', async (req, res) => {
     });
   }
 
-  async function reresolve() {
-    const { embedUrl } = await fetchYbEmbedInfo(slug);
-    if (!embedUrl) return null;
-    const fresh = await resolveYbVideoUrl(embedUrl);
-    if (!fresh || !isAllowedYbCdnUrl(fresh)) return null;
-    ybM3u8Cache.set(slug, fresh);
-    return fresh;
-  }
-
   try {
     let m3u8Url = ybM3u8Cache.get(slug);
 
-    // Cache miss → resolve sekarang
+    // Cache miss → resolve fresh via getYbFreshSession
     if (!m3u8Url) {
-      m3u8Url = await reresolve();
-      if (!m3u8Url) return apiError(res, 404, 'Stream tidak ditemukan');
+      const session = await getYbFreshSession(slug, true);
+      if (!session) return apiError(res, 404, 'Stream tidak ditemukan');
+      m3u8Url = session.masterUrl;
     }
 
     let manifestResp = await fetchManifest(m3u8Url);
 
-    // CDN menolak → token expire → coba re-resolve sekali
+    // CDN menolak → token expire → re-resolve sekali via getYbFreshSession
     if (manifestResp.status < 200 || manifestResp.status >= 300) {
       console.warn(`yb hls: CDN reject ${manifestResp.status} slug="${slug}", re-resolving…`);
-      m3u8Url = await reresolve();
-      if (!m3u8Url) return apiError(res, 502, 'CDN menolak manifest stream');
+      const session = await getYbFreshSession(slug, true);
+      if (!session) return apiError(res, 502, 'CDN menolak manifest stream');
+      m3u8Url = session.masterUrl;
       manifestResp = await fetchManifest(m3u8Url);
     }
 
-    if (manifestResp.status < 200 || manifestResp.status >= 300) {
+    if (manifestResp.status < 200 || manifestResp.status >= 300)
       return apiError(res, 502, 'CDN menolak manifest stream');
-    }
 
     const base      = m3u8Url.substring(0, m3u8Url.lastIndexOf('/') + 1);
     const rewritten = rewriteYbM3u8(String(manifestResp.data), base, slug);
@@ -1499,11 +1568,15 @@ app.get('/proxy/yb/hls/:slug', async (req, res) => {
   }
 });
 
-/* ── YB: HLS segment proxy ── */
+/* ── YB: HLS segment proxy — self-healing + stream.pipeline() ── */
 app.get('/proxy/yb/seg', async (req, res) => {
-  const raw = req.query.url;
+  const raw      = req.query.url;
+  const slugHint = /^[a-z0-9-]+$/i.test(req.query._s || '') ? req.query._s : null;
   if (!raw || !isAllowedYbCdnUrl(raw)) return res.status(400).end();
+  await handleYbSeg(raw, slugHint, req, res, false);
+});
 
+async function handleYbSeg(raw, slugHint, req, res, isRetry) {
   try {
     const upstream = await axYbSeg.get(raw, {
       headers: { 'User-Agent': UA, 'Referer': 'https://bysezejataos.com/' },
@@ -1511,20 +1584,26 @@ app.get('/proxy/yb/seg', async (req, res) => {
       timeout: 20000,
     });
 
+    const ct = (upstream.headers['content-type'] || '').toLowerCase();
+
+    // Non-2xx dari CDN → coba self-heal sekali sebelum menyerah
     if (upstream.status < 200 || upstream.status >= 300) {
       upstream.data.destroy();
+      console.error('yb seg: CDN reject', upstream.status, 'isRetry', isRetry, 'slug', slugHint);
+      if (!isRetry && slugHint && [401, 403, 500, 502, 503].includes(upstream.status)) {
+        const fresh = await reresolveYbUrl(slugHint, raw, true).catch(() => null);
+        if (fresh && fresh !== raw && isAllowedYbCdnUrl(fresh))
+          return handleYbSeg(fresh, slugHint, req, res, true);
+      }
       return res.status(upstream.status < 500 ? 404 : 502).end();
     }
-
-    const ct = (upstream.headers['content-type'] || '').toLowerCase();
 
     // Sub-manifest → rewrite URL sebelum dikirim ke client
     if (ct.includes('mpegurl') || raw.includes('.m3u8')) {
       let body = '';
       upstream.data.on('data', chunk => { body += chunk.toString(); });
       upstream.data.on('end', () => {
-        const base     = raw.substring(0, raw.lastIndexOf('/') + 1);
-        const slugHint = req.query._s || null;
+        const base      = raw.substring(0, raw.lastIndexOf('/') + 1);
         const rewritten = rewriteYbM3u8(body, base, slugHint);
         res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
         res.setHeader('Access-Control-Allow-Origin', '*');
@@ -1535,7 +1614,7 @@ app.get('/proxy/yb/seg', async (req, res) => {
       return;
     }
 
-    // Binary segment (ts, mp4, key, dll) — langsung pipe
+    // Binary segment (ts, mp4, key, dll)
     res.status(upstream.status);
     ['content-type', 'content-length', 'cache-control'].forEach(h => {
       if (upstream.headers[h]) res.setHeader(h, upstream.headers[h]);
@@ -1546,14 +1625,16 @@ app.get('/proxy/yb/seg', async (req, res) => {
       console.error('yb seg stream error:', err.message);
       if (!res.headersSent) res.status(502).end();
     });
-    upstream.data.pipe(res);
+    stream.pipeline(upstream.data, res, err => {
+      if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') console.error('yb seg pipeline:', err.message);
+    });
   } catch (err) {
     console.error('yb seg error:', err.message);
     if (!res.headersSent) res.status(502).end();
   }
-});
+}
 
-/* ── YB: Thumbnail proxy ── */
+/* ── YB: Thumbnail proxy — content-type validation + stream.pipeline() ── */
 const YB_THUMB_HOSTS = new Set(['yobokep.com', 'img-place.com', 'img.savefiles.com']);
 app.get('/proxy/yb/thumb', async (req, res) => {
   const raw = req.query.url;
@@ -1571,11 +1652,18 @@ app.get('/proxy/yb/thumb', async (req, res) => {
       responseType: 'stream',
       timeout: 10000,
     });
-    const ct = upstream.headers['content-type'] || 'image/jpeg';
+    const ct = upstream.headers['content-type'] || '';
+    if (!ct.startsWith('image/')) {
+      upstream.data.destroy();
+      return res.status(415).end();
+    }
     res.setHeader('Content-Type', ct);
     res.setHeader('Cache-Control', 'public, max-age=86400');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    upstream.data.pipe(res);
+    req.on('close', () => upstream.data.destroy());
+    stream.pipeline(upstream.data, res, err => {
+      if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') console.error('yb thumb pipeline:', err.message);
+    });
   } catch (err) {
     console.error('yb thumb error:', err.message);
     if (!res.headersSent) res.status(502).end();
