@@ -11,6 +11,8 @@
       { "source": "/rb/**", "destination": "/rb.html" },
       { "source": "/yb",    "destination": "/yb.html" },
       { "source": "/yb/**", "destination": "/yb.html" },
+      { "source": "/bk",    "destination": "/bk.html" },
+      { "source": "/bk/**", "destination": "/bk.html" },
       { "source": "**",     "destination": "/index.html" }
     ],
     "headers": [
