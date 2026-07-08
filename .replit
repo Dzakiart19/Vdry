@@ -38,3 +38,8 @@ externalPort = 80
 deploymentTarget = "autoscale"
 run = ["node", "server.js"]
 build = ["npm", "install", "--production"]
+
+[userenv]
+
+[userenv.shared]
+SESSION_SECRET = "Bdbdhdhdjdususjnsnsnsjdjdjxnjx"
