@@ -1148,6 +1148,7 @@ function isAllowedYbCdnUrl(raw) {
     if (u.protocol !== 'https:') return false;
     const hostOk = (
       u.hostname.endsWith('.r66nv9ed.com')   ||  // bysezejataos CDN (SprintCDN) — p=0, not IP-locked
+      u.hostname.endsWith('.owphbf24.com')   ||  // bysezejataos CDN (SprintCDN edge nodes, e.g. edge1-moscow/frankfurt)
       u.hostname.endsWith('.savefiles.com')  ||  // streamhls.to CDN — i= token, family:4 required
       u.hostname === 'savefiles.com'
     );
