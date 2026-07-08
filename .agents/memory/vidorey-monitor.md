@@ -1,58 +1,116 @@
 ---
 name: Vidorey Monitor — Real-Time SSE Dashboard
-description: /monitor route architecture, auth pattern, event tracking middleware, and UX decisions.
+description: /monitor dan /health/detail: auth pattern, event tracking, SSE architecture, dan unlimited buffer.
 ---
 
 # Vidorey Monitor
 
 ## Overview
-`/monitor` is a password-protected real-time visitor dashboard served by the Replit backend (`server.js`). It is NOT present on the Firebase frontend — Firebase only serves static files.
+
+`/monitor` dan `/health/detail` adalah endpoint monitoring yang diproteksi, dijalankan oleh Replit backend (`server.js`). Tidak ada di Firebase — Firebase hanya serve file statis.
 
 ---
 
-## Auth Pattern — Form Login, Not 401
+## Auth Pattern — Form Login, Bukan 401
 
-**Rule:** `/monitor` without `?key=` shows a login form, not a 401 error.
+**Rule:** Semua protected monitoring endpoint tanpa `?key=` menampilkan form login, bukan error mentah.
 
-**Why:** Users accessing from the Replit dev preview or production URL don't know to append `?key=SESSION_SECRET`. Showing a password form is friendlier. The form does a GET to `/monitor` with the entered value as `?key=`, so a correct submission results in a bookmark-able URL.
+**Why:** User tidak selalu tahu harus append `?key=SESSION_SECRET`. Form login lebih user-friendly. Submit form → GET ke endpoint yang sama dengan `?key=`, sehingga URL bisa di-bookmark.
 
 **How to apply:**
-- `checkMonitorKey(req, res)` — if key missing or wrong, render inline HTML login form and return `false`
-- Key salah → same form with "⚠ Key salah" error div
-- Auth is `process.env.SESSION_SECRET` (via `MONITOR_KEY` constant)
+```js
+// checkMonitorKey sekarang menerima parameter action (default '/monitor')
+function checkMonitorKey(req, res, action = '/monitor') { ... }
+
+// Di route handler:
+app.get('/monitor',        (req, res) => { if (!checkMonitorKey(req, res)) return; ... });
+app.get('/health/detail',  (req, res) => { if (!checkMonitorKey(req, res, '/health/detail')) return; ... });
+```
+
+- Key benar → handler dilanjutkan, return `true`
+- Key salah → render form login dengan error, return `false`
+- Auth key = `process.env.SESSION_SECRET` (via konstanta `MONITOR_KEY`)
+
+---
+
+## Endpoint yang Diproteksi
+
+| Route | Fungsi |
+|---|---|
+| `/monitor` | Dashboard HTML real-time (SSE live feed) |
+| `/monitor/events?key=` | SSE stream (`text/event-stream`) |
+| `/health/detail?key=` | JSON: cache stats, memory, uptime, CDN alerts |
 
 ---
 
 ## SSE Event Architecture
 
 ```
-monitorLog[]         — circular buffer, max 500 events in memory
-monitorSSE[]         — array of active res objects (SSE clients)
-pushMonitorEvent()   — appends to monitorLog, writes to all monitorSSE clients
+monitorLog[]         — unlimited array di memory (tidak ada trim)
+monitorSSE[]         — array active res objects (SSE clients)
+pushMonitorEvent()   — append ke monitorLog, write ke semua SSE clients
 ```
 
 On SSE connect (`/monitor/events?key=`):
-1. Send full history as `event: history` (JSON array)
-2. Push `res` into `monitorSSE[]`
-3. Send `: ping` every 25s keepalive
-4. On `req.close`, remove from `monitorSSE[]`
+1. Send full history sebagai `event: history` (JSON array)
+2. Push `res` ke `monitorSSE[]`
+3. Send `: ping` setiap 25 detik keepalive
+4. On `req.close`, remove dari `monitorSSE[]`
 
-Client JS listens for two event types:
-- `history` — bulk load past 500 events on connect
-- `event` — individual new events pushed live
+Client JS mendengarkan dua event type:
+- `history` — bulk load semua events saat pertama connect
+- `event` — event baru di-push live
+
+---
+
+## Buffer — Unlimited
+
+Semua buffer monitoring sudah diubah ke unlimited (tidak ada batas):
+- `MON_BUF = Infinity` — `monitorLog` tidak pernah di-trim
+- `CDN_ALERT_MAX = Infinity` — `cdnAlerts` tidak pernah di-trim
+- `MAX_ROWS = Infinity` — baris di tabel live feed tidak pernah dihapus
+
+**Trade-off:** Memory server naik seiring traffic. Restart server = semua data hilang (in-memory). Untuk persistent storage perlu database.
 
 ---
 
 ## Tracking Middleware
 
-Fires BEFORE route handlers (registered after `express.static`):
+Fires sebelum route handlers (didaftarkan setelah `express.static`):
 
-```js
-// Tracks: stream, video, folder, rb_video, rb_posts
-// Captures: IP (x-forwarded-for first), UA (truncated 100 chars), resource ID
+| Badge | Trigger |
+|---|---|
+| `stream` | `/proxy/stream/:id` (user menonton P1) |
+| `video` | `/api/video/:id` (user buka player P1) |
+| `folder` | `/api/folder/:id` (user browse folder P1) |
+| `rb_video` | `/api/rb/video/:slug` (P2) |
+| `rb_posts` | `/api/rb/posts` (P2) |
+| `yb_video` | `/api/yb/video/:slug` (P3) |
+| `yb_posts` | `/api/yb/posts` (P3) |
+
+IP diekstrak dari `x-forwarded-for` (value pertama, trimmed) — penting karena Replit proxy semua request.
+
+---
+
+## /health/detail Response
+
+```json
+{
+  "status": "ok",
+  "uptime": "2h 15m 30s",
+  "startedAt": "2026-07-08T00:00:00.000Z",
+  "memory": { "rss": "120.5 MB", "heapUsed": "45.2 MB" },
+  "caches": [
+    { "name": "p1_videoUrl", "size": 12, "hits": 340, "misses": 12 },
+    { "name": "p2_m3u8",     "size": 8,  "hits": 120, "misses": 8  },
+    { "name": "p2_posts",    "size": 3,  "hits": 45,  "misses": 3  },
+    { "name": "p2_freshSession", ... },
+    { "name": "p3_m3u8",    ... },
+    { "name": "p3_posts",   ... }
+  ],
+  "cdnAlerts": { "total": 3, "items": [...] }
+}
 ```
-
-IP is extracted from `x-forwarded-for` (first value, trimmed) — important because Replit proxies all requests.
 
 ---
 
@@ -61,12 +119,10 @@ IP is extracted from `x-forwarded-for` (first value, trimmed) — important beca
 - Dark theme matching app (`#0d0d12` background, `#a78bfa` accent)
 - Stats bar: Total Events · Streams · Video Opens · Unique IPs
 - Event rows: time · colored badge · resource ID · IP (truncated)
-- Two top-right buttons:
-  - **🔥 vidorey.web.app** → Firebase-hosted frontend
-  - **📊 Firebase Analytics** → `https://analytics.google.com/analytics/web/?authuser=1&hl=en-US#/a338511152p518732508/reports/dashboard?r=firebase-overview`
+- Tombol: **🔥 vidorey.web.app** dan **📊 Firebase Analytics**
 
 ---
 
-## What Monitor Cannot Track
+## Yang Tidak Bisa Ditrack
 
-Firebase serves static files directly from CDN — page views and navigation on `vidorey.web.app` that don't call the Replit backend are invisible to this monitor. Only API calls (folder browse, video open, stream play) are visible. Use Firebase Analytics (Google Analytics) for page-view-level data.
+Firebase serve file statis dari CDN — page views dan navigasi di `vidorey.web.app` yang tidak memanggil Replit backend tidak terlihat di monitor ini. Gunakan Firebase Analytics untuk page-view-level data.
