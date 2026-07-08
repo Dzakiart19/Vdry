@@ -4,7 +4,7 @@ Web app untuk browse dan nonton video dari empat platform terpisah.
 
 ## Stack
 - **Backend**: Node.js + Express (proxy + HTML scraper), modular — lihat struktur di bawah
-- **Frontend**: Vanilla JS SPA (no framework), tiga halaman terpisah
+- **Frontend**: Vanilla JS SPA (no framework), empat halaman terpisah
 - **Port**: 5000
 
 ## Struktur Backend
@@ -34,9 +34,17 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 | Platform 3 | `/yb` | yobokep.com | `yb.html` | `yb.js` |
 | Platform 4 | `/bk` | bokepking.cam | `bk.html` | `bk.js` |
 
-Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan Vidorey 1 / 2 / 3 dengan highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
+Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan Vidorey 1 / 2 / 3 / 4 dengan highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
 
-### Struktur Nav Drawer (sama di ketiga HTML)
+## Iklan (Adsterra)
+Tiga jenis slot iklan dipakai, semuanya identik di `index.html`/`rb.html`/`yb.html`/`bk.html`:
+1. **Native banner** (`.ad-native-slot`, di bawah grid listing) — key `761a1a8645cd2263043bfeb6f2e87eea`, invoke.js dari `pl28423230.effectivecpmnetwork.com`. Punya container `id` tetap (`container-<key>`) yang di-hardcode oleh jaringan iklan — **jangan diduplikasi di halaman yang sama** (duplicate `id` bikin script hanya render ke elemen pertama).
+2. **Display banner 300×250** (`.ad-display-slot` di listing, `.watch-ad-slot` di watch view) — pola `atOptions` + invoke.js dari `highperformanceformat.com`, **aman diduplikasi** berkali-kali di halaman yang sama karena scriptnya `document.write` langsung di lokasi tag, tidak butuh id unik (deklarasi `atOptions` di-reset tepat sebelum tiap invoke.js dipanggil).
+3. **Popunder + Social Bar** (di akhir `<body>`, sekali per halaman) — dua script dari `effectivecpmnetwork.com` (`pl28418540`, `pl28427857`), sengaja tidak dipakai di watch view karena bersifat mengganggu (buka tab baru / overlay mengambang).
+
+Semua domain iklan sudah masuk allowlist `script-src` di CSP (`server.js`) — kalau nambah jaringan iklan baru, domain barunya wajib ditambah eksplisit (CSP tidak pakai wildcard `https:`).
+
+### Struktur Nav Drawer (sama di keempat HTML)
 - `.nav-burger` (id `navBurger`) — tombol hamburger di dalam `.brand` di topbar
 - `div.nav-overlay` (id `navOverlay`) — backdrop gelap, z-index 149
 - `nav.nav-drawer` (id `navDrawer`) — panel slide-in, z-index 150
@@ -74,6 +82,8 @@ Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri 
 ### Watch View P2 (gaya YouTube/XNXX)
 Klik video membuka modal watch view (scrollable, **bukan** full-screen — desain sengaja): player di atas, lalu judul + deskripsi (gaya YouTube), lalu grid "Video Lainnya" + pagination client-side 8/halaman (gaya XNXX, dari `related` yang di-scrape). Tombol **Bagikan** di sebelah judul memakai `navigator.share()` (fallback copy-to-clipboard) dengan link `/rb/watch/<slug>` yang deep-link langsung ke video itu. URL address bar mengikuti video yang sedang tampil (`/rb/watch/<slug>`) via history API — lihat `openModal()`/popstate handler di `rb.js` untuk mekanisme back/forward yang harus tetap konsisten. Pola ini jadi acuan saat direplikasi ke P3/P4.
 
+Di bawah grid "Video Lainnya" (paling bawah watch view, dipisah garis) ada satu slot iklan kecil (`.watch-ad-slot`, banner iframe 300×250 dari `highperformanceformat.com` — domain sama dengan display ad yang sudah dipakai di listing, jadi tidak perlu tambahan allowlist CSP). Sengaja dipilih ad ini (bukan popunder/social bar) karena tidak membuka tab baru atau menutupi konten — hanya satu blok statis di posisi paling akhir, jadi tidak mengganggu nonton video atau baca related videos. Identik di P2/P3/P4.
+
 ## Cara Kerja — Platform 3 (yobokep.com)
 1. `/api/yb/posts` → WP REST API untuk slug + title + totalPages; parallel-fetch `og:image` dari tiap post untuk thumbnail (cache 24 jam)
 2. `/api/yb/video/:slug` → scrape post page → resolve embed (bysezejataos.com atau streamhls.to) → HLS URL; response juga membawa `description` (og:description) dan `related` (di-scrape dari widget "Related videos" — `.under-video-block` dengan heading persis "Related videos", isi `article.loop-video[data-main-thumb]`, markup mirip P2)
@@ -83,7 +93,7 @@ Klik video membuka modal watch view (scrollable, **bukan** full-screen — desai
 6. `/yb/watch/:slug` → SPA route (sama seperti `/yb`, serve `yb.html`) — deep-link/share URL, buka watch view video tsb saat diakses
 
 ### Watch View P3 (sama seperti P2)
-Pola watch view (player + judul/deskripsi + grid "Video Lainnya" + tombol Bagikan, deep-link `/yb/watch/<slug>`) direplikasi identik dari P2 — lihat "Watch View P2" di atas untuk detail UX dan mekanisme history/popstate.
+Pola watch view (player + judul/deskripsi + grid "Video Lainnya" + tombol Bagikan + slot iklan kecil di bawah, deep-link `/yb/watch/<slug>`) direplikasi identik dari P2 — lihat "Watch View P2" di atas untuk detail UX, mekanisme history/popstate, dan penempatan iklan.
 
 ### Kenapa WP REST API untuk P3 (bukan HTML scrape seperti P2)
 yobokep.com HTML listing page selalu mengembalikan 24 post yang sama di semua `/page/N/` — server-side pagination tidak berjalan (butuh JS/AJAX dari browser). WP REST API paginasinya benar via `x-wp-totalpages` header.
@@ -101,7 +111,7 @@ yobokep.com HTML listing page selalu mengembalikan 24 post yang sama di semua `/
 5. `/bk/watch/:slug` → SPA route (sama seperti `/bk`, serve `bk.html`) — deep-link/share URL, buka watch view video tsb saat diakses
 
 ### Watch View P4 (sama seperti P2, player MP4 langsung tanpa iframe)
-Pola watch view direplikasi dari P2/P3 — player (elemen `<video>` MP4 langsung, tidak ada iframe di modal P4) + judul/deskripsi + grid "Video Lainnya" + tombol Bagikan, deep-link `/bk/watch/<slug>`. Mekanisme history/popstate identik dengan P2/P3.
+Pola watch view direplikasi dari P2/P3 — player (elemen `<video>` MP4 langsung, tidak ada iframe di modal P4) + judul/deskripsi + grid "Video Lainnya" + tombol Bagikan + slot iklan kecil di bawah, deep-link `/bk/watch/<slug>`. Mekanisme history/popstate identik dengan P2/P3.
 
 ### CDN Allowlist P4 (isAllowedBkCdnUrl + isAllowedBkThumbUrl)
 - `vdn.bokepking.cam` — CDN video & thumbnail utama (tanpa signed token, TTL 30 mnt aman)

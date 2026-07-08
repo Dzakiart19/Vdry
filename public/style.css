@@ -880,6 +880,20 @@ body {
   border-radius: 4px;
   letter-spacing: .02em;
 }
+/* Ad kecil di bawah "Video Lainnya" — sengaja dipisah dari grid supaya
+   jelas terlihat sebagai iklan, bukan bagian dari related videos, dan
+   tidak menutupi/menganggu player atau tombol Bagikan. */
+.watch-ad-slot {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  min-height: 250px;
+  overflow: hidden;
+}
+.watch-ad-slot:empty { display: none; }
+
 @media (max-width: 600px) {
   .modal-panel-watch { max-height: 96vh; }
   .watch-info { padding: 12px 14px 4px; }
