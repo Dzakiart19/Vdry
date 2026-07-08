@@ -1155,7 +1155,12 @@ app.get('/monitor', (req, res) => {
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d0d12;color:#e0e0e8;min-height:100vh;padding:16px}
-  h1{font-size:1.1rem;color:#a78bfa;letter-spacing:.05em;margin-bottom:12px}
+  h1{font-size:1.1rem;color:#a78bfa;letter-spacing:.05em;margin-bottom:8px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .btn-firebase{display:inline-flex;align-items:center;gap:6px;background:#1a1a24;border:1px solid #f59e0b44;
+    color:#fbbf24;border-radius:8px;padding:6px 14px;font-size:.78rem;font-weight:600;text-decoration:none;
+    letter-spacing:.03em;transition:background .15s}
+  .btn-firebase:hover{background:#2a2010}
   .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
   .stat{background:#1a1a24;border:1px solid #2a2a3a;border-radius:8px;padding:10px 16px;min-width:110px}
   .stat-val{font-size:1.6rem;font-weight:700;color:#c4b5fd}
@@ -1180,7 +1185,12 @@ app.get('/monitor', (req, res) => {
 </style>
 </head>
 <body>
-<h1>⬡ Vidorey Monitor</h1>
+<div class="topbar">
+  <h1>⬡ Vidorey Monitor</h1>
+  <a class="btn-firebase" href="https://vidorey.web.app" target="_blank" rel="noopener">
+    🔥 vidorey.web.app
+  </a>
+</div>
 <div id="status"><span class="dot"></span>Connecting…</div>
 <div class="stats">
   <div class="stat"><div class="stat-val" id="s-total">0</div><div class="stat-lbl">Total Events</div></div>
