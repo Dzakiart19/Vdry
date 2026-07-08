@@ -25,14 +25,14 @@ const STREAM_HOSTS = new Set(['vidoycdn.b-cdn.net', 'cache.cdnvdy.com', 'cache.o
 
 /* ── Monitor: real-time visit log ── */
 const MONITOR_KEY = process.env.SESSION_SECRET || '';
-const MON_BUF     = 500;       // max events disimpan di memory
+const MON_BUF     = Infinity;  // unlimited — semua events disimpan di memory
 const monitorLog  = [];        // circular buffer
 let   monitorSSE  = [];        // connected SSE clients
 
 function pushMonitorEvent(type, payload) {
   const ev = { ts: Date.now(), type, ...payload };
   monitorLog.push(ev);
-  if (monitorLog.length > MON_BUF) monitorLog.shift();
+  // unlimited — tidak ada trim
   const msg = `data: ${JSON.stringify(ev)}\n\n`;
   monitorSSE = monitorSSE.filter(r => {
     try { r.write(msg); return true; } catch { return false; }
@@ -688,10 +688,10 @@ async function axSegmentGet(url, config = {}, retries = 2) {
 
 /* ── CDN Alert buffer — ditangkap oleh logCdnAlert(), dibaca oleh /health/detail ── */
 const cdnAlerts = [];
-const CDN_ALERT_MAX = 100;
+const CDN_ALERT_MAX = Infinity; // unlimited
 function logCdnAlert(msg) {
   console.warn(msg);
-  if (cdnAlerts.length >= CDN_ALERT_MAX) cdnAlerts.shift();
+  // unlimited — tidak ada trim
   cdnAlerts.push({ ts: new Date().toISOString(), msg });
 }
 
@@ -1750,7 +1750,7 @@ app.get('/monitor', (req, res) => {
 <script>
 const KEY = '${key}';
 const feed = document.getElementById('feed');
-const MAX_ROWS = 200;
+const MAX_ROWS = Infinity; // unlimited
 let counts = {total:0, stream:0, video:0};
 const ips = new Set();
 
@@ -1777,7 +1777,7 @@ function addRow(ev, prepend=true){
     + '<span class="ev-id">'+(ev.id||'-')+'</span>'
     + '<span class="ev-ip">'+ipShort+'</span>';
   if(prepend) feed.prepend(row); else feed.append(row);
-  while(feed.children.length > MAX_ROWS) feed.lastChild.remove();
+  // unlimited — tidak ada trim baris
 }
 
 function connect(){
