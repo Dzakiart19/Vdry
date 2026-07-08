@@ -65,10 +65,14 @@ Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri 
 ## Cara Kerja — Platform 2 (ruangbokep.ws)
 1. `/api/rb/categories` → fetch kategori via WordPress REST API
 2. `/api/rb/posts` → scrape listing HTML (`article.loop-video[data-main-thumb]`) — support pagination & kategori
-3. `/api/rb/video/:slug` → resolve iframe embed URL (putarvid/streamruby) → HLS via PackerJS decode
+3. `/api/rb/video/:slug` → resolve iframe embed URL (putarvid/streamruby) → HLS via PackerJS decode; response juga membawa `description` (og:description) dan `related` (array video terkait, discrape dari widget "Related videos" di halaman post itu sendiri)
 4. `/proxy/rb/hls/:slug` → proxy master m3u8, rewrite semua URL ke `/proxy/rb/seg`
 5. `/proxy/rb/seg` → proxy segment/sub-manifest; self-healing saat CDN 403 via `handleRbSeg` + `reresolveUrl`
 6. `/proxy/rb/thumb?url=` → proxy thumbnail (validasi `content-type: image/*`)
+7. `/rb/watch/:slug` → SPA route (sama seperti `/rb`, serve `rb.html`) — dipakai sebagai deep-link/share URL, langsung membuka watch view video tsb saat diakses
+
+### Watch View P2 (gaya YouTube/XNXX)
+Klik video membuka modal watch view (scrollable, **bukan** full-screen — desain sengaja): player di atas, lalu judul + deskripsi (gaya YouTube), lalu grid "Video Lainnya" + pagination client-side 8/halaman (gaya XNXX, dari `related` yang di-scrape). Tombol **Bagikan** di sebelah judul memakai `navigator.share()` (fallback copy-to-clipboard) dengan link `/rb/watch/<slug>` yang deep-link langsung ke video itu. URL address bar mengikuti video yang sedang tampil (`/rb/watch/<slug>`) via history API — lihat `openModal()`/popstate handler di `rb.js` untuk mekanisme back/forward yang harus tetap konsisten. Pola ini jadi acuan saat direplikasi ke P3/P4.
 
 ## Cara Kerja — Platform 3 (yobokep.com)
 1. `/api/yb/posts` → WP REST API untuk slug + title + totalPages; parallel-fetch `og:image` dari tiap post untuk thumbnail (cache 24 jam)

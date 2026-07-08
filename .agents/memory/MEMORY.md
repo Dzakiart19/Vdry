@@ -8,4 +8,4 @@
 - [Vidorey Deploy Config](vidorey-deploy-config.md) — config.js pakai placeholder __REPLIT_BACKEND_URL__; deploy.sh pakai trap EXIT restore + sed delimiter |; jangan hardcode URL di file.
 - [Vidorey CSP Allowlist](vidorey-csp-allowlist.md) — script-src tidak pakai https: wildcard; domain eksplisit wajib ditambah jika ada script/ad network baru.
 - [Vidorey Nav Drawer](vidorey-nav-drawer.md) — platform switcher adalah sidebar drawer (hamburger ≡), bukan dropdown; ID lama platformSwitcher/psTrigger/psMenu sudah dihapus dari semua HTML.
-- [RB Watch View + Related](rb-watch-view-related.md) — related-videos widget ada di source site sendiri (article.loop-video); openModal() harus idempotent saat related-card klik ulang, atau history/back rusak.
+- [RB Watch View + Related + Share](rb-watch-view-related.md) — related-videos widget ada di source site sendiri; URL /rb/watch/:slug jadi share link; openModal() idempotent + popstate 3-branch wajib buat back/forward konsisten.
