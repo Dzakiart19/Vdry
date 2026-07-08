@@ -119,16 +119,20 @@ app.use(helmet({
 /* ── CORS ── */
 app.use(cors({
   origin(origin, cb) {
-    // Izinkan: tanpa origin (curl/Postman), localhost, *.replit.dev, *.replit.app
+    // Izinkan: tanpa origin (curl/Postman), localhost (exact), *.replit.dev, *.replit.app
     if (!origin) return cb(null, true);
-    const ok = [
-      /^http:\/\/localhost/,
-      /\.replit\.dev$/,
-      /\.replit\.app$/,
-      /^https:\/\/vidorey\.web\.app$/,
-      /^https:\/\/vidorey\.firebaseapp\.com$/,
-      /^https:\/\/vidorey--lturner686\.replit\.app$/,
-    ].some(r => r.test(origin));
+    let hostname, proto;
+    try { const u = new URL(origin); hostname = u.hostname; proto = u.protocol; }
+    catch { return cb(new Error('CORS: origin tidak valid'), false); }
+    // Gunakan URL parsing agar "localhost.evil.com" tidak lolos prefix check
+    const ok = (
+      (hostname === 'localhost')                                        ||
+      (hostname.endsWith('.replit.dev')  && proto === 'https:')        ||
+      (hostname.endsWith('.replit.app')  && proto === 'https:')        ||
+      origin === 'https://vidorey.web.app'                             ||
+      origin === 'https://vidorey.firebaseapp.com'                     ||
+      origin === 'https://vidorey--lturner686.replit.app'
+    );
     cb(ok ? null : new Error('CORS: origin tidak diizinkan'), ok);
   },
   methods: ['GET', 'HEAD'],
@@ -599,18 +603,28 @@ app.get('/api/rb/posts', async (req, res) => {
 });
 
 /* ── RB CDN allowlist untuk HLS proxy ── */
+// Ekstensi path yang diizinkan: HLS segments, manifest, encryption key, init segment
+const RB_CDN_ALLOWED_EXT = new Set(['.ts', '.m3u8', '.m3u', '.aac', '.mp4', '.m4s', '.key', '.init']);
+
 function isAllowedRbCdnUrl(raw) {
   try {
     const u = new URL(raw);
     if (u.protocol !== 'https:') return false;
-    const ok = (
+    // Validasi host: hanya domain CDN yang diketahui dipakai oleh putarvid/streamruby
+    const hostOk = (
       u.hostname === 'putarvid.com'         ||
       u.hostname.endsWith('.putarvid.com')  ||
       u.hostname.endsWith('.streamruby.net') ||  // putarvid stream CDN
       u.hostname.endsWith('.b-cdn.net')     ||
       u.hostname.endsWith('.bunnycdn.com')
     );
-    if (!ok) logCdnAlert(`[cdn-alert] P2 CDN domain baru terdeteksi: "${u.hostname}" — tambahkan ke isAllowedRbCdnUrl jika legit`);
+    // Validasi path: hanya izinkan ekstensi HLS yang valid agar proxy tidak bisa
+    // dipakai untuk fetch konten arbitrer dari CDN-CDN broad ini.
+    const ext = u.pathname.substring(u.pathname.lastIndexOf('.')).toLowerCase();
+    const extOk = RB_CDN_ALLOWED_EXT.has(ext) || u.pathname.endsWith('.m3u8');
+    const ok = hostOk && extOk;
+    if (!hostOk) logCdnAlert(`[cdn-alert] P2 CDN domain baru terdeteksi: "${u.hostname}" — tambahkan ke isAllowedRbCdnUrl jika legit`);
+    if (hostOk && !extOk) logCdnAlert(`[cdn-alert] P2 path ekstensi tidak dikenal: "${u.pathname}" dari "${u.hostname}"`);
     return ok;
   } catch { return false; }
 }
