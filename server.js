@@ -1227,7 +1227,7 @@ app.get('/monitor', (req, res) => {
   <h1>⬡ Vidorey Monitor</h1>
   <div class="toplinks">
     <a class="btn-firebase" href="https://vidorey.web.app" target="_blank" rel="noopener">🔥 vidorey.web.app</a>
-    <a class="btn-console" href="https://console.firebase.google.com/project/vidorey/analytics/overview" target="_blank" rel="noopener">📊 Firebase Console</a>
+    <a class="btn-console" href="https://analytics.google.com/analytics/web/?authuser=1&hl=en-US#/a338511152p518732508/reports/dashboard?r=firebase-overview" target="_blank" rel="noopener">📊 Firebase Analytics</a>
   </div>
 </div>
 <div id="status"><span class="dot"></span>Connecting…</div>
