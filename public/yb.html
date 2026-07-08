@@ -15,44 +15,63 @@
 
 <!-- ─── TOPBAR ─── -->
 <header class="topbar">
-  <div class="brand ps-wrapper" id="platformSwitcher">
-    <button class="ps-trigger" id="psTrigger" aria-haspopup="listbox" aria-expanded="false">
+  <div class="brand">
+    <button class="nav-burger" id="navBurger" aria-label="Menu platform" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <div class="brand-static">
       <div class="brand-icon">
         <img src="/logo.png" alt="Vidorey" class="brand-logo-img" />
       </div>
       <span class="brand-name">Vidorey</span>
-      <svg class="ps-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-        <polyline points="6 9 12 15 18 9"/>
-      </svg>
-    </button>
-    <div class="ps-menu hidden" id="psMenu" role="listbox">
-      <a class="ps-item" href="/" role="option">
-        <div class="ps-avatar">V</div>
-        <div class="ps-info">
-          <span class="ps-name">Vidorey 1</span>
-          <span class="ps-desc">Folder video · streaming</span>
-        </div>
-      </a>
-      <a class="ps-item" href="/rb" role="option">
-        <div class="ps-avatar ps-avatar-rb">R</div>
-        <div class="ps-info">
-          <span class="ps-name">Vidorey 2</span>
-          <span class="ps-desc">Video harian · cari &amp; tonton</span>
-        </div>
-      </a>
-      <a class="ps-item ps-active" href="/yb" role="option" aria-selected="true">
-        <div class="ps-avatar ps-avatar-yb">Y</div>
-        <div class="ps-info">
-          <span class="ps-name">Vidorey 3</span>
-          <span class="ps-desc">Video harian · cari &amp; tonton</span>
-        </div>
-        <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-      </a>
     </div>
   </div>
 </header>
+
+<!-- ─── NAV DRAWER ─── -->
+<div class="nav-overlay" id="navOverlay"></div>
+<nav class="nav-drawer" id="navDrawer" aria-label="Pilih platform">
+  <div class="nav-drawer-head">
+    <div class="brand-icon">
+      <img src="/logo.png" alt="Vidorey" class="brand-logo-img" />
+    </div>
+    <span class="brand-name">Vidorey</span>
+    <button class="nav-drawer-close" id="navClose" aria-label="Tutup menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="nav-drawer-label">Pilih Platform</div>
+
+  <a class="nav-plat-item" href="/">
+    <div class="ps-avatar">V</div>
+    <div class="ps-info">
+      <span class="ps-name">Vidorey 1</span>
+      <span class="ps-desc">Folder video · streaming</span>
+    </div>
+  </a>
+  <a class="nav-plat-item" href="/rb">
+    <div class="ps-avatar ps-avatar-rb">R</div>
+    <div class="ps-info">
+      <span class="ps-name">Vidorey 2</span>
+      <span class="ps-desc">Video harian · cari &amp; tonton</span>
+    </div>
+  </a>
+  <a class="nav-plat-item active" href="/yb" aria-current="page">
+    <div class="ps-avatar ps-avatar-yb">Y</div>
+    <div class="ps-info">
+      <span class="ps-name">Vidorey 3</span>
+      <span class="ps-desc">Video harian · cari &amp; tonton</span>
+    </div>
+    <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </a>
+</nav>
 
 <!-- ─── SEARCH BAR ─── -->
 <div class="rb-searchbar">
@@ -166,16 +185,19 @@
 <script src="/config.js"></script>
 <script src="/yb.js"></script>
 
-<!-- ─── Platform Switcher ─── -->
+<!-- ─── Nav Drawer ─── -->
 <script>
 (function () {
-  var trigger = document.getElementById('psTrigger');
-  var menu    = document.getElementById('psMenu');
-  function open()  { menu.classList.remove('hidden'); trigger.setAttribute('aria-expanded','true'); }
-  function close() { menu.classList.add('hidden');    trigger.setAttribute('aria-expanded','false'); }
-  trigger.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.contains('hidden') ? open() : close(); });
-  document.addEventListener('click', close);
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  var burger  = document.getElementById('navBurger');
+  var drawer  = document.getElementById('navDrawer');
+  var overlay = document.getElementById('navOverlay');
+  var btnClose = document.getElementById('navClose');
+  function openDrawer()  { drawer.classList.add('open');    overlay.classList.add('open');    burger.setAttribute('aria-expanded','true'); }
+  function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('open'); burger.setAttribute('aria-expanded','false'); }
+  burger.addEventListener('click',   function (e) { e.stopPropagation(); openDrawer(); });
+  overlay.addEventListener('click',  closeDrawer);
+  btnClose.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
 })();
 </script>
 
