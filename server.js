@@ -1190,10 +1190,15 @@ app.get('/monitor', (req, res) => {
   body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d0d12;color:#e0e0e8;min-height:100vh;padding:16px}
   h1{font-size:1.1rem;color:#a78bfa;letter-spacing:.05em;margin-bottom:8px}
   .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .toplinks{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .btn-firebase{display:inline-flex;align-items:center;gap:6px;background:#1a1a24;border:1px solid #f59e0b44;
     color:#fbbf24;border-radius:8px;padding:6px 14px;font-size:.78rem;font-weight:600;text-decoration:none;
     letter-spacing:.03em;transition:background .15s}
   .btn-firebase:hover{background:#2a2010}
+  .btn-console{display:inline-flex;align-items:center;gap:6px;background:#1a1a24;border:1px solid #4285f444;
+    color:#74a9ff;border-radius:8px;padding:6px 14px;font-size:.78rem;font-weight:600;text-decoration:none;
+    letter-spacing:.03em;transition:background .15s}
+  .btn-console:hover{background:#101828}
   .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
   .stat{background:#1a1a24;border:1px solid #2a2a3a;border-radius:8px;padding:10px 16px;min-width:110px}
   .stat-val{font-size:1.6rem;font-weight:700;color:#c4b5fd}
@@ -1220,9 +1225,10 @@ app.get('/monitor', (req, res) => {
 <body>
 <div class="topbar">
   <h1>⬡ Vidorey Monitor</h1>
-  <a class="btn-firebase" href="https://vidorey.web.app" target="_blank" rel="noopener">
-    🔥 vidorey.web.app
-  </a>
+  <div class="toplinks">
+    <a class="btn-firebase" href="https://vidorey.web.app" target="_blank" rel="noopener">🔥 vidorey.web.app</a>
+    <a class="btn-console" href="https://console.firebase.google.com/project/vidorey/analytics/overview" target="_blank" rel="noopener">📊 Firebase Console</a>
+  </div>
 </div>
 <div id="status"><span class="dot"></span>Connecting…</div>
 <div class="stats">
