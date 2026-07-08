@@ -1,6 +1,6 @@
-# Vidorey — Tri-Platform Video Browser
+# Vidorey — Quad-Platform Video Browser
 
-Web app untuk browse dan nonton video dari tiga platform terpisah.
+Web app untuk browse dan nonton video dari empat platform terpisah.
 
 ## Stack
 - **Backend**: Node.js + Express (proxy + HTML scraper), modular — lihat struktur di bawah
@@ -8,7 +8,7 @@ Web app untuk browse dan nonton video dari tiga platform terpisah.
 - **Port**: 5000
 
 ## Struktur Backend
-`server.js` (composition root, ~90 baris) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 3 router platform → monitor/health routes → SPA fallback.
+`server.js` (composition root, ~150 baris) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 4 router platform → monitor/health routes → SPA fallback.
 
 ```
 server.js                 ← composition root (helmet/CSP, CORS, rate limit, mount routers, listen)
@@ -20,17 +20,19 @@ lib/
     p1.js                 ← xpvid.cc: folder/video API, stream+thumb proxy, /embed/:id
     rb.js                 ← ruangbokep.ws: PackerJS decode, self-healing CDN token, HLS proxy, /rb SPA route
     yb.js                 ← yobokep.com: dual embed provider (bysezejataos AES-256-GCM + streamhls.to), HLS proxy, /yb SPA route
+    bk.js                 ← bokepking.cam: WP REST API listing, direct MP4 proxy, /bk SPA route
 ```
 
-Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai `server.js` untuk agregasi `getCacheStats()` di `/health/detail`. **Tidak ada cross-import antar `p1.js`/`rb.js`/`yb.js`** — hanya `lib/cache.js` dan `lib/proxy.js` yang generik/stateless di-share.
+Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai `server.js` untuk agregasi `getCacheStats()` di `/health/detail`. **Tidak ada cross-import antar `p1.js`/`rb.js`/`yb.js`/`bk.js`** — hanya `lib/cache.js` dan `lib/proxy.js` yang generik/stateless di-share.
 
-## Tiga Platform (Completely Isolated)
+## Empat Platform (Completely Isolated)
 
 | Platform | URL | Source | HTML | JS |
 |---|---|---|---|---|
 | Platform 1 | `/` | xpvid.cc | `index.html` | `app.js` |
 | Platform 2 | `/rb` | ruangbokep.ws | `rb.html` | `rb.js` |
 | Platform 3 | `/yb` | yobokep.com | `yb.html` | `yb.js` |
+| Platform 4 | `/bk` | bokepking.cam | `bk.html` | `bk.js` |
 
 Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan Vidorey 1 / 2 / 3 dengan highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
 
@@ -83,6 +85,18 @@ yobokep.com HTML listing page selalu mengembalikan 24 post yang sama di semua `/
 - `*.owphbf24.com` — SprintCDN edge nodes geografis (moscow, frankfurt, dll)
 - `*.savefiles.com` + `savefiles.com` — streamhls.to CDN, token `i=` dikunci ke IP
 
+## Cara Kerja — Platform 4 (bokepking.cam)
+1. `/api/bk/posts?p=N&q=query` → WP REST API bypass (`/?rest_route=/wp/v2/posts`) untuk listing + pagination; parallel-fetch thumbnail dari `/wp/v2/media/:id` (cache 24 jam)
+2. `/api/bk/video/:slug` → scrape post HTML → extract `<meta itemprop="contentURL" content="...mp4">` atau `<source type="video/mp4">` → MP4 URL langsung (tidak pakai HLS)
+3. `/proxy/bk/stream/:slug` → proxy MP4 ke `vdn.bokepking.cam` dengan Range support; evict cache & retry sekali jika CDN 403/404
+4. `/proxy/bk/thumb?url=` → proxy thumbnail (allowlist `vdn.bokepking.cam` only, validasi `content-type: image/*`)
+
+### CDN Allowlist P4 (isAllowedBkCdnUrl + isAllowedBkThumbUrl)
+- `vdn.bokepking.cam` — CDN video & thumbnail utama (tanpa signed token, TTL 30 mnt aman)
+
+### Kenapa Direct MP4 (bukan HLS) untuk P4
+bokepking.cam menyimpan video sebagai MP4 langsung di `vdn.bokepking.cam` — tidak ada playlist `.m3u8`. Proksi dilakukan via `/proxy/bk/stream/:slug` dengan Range support supaya seek/scrubbing berfungsi.
+
 ## Deployment
 - **Replit (backend + dev frontend)**: server jalan di port 5000
 - **Firebase (production frontend)**: `vidorey.web.app` — host file statis dari `public/`
@@ -127,6 +141,8 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 | `rb_posts` | `/api/rb/posts` dipanggil (P2) |
 | `yb_video` | `/api/yb/video/:slug` dipanggil (P3) |
 | `yb_posts` | `/api/yb/posts` dipanggil (P3) |
+| `bk_video` | `/api/bk/video/:slug` dipanggil (P4) |
+| `bk_posts` | `/api/bk/posts` dipanggil (P4) |
 
 ### Implementasi Monitor
 - Buffer di memory: **unlimited** — semua events tersimpan (tidak ada trim)

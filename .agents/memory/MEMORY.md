@@ -1,10 +1,10 @@
 - [Platform 2 Architecture](rb-platform2-architecture.md) — HLS via PackerJS; self-healing CDN token; force IPv4 autoscale fix; single+double quote m3u8 regex.
-- [Vidorey Caching Strategy](vidorey-caching-strategy.md) — makeCache helper (get()→null not undefined); P1/P2/P3 caches + TTLs; sentinel values; monitor buffer unlimited.
+- [Vidorey Caching Strategy](vidorey-caching-strategy.md) — makeCache helper (get()→null not undefined); P1/P2/P3/P4 caches + TTLs; sentinel values; monitor buffer unlimited.
 - [RB Layout Scroll Fix](rb-layout-scroll-fix.md) — override via body.rb-page in style.css (NOT inline style in html); #ybSearchHeading CSS rules must mirror #rbSearchHeading.
 - [P1 Cross-Origin Video](p1-crossorigin-video.md) — never use crossorigin attr on <video>; set video.src immediately; *.overfetch.video allowlist.
 - [Vidorey Monitor](vidorey-monitor.md) — SSE unlimited buffer; checkMonitorKey(req,res,action) protects /monitor + /health/detail; P3 events tracked.
 - [P3 yobokep Architecture](yb-pagination-thumbnail.md) — HTML pagination broken (pakai WP REST API); thumbnail via parallel og:image fetch; self-healing handleYbSeg+reresolveYbUrl; CDN allowlist owphbf24.com.
-- [Vidorey Modular Refactor](vidorey-modular-refactor.md) — server.js split into lib/{cache,proxy,monitor,scrapers/p1,rb,yb}.js; platform isolation preserved, no cross-imports.
+- [Vidorey Modular Refactor](vidorey-modular-refactor.md) — server.js split into lib/{cache,proxy,monitor,scrapers/p1,rb,yb,bk}.js; platform isolation preserved; new platform needs trackRequest branches + badge CSS in monitor.
 - [Vidorey Deploy Config](vidorey-deploy-config.md) — config.js pakai placeholder __REPLIT_BACKEND_URL__; deploy.sh pakai trap EXIT restore + sed delimiter |; jangan hardcode URL di file.
 - [Vidorey CSP Allowlist](vidorey-csp-allowlist.md) — script-src tidak pakai https: wildcard; domain eksplisit wajib ditambah jika ada script/ad network baru.
 - [Vidorey Nav Drawer](vidorey-nav-drawer.md) — platform switcher adalah sidebar drawer (hamburger ≡), bukan dropdown; ID lama platformSwitcher/psTrigger/psMenu sudah dihapus dari semua HTML.

@@ -54,3 +54,6 @@ Active item per page:
 - `index.html` → Vidorey 1 item has `.active` + `aria-current="page"`
 - `rb.html` → Vidorey 2 item has `.active` + `aria-current="page"`
 - `yb.html` → Vidorey 3 item has `.active` + `aria-current="page"`
+- `bk.html` → Vidorey 4 item has `.active` + `aria-current="page"`
+
+All four HTML files include all four platform items in their nav drawer. P4 avatar class is `.ps-avatar-bk`.

@@ -76,6 +76,28 @@ Returns `{ get, set, del, has, stats }`.
 
 ---
 
+## Platform 4 — bokepking.cam
+
+### bkPostsCache — Post listings
+- Key: `"page:q"`
+- TTL: 3 min | Max: 200 | Name: `p4_posts`
+- **No sentinel caching** — errors/404 return immediately without negative-cache (unlike P2/P3; potential issue for repeated-fail pages hitting upstream)
+
+### bkThumbCache — Thumbnail URLs
+- Key: featured_media ID (integer)
+- Stores: `source_url` string ('' if not found — sentinel empty string)
+- TTL: **24 jam** | Max: 2000 | Name: `p4_thumb`
+- **Why 24 jam:** WP media attachments don't change; avoids per-request parallel fetch after warm-up
+
+### bkVideoUrlCache — MP4 URLs
+- Key: slug
+- Stores: `{mp4Url, title, thumb}`
+- TTL: **30 min** | Max: 300 | Name: `p4_videoUrl`
+- **Why 30 min:** vdn.bokepking.cam CDN has no signed tokens (confirmed via recon) → longer TTL is safe
+- Eviction: `/proxy/bk/stream/:slug` calls `resolveBkMp4(evictFirst=true)` if CDN returns 403/404
+
+---
+
 ## Monitor Buffer — Unlimited
 
 - `monitorLog[]` — **unlimited** (tidak ada trim/eviction)

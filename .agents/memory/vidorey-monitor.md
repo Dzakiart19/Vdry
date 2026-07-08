@@ -87,6 +87,8 @@ Fires sebelum route handlers (didaftarkan setelah `express.static`):
 | `rb_posts` | `/api/rb/posts` (P2) |
 | `yb_video` | `/api/yb/video/:slug` (P3) |
 | `yb_posts` | `/api/yb/posts` (P3) |
+| `bk_video` | `/api/bk/video/:slug` (P4) |
+| `bk_posts` | `/api/bk/posts` (P4) |
 
 IP diekstrak dari `x-forwarded-for` (value pertama, trimmed) — penting karena Replit proxy semua request.
 
