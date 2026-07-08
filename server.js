@@ -166,8 +166,7 @@ app.get('/health', (_req, res) => {
 
 /* ── Health detail — cache stats + cdn-alerts sejak server start ── */
 app.get('/health/detail', (req, res) => {
-  if (!MONITOR_KEY || req.query.key !== MONITOR_KEY)
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (!checkMonitorKey(req, res, '/health/detail')) return;
   const uptime = process.uptime();
   const uptimeStr = `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`;
   res.json({
@@ -1731,10 +1730,9 @@ app.get('/embed/:id', (req, res) => {
 /* ═══════════════════════════════════════
    MONITOR — real-time visitor dashboard
 ═══════════════════════════════════════ */
-function checkMonitorKey(req, res) {
+function checkMonitorKey(req, res, action = '/monitor') {
   if (!MONITOR_KEY) { res.status(503).send('SESSION_SECRET belum di-set.'); return false; }
   if (req.query.key !== MONITOR_KEY) {
-    // Tampilkan form login jika key salah / tidak ada
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.status(req.query.key ? 401 : 200).send(`<!DOCTYPE html>
 <html lang="id"><head><meta charset="utf-8">
@@ -1760,7 +1758,7 @@ function checkMonitorKey(req, res) {
   <h1>⬡ Vidorey Monitor</h1>
   <p>Masukkan SESSION_SECRET untuk masuk</p>
   ${req.query.key ? '<div class="err">⚠ Key salah, coba lagi.</div>' : ''}
-  <form method="GET" action="/monitor">
+  <form method="GET" action="${action}">
     <input type="password" name="key" placeholder="SESSION_SECRET" autofocus autocomplete="current-password">
     <button type="submit">Masuk</button>
   </form>
