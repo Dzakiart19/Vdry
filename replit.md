@@ -32,7 +32,16 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 | Platform 2 | `/rb` | ruangbokep.ws | `rb.html` | `rb.js` |
 | Platform 3 | `/yb` | yobokep.com | `yb.html` | `yb.js` |
 
-Navigasi antar platform via dropdown di kanan atas topbar.
+Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan Vidorey 1 / 2 / 3 dengan highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
+
+### Struktur Nav Drawer (sama di ketiga HTML)
+- `.nav-burger` (id `navBurger`) — tombol hamburger di dalam `.brand` di topbar
+- `div.nav-overlay` (id `navOverlay`) — backdrop gelap, z-index 149
+- `nav.nav-drawer` (id `navDrawer`) — panel slide-in, z-index 150
+- `.nav-drawer-head` + `.nav-drawer-close` (id `navClose`) — header drawer
+- `.nav-plat-item` + `.nav-plat-item.active` — item platform, reuse `.ps-avatar`/`.ps-info`/`.ps-check`
+
+**ID lama yang sudah dihapus:** `platformSwitcher`, `psTrigger`, `psMenu` — tidak ada lagi di HTML manapun. CSS `.ps-trigger`, `.ps-menu`, `.ps-chevron` di style.css adalah dead code (tidak membahayakan, tapi tidak dipakai).
 
 ## Cara Kerja — Platform 1 (xpvid.cc)
 1. `/api/folder/:id` → scrape subfolder & video list dari xpvid.cc
