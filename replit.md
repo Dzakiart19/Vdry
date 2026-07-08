@@ -104,7 +104,7 @@ yobokep.com HTML listing page selalu mengembalikan 24 post yang sama di semua `/
 - `*.savefiles.com` + `savefiles.com` — streamhls.to CDN, token `i=` dikunci ke IP
 
 ## Cara Kerja — Platform 4 (bokepking.cam)
-1. `/api/bk/posts?p=N&q=query` → WP REST API bypass (`/?rest_route=/wp/v2/posts`) untuk listing + pagination; parallel-fetch thumbnail dari `/wp/v2/media/:id` (cache 24 jam)
+1. `/api/bk/posts?p=N&q=query` → WP REST API bypass (`/?rest_route=/wp/v2/posts`) untuk listing + pagination; parallel-fetch thumbnail dari `/wp/v2/media/:id` (cache 24 jam); **sentinel caching** — error/404/empty di-cache 20-30s agar tidak hammer upstream (konsisten P2/P3)
 2. `/api/bk/video/:slug` → scrape post HTML → extract `<meta itemprop="contentURL" content="...mp4">` atau `<source type="video/mp4">` → MP4 URL langsung (tidak pakai HLS); response juga membawa `description` (meta og:description/itemprop/name description, urutan fallback) dan `related` (di-scrape dari `.under-video-block > .videos-list > article[id]` — satu-satunya blok di halaman, tanpa heading pembeda; thumbnail asli ada di `img[data-src]`, bukan `src`, karena lazy-loaded)
 3. `/proxy/bk/stream/:slug` → proxy MP4 ke `vdn.bokepking.cam` dengan Range support; evict cache & retry sekali jika CDN 403/404
 4. `/proxy/bk/thumb?url=` → proxy thumbnail (allowlist `vdn.bokepking.cam` only, validasi `content-type: image/*`)

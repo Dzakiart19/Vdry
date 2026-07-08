@@ -81,7 +81,7 @@ Returns `{ get, set, del, has, stats }`.
 ### bkPostsCache — Post listings
 - Key: `"page:q"`
 - TTL: 3 min | Max: 200 | Name: `p4_posts`
-- **No sentinel caching** — errors/404 return immediately without negative-cache (unlike P2/P3; potential issue for repeated-fail pages hitting upstream)
+- Sentinel values: `{_error: true}` → 502 (20s), `{_status: 404}` → 404 (30s), `{_status: 400}` → 400 (30s), empty result → 30s throttle — **sekarang konsisten dengan P2/P3**
 
 ### bkThumbCache — Thumbnail URLs
 - Key: featured_media ID (integer)
@@ -91,10 +91,11 @@ Returns `{ get, set, del, has, stats }`.
 
 ### bkVideoUrlCache — MP4 URLs
 - Key: slug
-- Stores: `{mp4Url, title, thumb}`
+- Stores: `{mp4Url, title, thumb, description, related}` or sentinel `{_error}` / `{_status: 404}`
 - TTL: **30 min** | Max: 300 | Name: `p4_videoUrl`
 - **Why 30 min:** vdn.bokepking.cam CDN has no signed tokens (confirmed via recon) → longer TTL is safe
 - Eviction: `/proxy/bk/stream/:slug` calls `resolveBkMp4(evictFirst=true)` if CDN returns 403/404
+- Sentinel: 404 → 30s, error → 20s — konsisten dengan P2/P3
 
 ---
 
