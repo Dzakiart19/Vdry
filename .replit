@@ -42,4 +42,4 @@ build = ["npm", "install", "--production"]
 [userenv]
 
 [userenv.shared]
-SESSION_SECRET = "Bdbdhdhdjdususjnsnsnsjdjdjxnjx"
+SESSION_SECRET = "OUqz5gKa7soOwVXAUKk+tnDf+lzrUk1421NZXt0fL5YvPy/UHHtmeT0FaktBYlczQqsgwhyquCxLqejK/vC3NA=="
