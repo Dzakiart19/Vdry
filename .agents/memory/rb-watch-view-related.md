@@ -53,3 +53,27 @@ available (mobile), falls back to `navigator.clipboard.writeText()` + toast.
 Share URL is always `${origin}/rb/watch/<slug>`. Apply the same idempotent-modal
 + popstate-branch fixes above when building this for yb/bk, since the share
 feature is what makes the URL-based scheme necessary in the first place.
+
+## P3 (yb) and P4 (bk) replication — actual markup found, confirms the warning above
+Both were replicated successfully using the exact same modal/history/share JS
+pattern (openModal idempotency, 3-branch popstate, pre-loadPosts deep-link
+capture) — that part is copy-paste safe. The related-video **scraping selector**
+differed per site as warned:
+- **yb (yobokep.com)**: reuses `article.loop-video[data-main-thumb]` like rb, but
+  the container heading text must be checked explicitly — code review initially
+  flagged the first attempt as too permissive (accepted any `.under-video-block`
+  even without a matching heading). Fix: require the block's direct
+  `.widget-title` to contain "related video" (no fallback), and scope items to
+  `> div > article.loop-video[data-main-thumb]` only.
+- **bk (bokepking.cam)**: totally different markup —
+  `.under-video-block > .videos-list > article[id^="post-"]`, no distinguishing
+  heading (only one such block on the page, so container alone is sufficient
+  scope). Thumbnail is lazy-loaded: the real URL is in `img[data-src]`, not
+  `src` (which holds a placeholder). Title in `.title` span, duration in
+  `.duration` div text (has an inline `style` attr but `.text()` only reads text
+  nodes so it's unaffected). Description: multiple meta tags exist
+  (`og:description`, `itemprop="description"`, `name="description"`) — prefer
+  `og:description` first for consistency with rb/yb, other two as fallback.
+**Lesson confirmed:** always curl the real post-page HTML per platform before
+writing the related-selector; never assume the previous platform's exact class
+names/heading text carry over.

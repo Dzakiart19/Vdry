@@ -76,10 +76,14 @@ Klik video membuka modal watch view (scrollable, **bukan** full-screen — desai
 
 ## Cara Kerja — Platform 3 (yobokep.com)
 1. `/api/yb/posts` → WP REST API untuk slug + title + totalPages; parallel-fetch `og:image` dari tiap post untuk thumbnail (cache 24 jam)
-2. `/api/yb/video/:slug` → scrape post page → resolve embed (bysezejataos.com atau streamhls.to) → HLS URL
+2. `/api/yb/video/:slug` → scrape post page → resolve embed (bysezejataos.com atau streamhls.to) → HLS URL; response juga membawa `description` (og:description) dan `related` (di-scrape dari widget "Related videos" — `.under-video-block` dengan heading persis "Related videos", isi `article.loop-video[data-main-thumb]`, markup mirip P2)
 3. `/proxy/yb/hls/:slug` → proxy master m3u8, rewrite semua URL ke `/proxy/yb/seg`
 4. `/proxy/yb/seg` → proxy segment/sub-manifest; self-healing saat CDN 403 via `handleYbSeg` + `reresolveYbUrl`
 5. `/proxy/yb/thumb?url=` → proxy thumbnail (validasi `content-type: image/*`)
+6. `/yb/watch/:slug` → SPA route (sama seperti `/yb`, serve `yb.html`) — deep-link/share URL, buka watch view video tsb saat diakses
+
+### Watch View P3 (sama seperti P2)
+Pola watch view (player + judul/deskripsi + grid "Video Lainnya" + tombol Bagikan, deep-link `/yb/watch/<slug>`) direplikasi identik dari P2 — lihat "Watch View P2" di atas untuk detail UX dan mekanisme history/popstate.
 
 ### Kenapa WP REST API untuk P3 (bukan HTML scrape seperti P2)
 yobokep.com HTML listing page selalu mengembalikan 24 post yang sama di semua `/page/N/` — server-side pagination tidak berjalan (butuh JS/AJAX dari browser). WP REST API paginasinya benar via `x-wp-totalpages` header.
@@ -91,9 +95,13 @@ yobokep.com HTML listing page selalu mengembalikan 24 post yang sama di semua `/
 
 ## Cara Kerja — Platform 4 (bokepking.cam)
 1. `/api/bk/posts?p=N&q=query` → WP REST API bypass (`/?rest_route=/wp/v2/posts`) untuk listing + pagination; parallel-fetch thumbnail dari `/wp/v2/media/:id` (cache 24 jam)
-2. `/api/bk/video/:slug` → scrape post HTML → extract `<meta itemprop="contentURL" content="...mp4">` atau `<source type="video/mp4">` → MP4 URL langsung (tidak pakai HLS)
+2. `/api/bk/video/:slug` → scrape post HTML → extract `<meta itemprop="contentURL" content="...mp4">` atau `<source type="video/mp4">` → MP4 URL langsung (tidak pakai HLS); response juga membawa `description` (meta og:description/itemprop/name description, urutan fallback) dan `related` (di-scrape dari `.under-video-block > .videos-list > article[id]` — satu-satunya blok di halaman, tanpa heading pembeda; thumbnail asli ada di `img[data-src]`, bukan `src`, karena lazy-loaded)
 3. `/proxy/bk/stream/:slug` → proxy MP4 ke `vdn.bokepking.cam` dengan Range support; evict cache & retry sekali jika CDN 403/404
 4. `/proxy/bk/thumb?url=` → proxy thumbnail (allowlist `vdn.bokepking.cam` only, validasi `content-type: image/*`)
+5. `/bk/watch/:slug` → SPA route (sama seperti `/bk`, serve `bk.html`) — deep-link/share URL, buka watch view video tsb saat diakses
+
+### Watch View P4 (sama seperti P2, player MP4 langsung tanpa iframe)
+Pola watch view direplikasi dari P2/P3 — player (elemen `<video>` MP4 langsung, tidak ada iframe di modal P4) + judul/deskripsi + grid "Video Lainnya" + tombol Bagikan, deep-link `/bk/watch/<slug>`. Mekanisme history/popstate identik dengan P2/P3.
 
 ### CDN Allowlist P4 (isAllowedBkCdnUrl + isAllowedBkThumbUrl)
 - `vdn.bokepking.cam` — CDN video & thumbnail utama (tanpa signed token, TTL 30 mnt aman)

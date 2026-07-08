@@ -32,6 +32,7 @@
     modal:         $('ybPlayerModal'),
     modalBackdrop: $('ybModalBackdrop'),
     modalClose:    $('ybModalClose'),
+    modalBody:     $('ybModalBody'),
     videoTitle:    $('ybVideoTitle'),
     videoSub:      $('ybVideoSub'),
     videoEl:       $('ybVideoEl'),
@@ -39,7 +40,16 @@
     playerLoading: $('ybPlayerLoading'),
     retryBtn:      $('ybRetryBtn'),
     toast:         $('toast'),
+    watchDesc:     $('ybWatchDesc'),
+    watchDescText: $('ybWatchDescText'),
+    relatedSection:    $('ybRelatedSection'),
+    relatedGrid:       $('ybRelatedGrid'),
+    relatedPagination: $('ybRelatedPagination'),
+    shareBtn:      $('ybShareBtn'),
   };
+
+  /* ── Slug video yang sedang tampil di watch view (untuk share link) ── */
+  let currentSlug = null;
 
   /* ── Player session tracking ── */
   let hlsInstance   = null;
@@ -273,21 +283,129 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  /* ── Open player modal ── */
-  async function openPlayer(slug) {
+  /* ── Related videos (gaya XNXX: grid + pagination client-side) ── */
+  const RELATED_PAGE_SIZE = 8;
+  let relatedState = { items: [], page: 1 };
+
+  function renderWatchDesc(description) {
+    if (!description) {
+      els.watchDesc.classList.add('hidden');
+      els.watchDescText.textContent = '';
+      return;
+    }
+    els.watchDescText.textContent = description;
+    els.watchDesc.classList.remove('hidden');
+  }
+
+  function renderRelated(items) {
+    relatedState = { items: items || [], page: 1 };
+    if (!relatedState.items.length) {
+      els.relatedGrid.innerHTML = '';
+      els.relatedPagination.classList.add('hidden');
+      els.relatedSection.classList.add('hidden');
+      return;
+    }
+    els.relatedSection.classList.remove('hidden');
+    renderRelatedPage();
+  }
+
+  function renderRelatedPage() {
+    const { items, page } = relatedState;
+    const totalPages = Math.max(1, Math.ceil(items.length / RELATED_PAGE_SIZE));
+    const start = (page - 1) * RELATED_PAGE_SIZE;
+    const pageItems = items.slice(start, start + RELATED_PAGE_SIZE);
+
+    els.relatedGrid.innerHTML = pageItems.map(p => {
+      const rawThumb = p.thumb || '';
+      const thumb = rawThumb ? `${API}/proxy/yb/thumb?url=${encodeURIComponent(rawThumb)}` : '';
+      const title = escHtml(p.title);
+      const slug  = escHtml(p.slug);
+      const duration = p.duration ? `<span class="rb-card-duration">${escHtml(p.duration)}</span>` : '';
+
+      return `<div class="rb-card" data-slug="${slug}" tabindex="0" role="button" aria-label="${title}">
+        <div class="rb-card-thumb">
+          ${thumb
+            ? `<img src="${thumb}" alt="${title}" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('rb-thumb-err')" />`
+            : ''}
+          ${duration}
+          <div class="rb-card-overlay">
+            <svg class="rb-play-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="rb-card-info">
+          <p class="rb-card-title" title="${title}">${title}</p>
+        </div>
+      </div>`;
+    }).join('');
+
+    els.relatedGrid.querySelectorAll('.rb-card').forEach(card => {
+      card.addEventListener('click', () => openPlayer(card.dataset.slug));
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') openPlayer(card.dataset.slug);
+      });
+    });
+
+    renderRelatedPagination(page, totalPages);
+  }
+
+  function renderRelatedPagination(cur, total) {
+    if (total <= 1) { els.relatedPagination.classList.add('hidden'); return; }
+
+    const pages = buildPageList(cur, total);
+    let html = '';
+
+    if (cur > 1) html += `<button type="button" class="page-btn page-prev" data-page="${cur - 1}">‹</button>`;
+    pages.forEach(p => {
+      html += p === '…'
+        ? `<span class="page-ellipsis">…</span>`
+        : `<button type="button" class="page-btn ${p === cur ? 'active' : ''}" data-page="${p}">${p}</button>`;
+    });
+    if (cur < total) html += `<button type="button" class="page-btn page-next" data-page="${cur + 1}">›</button>`;
+
+    els.relatedPagination.innerHTML = html;
+    els.relatedPagination.classList.remove('hidden');
+
+    els.relatedPagination.querySelectorAll('[data-page]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = parseInt(btn.dataset.page);
+        if (p !== relatedState.page) {
+          relatedState.page = p;
+          renderRelatedPage();
+          els.relatedSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  }
+
+  /* ── Open player modal (watch view: player + info + related) ──
+     opts.fromHistory = true → dipanggil dari popstate (Forward ke entry
+     ybModal) — entry history-nya SUDAH ada, jangan push/replace lagi. */
+  async function openPlayer(slug, opts = {}) {
     const session = ++playerSession;
+    currentSlug = slug;
 
     els.videoTitle.textContent = 'Memuat…';
-    els.videoSub.textContent   = 'Vidorey 3';
     els.playerLoading.classList.remove('hidden');
+    renderWatchDesc('');
+    renderRelated([]);
     destroyHls();
-    openModal();
+    if (opts.fromHistory) {
+      els.modal.classList.remove('hidden');
+      document.body.classList.add('modal-open');
+    } else {
+      openModal(slug);
+    }
+    if (els.modalBody) els.modalBody.scrollTop = 0;
 
     try {
       const data = await apiFetch(`/api/yb/video/${encodeURIComponent(slug)}`);
       if (session !== playerSession) return;
 
       els.videoTitle.textContent = data.title || slug;
+      renderWatchDesc(data.description || '');
+      renderRelated(data.related || []);
 
       if (data.m3u8Url) {
         playHls(API + data.m3u8Url, slug);
@@ -383,12 +501,28 @@
   }
 
   /* ── Modal controls ── */
+  // Flag: apakah kita sudah push history state untuk modal ini
   let modalHistoryPushed = false;
 
-  function openModal() {
+  function openModal(slug) {
+    // URL /yb/watch/<slug> — supaya address bar jadi link yang bisa langsung
+    // dibagikan (tombol Share) dan membuka video yang sama saat diakses ulang.
+    const url = slug ? `/yb/watch/${encodeURIComponent(slug)}` : '/yb/watch';
+
+    if (!els.modal.classList.contains('hidden')) {
+      // Modal SUDAH terbuka (mis. klik video related di dalam watch view) —
+      // jangan push history entry baru, cukup ganti URL entry yang sama
+      // supaya link di address bar tetap ikut video yang sedang tampil.
+      if (modalHistoryPushed) history.replaceState({ ybModal: true, ybSlug: slug }, '', url);
+      return;
+    }
+
     els.modal.classList.remove('hidden');
     document.body.classList.add('modal-open');
-    history.pushState({ ybModal: true }, '', '/yb#player');
+    // Push state BERBEDA (/yb/watch/<slug>) supaya browser bisa membedakannya dari /yb biasa.
+    // Ini penting karena history.back() dari dua URL /yb yang identik bisa melewati
+    // keduanya sekaligus dan mendarat di P1 (/) — masalah Chrome/Safari.
+    history.pushState({ ybModal: true, ybSlug: slug }, '', url);
     modalHistoryPushed = true;
   }
 
@@ -401,27 +535,42 @@
 
   function closeModal() {
     _doCloseModal();
+    currentSlug = null;
 
     if (modalHistoryPushed) {
       modalHistoryPushed = false;
+      // replaceState (BUKAN history.back()) — ganti entry modal dengan /yb bersih.
       history.replaceState(null, '', '/yb');
     }
   }
 
+  // Tangkap tombol Back/Forward browser
   window.addEventListener('popstate', e => {
+    const s = e.state;
+
     if (!els.modal.classList.contains('hidden')) {
+      // User menekan Back saat modal terbuka → tutup modal saja, tetap di /yb
       modalHistoryPushed = false;
+      currentSlug = null;
       _doCloseModal();
-      history.replaceState(e.state || null, '', '/yb');
+      history.replaceState(s || null, '', '/yb');
       return;
     }
 
-    const s = e.state;
+    // User menekan Forward ke entry watch-view (mis. setelah Back dari modal) →
+    // buka lagi modal untuk slug itu, JANGAN push entry baru (sudah ada di history).
+    if (s && s.ybModal && s.ybSlug) {
+      modalHistoryPushed = true; // entry-nya sudah ada di history, tidak perlu push lagi
+      openPlayer(s.ybSlug, { fromHistory: true });
+      return;
+    }
+
+    // Modal tertutup: restore halaman/search dari history state
     if (s && typeof s.ybPage !== 'undefined') {
       state.page        = s.ybPage || 1;
       state.searchQuery = s.ybQ   || '';
       els.searchInput.value = state.searchQuery;
-      loadPosts(false);
+      loadPosts(false); // false = jangan push lagi (sudah ada di history)
     }
   });
 
@@ -430,6 +579,31 @@
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && !els.modal.classList.contains('hidden')) closeModal();
   });
+
+  /* ── Share ── */
+  if (els.shareBtn) {
+    els.shareBtn.addEventListener('click', async () => {
+      if (!currentSlug) return;
+      const shareUrl   = `${location.origin}/yb/watch/${encodeURIComponent(currentSlug)}`;
+      const shareTitle = els.videoTitle.textContent || 'Vidorey';
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: shareTitle, url: shareUrl });
+        } catch (e) {
+          if (e.name !== 'AbortError') showToast('Gagal membagikan link.');
+        }
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        showToast('Link video disalin ke clipboard');
+      } catch {
+        showToast(shareUrl);
+      }
+    });
+  }
 
   /* ── Retry ── */
   els.retryBtn.addEventListener('click', () => loadPosts(false));
@@ -445,6 +619,22 @@
   }
 
   /* ── Init ── */
+  // Tangkap path SEBELUM loadPosts() dipanggil — loadPosts() memanggil
+  // saveNav() yang langsung replaceState() ke '/yb', jadi location.pathname
+  // sudah berubah kalau dibaca SESUDAH loadPosts() jalan.
+  const deepLinkMatch = location.pathname.match(/^\/yb\/watch\/([^/]+)\/?$/);
+
   loadPosts(false);
+
+  // Deep-link: kalau URL-nya /yb/watch/<slug> (dari link Share), langsung
+  // buka watch view video itu di atas listing yang baru saja dimuat.
+  if (deepLinkMatch) {
+    let slug = null;
+    try { slug = decodeURIComponent(deepLinkMatch[1]); } catch { /* % encoding rusak — abaikan deep-link */ }
+    if (slug) {
+      modalHistoryPushed = false;
+      openPlayer(slug);
+    }
+  }
 
 })();

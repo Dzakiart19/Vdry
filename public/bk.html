@@ -160,13 +160,12 @@
   </main>
 </div>
 
-<!-- ─── PLAYER MODAL ─── -->
+<!-- ─── PLAYER MODAL (watch view: player + info + related, gaya YouTube/XNXX) ─── -->
 <div id="bkPlayerModal" class="modal hidden" role="dialog" aria-modal="true">
   <div class="modal-backdrop" id="bkModalBackdrop"></div>
-  <div class="modal-panel">
+  <div class="modal-panel modal-panel-watch">
     <div class="modal-top">
       <div class="modal-meta">
-        <h2 id="bkVideoTitle" class="modal-title">—</h2>
         <span id="bkVideoSub" class="modal-sub">Vidorey 4</span>
       </div>
       <button class="modal-close" id="bkModalClose" title="Tutup">
@@ -175,18 +174,44 @@
         </svg>
       </button>
     </div>
-    <div class="video-stage rb-video-stage">
-      <div id="bkPlayerLoading" class="rb-player-loader">
-        <div class="loader-ring"></div>
-        <p>Memuat video…</p>
+    <div class="modal-body" id="bkModalBody">
+      <div class="video-stage rb-video-stage">
+        <div id="bkPlayerLoading" class="rb-player-loader">
+          <div class="loader-ring"></div>
+          <p>Memuat video…</p>
+        </div>
+        <video
+          id="bkVideoEl"
+          class="rb-player-video hidden"
+          controls
+          playsinline
+          preload="none"
+        ></video>
       </div>
-      <video
-        id="bkVideoEl"
-        class="rb-player-video hidden"
-        controls
-        playsinline
-        preload="none"
-      ></video>
+
+      <!-- ─── Info video (judul + deskripsi), gaya YouTube ─── -->
+      <div class="watch-info">
+        <div class="watch-title-row">
+          <h1 id="bkVideoTitle" class="watch-title">—</h1>
+          <button type="button" id="bkShareBtn" class="watch-share-btn" title="Bagikan video">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/>
+            </svg>
+            <span>Bagikan</span>
+          </button>
+        </div>
+        <div id="bkWatchDesc" class="watch-desc hidden">
+          <p id="bkWatchDescText"></p>
+        </div>
+      </div>
+
+      <!-- ─── Video lainnya / related, gaya XNXX dengan pagination ─── -->
+      <div class="watch-related hidden" id="bkRelatedSection">
+        <h3 class="watch-related-heading">Video Lainnya</h3>
+        <div id="bkRelatedGrid" class="rb-grid rb-grid-related"></div>
+        <div id="bkRelatedPagination" class="pagination hidden"></div>
+      </div>
     </div>
   </div>
 </div>
