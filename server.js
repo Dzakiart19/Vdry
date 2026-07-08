@@ -1162,8 +1162,9 @@ function isAllowedYbCdnUrl(raw) {
 }
 
 /* ── Caches Platform 3 ── */
-const ybM3u8Cache  = makeCache(500, 3 * 60 * 1000, 'p3_m3u8');  // slug → m3u8Url (TTL 3 mnt)
-const ybPostsCache = makeCache(200, 3 * 60 * 1000, 'p3_posts'); // key  → result
+const ybM3u8Cache  = makeCache(500,  3 * 60 * 1000,      'p3_m3u8');   // slug → m3u8Url (TTL 3 mnt)
+const ybPostsCache = makeCache(200,  3 * 60 * 1000,      'p3_posts');  // key  → result
+const ybThumbCache = makeCache(2000, 24 * 60 * 60 * 1000,'p3_thumb');  // slug → thumbUrl (TTL 24 jam)
 function ybPostsCacheKey(page, q) { return `${page}:${q || ''}`; }
 
 /* ── Rewrite m3u8 manifest — proxy semua URL ke /proxy/yb/seg ── */
@@ -1322,9 +1323,13 @@ async function resolveYbVideoUrl(embedUrl) {
   }
 }
 
-/* ── YB: Post listing — scrape HTML listing (WP REST API tidak punya thumbnail) ──
-   yobokep.com pakai WordPress theme yang sama dengan ruangbokep.ws:
-   article.loop-video[data-main-thumb] → thumbnail langsung tersedia. ── */
+/* ── YB: Post listing ──────────────────────────────────────────────────────
+   Diagnosis: yobokep.com HTML listing page selalu return 24 post yang sama
+   di semua /page/N/ (server-side pagination tidak berjalan — butuh JS/AJAX).
+   Solusi: WP REST API untuk slug + title + totalPages (paginasi benar),
+   lalu parallel-fetch og:image dari halaman post individual untuk thumbnail
+   (di-cache 24 jam di ybThumbCache agar tiap slug hanya di-fetch sekali).
+   ─────────────────────────────────────────────────────────────────────── */
 app.get('/api/yb/posts', async (req, res) => {
   const page = Math.max(1, parseInt(req.query.p) || 1);
   const q    = (req.query.q || '').trim().substring(0, 150);
@@ -1339,102 +1344,72 @@ app.get('/api/yb/posts', async (req, res) => {
   }
 
   try {
-    let url;
-    if (q) {
-      const enc = encodeURIComponent(q);
-      url = page > 1 ? `${YB_BASE}/page/${page}/?s=${enc}` : `${YB_BASE}/?s=${enc}`;
-    } else {
-      url = page > 1 ? `${YB_BASE}/page/${page}/` : `${YB_BASE}/`;
-    }
+    // Step 1: WP REST API — slug + title + totalPages (pagination berjalan benar)
+    const apiUrl = q
+      ? `${YB_BASE}/wp-json/wp/v2/posts?per_page=24&page=${page}&_fields=slug,title&search=${encodeURIComponent(q)}`
+      : `${YB_BASE}/wp-json/wp/v2/posts?per_page=24&page=${page}&_fields=slug,title`;
 
-    // WP REST API — hanya untuk x-wp-totalpages header (jauh lebih ringan dari full HTML)
-    // yobokep.com homepage tidak punya numbered pagination di HTML, tapi API reliable.
-    const apiTotalUrl = q
-      ? `${YB_BASE}/wp-json/wp/v2/posts?per_page=24&page=${page}&_fields=id&search=${encodeURIComponent(q)}`
-      : `${YB_BASE}/wp-json/wp/v2/posts?per_page=24&page=${page}&_fields=id`;
-
-    // Jalankan HTML scrape dan API total-pages dalam paralel
-    const [htmlResult, apiResult] = await Promise.allSettled([
-      axYbGet(url, {
-        headers: {
-          'User-Agent':      UA,
-          'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Accept-Encoding': 'gzip, deflate',
-          'Referer':         `${YB_BASE}/`,
-          'Cache-Control':   'no-cache',
-        },
-      }),
-      axYbGet(apiTotalUrl, {
-        headers: { 'User-Agent': UA, 'Accept': 'application/json' },
-      }),
-    ]);
-
-    // HTML scrape harus berhasil — jika gagal, throw ke catch
-    if (htmlResult.status === 'rejected') throw htmlResult.reason;
-    const html = htmlResult.value.data;
-    const $ = cheerio.load(html);
-
-    const posts = [];
-    $('article.loop-video').each((_, el) => {
-      const $el   = $(el);
-      const thumb = $el.attr('data-main-thumb')
-                 || $el.find('img.video-main-thumb').attr('data-lazy-src')
-                 || $el.find('img.video-main-thumb').attr('src')
-                 || $el.find('img').first().attr('src')
-                 || '';
-      const href  = $el.find(`a[href*="yobokep.com"]`).first().attr('href')
-                 || $el.find('a').first().attr('href')
-                 || '';
-      const title = $el.find('img').first().attr('alt')
-                 || $el.find('.entry-title, h2, h3').first().text().trim()
-                 || '';
-      const m = href.match(/yobokep\.com\/([^/]+)\/?$/);
-      const slug = m ? m[1] : '';
-      if (slug && title) posts.push({ slug, title, thumb });
+    const apiResp = await axYbGet(apiUrl, {
+      headers: { 'User-Agent': UA, 'Accept': 'application/json' },
     });
 
-    // Total pages: WP REST API lebih reliable (homepage tidak punya numbered pagination di HTML)
-    let totalPages = 1;
-    if (apiResult.status === 'fulfilled') {
-      totalPages = Math.max(1, parseInt(apiResult.value.headers['x-wp-totalpages'] || '1') || 1);
-    } else {
-      // Fallback: parse dari HTML (bekerja untuk search/category page)
-      $('.pagination ul li a').each((_, el) => {
-        if ($(el).text().trim() === 'Last') {
-          const m = ($(el).attr('href') || '').match(/\/page\/(\d+)\//);
-          if (m) { totalPages = parseInt(m[1]); return false; }
-        }
-      });
-      if (totalPages === 1) {
-        $('.pagination ul li a').each((_, el) => {
-          const n = parseInt($(el).text().trim());
-          if (n && !isNaN(n) && n > totalPages) totalPages = n;
-        });
-      }
-      // Heuristik: jika HTML pagination tidak bisa parse total tapi posts ada di page > 1,
-      // minimal set totalPages = page supaya frontend tidak berhenti di page 1.
-      if (totalPages < page && posts.length > 0) totalPages = page;
+    const totalPages = Math.max(1, parseInt(apiResp.headers['x-wp-totalpages'] || '1') || 1);
+    const rawPosts = (apiResp.data || []).map(p => ({
+      slug:  p.slug,
+      title: (p.title?.rendered || p.slug)
+               .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n))
+               .replace(/<[^>]+>/g, ''),
+    }));
+
+    if (!rawPosts.length) {
+      const result = { posts: [], page, totalPages };
+      ybPostsCache.set(cacheKey, result, 30 * 1000);
+      res.setHeader('X-Cache', 'MISS');
+      return res.json(result);
     }
+
+    // Step 2: Thumbnail — fetch og:image dari halaman post individual, parallel.
+    // ybThumbCache (TTL 24 jam) memastikan tiap slug hanya di-fetch sekali.
+    const uncachedSlugs = rawPosts
+      .filter(p => ybThumbCache.get(p.slug) === null)
+      .map(p => p.slug);
+
+    if (uncachedSlugs.length > 0) {
+      await Promise.allSettled(
+        uncachedSlugs.map(slug =>
+          axYbGet(`${YB_BASE}/${slug}/`, {
+            headers: {
+              'User-Agent': UA,
+              'Accept':     'text/html',
+              'Referer':    `${YB_BASE}/`,
+            },
+          }).then(r => {
+            const html = r.data || '';
+            // og:image bisa hadir dalam dua urutan atribut
+            const m = html.match(/property=["']og:image["'][^>]*content=["']([^"']+)/)
+                   || html.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/);
+            ybThumbCache.set(slug, m?.[1] || '');
+          }).catch(() => {
+            ybThumbCache.set(slug, ''); // cache kosong agar tidak retry terus
+          })
+        )
+      );
+    }
+
+    // Step 3: Gabungkan — slug + title dari API, thumb dari cache
+    const posts = rawPosts.map(p => ({
+      slug:  p.slug,
+      title: p.title,
+      thumb: ybThumbCache.get(p.slug) || '',
+    }));
 
     const result = { posts, page, totalPages };
-
-    if (posts.length > 0) {
-      ybPostsCache.set(cacheKey, result);
-    } else {
-      // Bedakan: halaman genuinely kosong vs selector rusak
-      const articleCount = $('article').length;
-      if (articleCount > 0) {
-        console.warn(`[scraper-alert] yb/posts key="${cacheKey}": ${articleCount} <article> ditemukan tapi 0 posts di-parse — selector mungkin berubah`);
-      }
-      ybPostsCache.set(cacheKey, result, 30 * 1000);
-    }
-
+    ybPostsCache.set(cacheKey, result);
     res.setHeader('X-Cache', 'MISS');
     res.json(result);
   } catch (err) {
     console.error('yb posts error:', err.message);
-    if (err.response?.status === 404) {
+    if (err.response?.status === 400 || err.response?.status === 404) {
       ybPostsCache.set(cacheKey, { _status: 404 }, 30 * 1000);
       return apiError(res, 404, 'Halaman tidak ditemukan');
     }

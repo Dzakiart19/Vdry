@@ -3,3 +3,4 @@
 - [RB Layout Scroll Fix](rb-layout-scroll-fix.md) — rb.html must override body overflow:hidden and use natural page scroll; modal uses body.modal-open class.
 - [P1 Cross-Origin Video](p1-crossorigin-video.md) — never use crossorigin attr on <video>; set video.src immediately (parallel title fetch); *.overfetch.video allowlist for DoodStream CDN.
 - [Vidorey Monitor](vidorey-monitor.md) — SSE real-time dashboard at /monitor; form login (not 401); tracking middleware for stream/video/folder/rb events; Firebase Analytics button.
+- [P3 yobokep Pagination & Thumbnail](yb-pagination-thumbnail.md) — HTML pagination broken (pakai WP REST API); thumbnail via parallel og:image fetch; makeCache.get() returns null not undefined.
