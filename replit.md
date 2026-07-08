@@ -143,8 +143,9 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 
 | Route | Fungsi |
 |---|---|
-| `/monitor` | Dashboard HTML real-time (SSE-based) |
+| `/monitor` | Dashboard HTML real-time (SSE + virtual list) |
 | `/monitor/events` | SSE stream (text/event-stream) |
+| `/monitor/log?before=&limit=` | REST: ambil event lama untuk pagination (max 500/req) |
 | `/health/detail` | JSON: cache stats, memory, uptime, CDN alerts |
 
 ### Auth
@@ -167,17 +168,18 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 | `bk_posts` | `/api/bk/posts` dipanggil (P4) |
 
 ### Implementasi Monitor
-- Buffer di memory: **ring buffer** — `MON_BUF=2000` event, `CDN_ALERT_MAX=200` alert
-- `totalEvents` counter integer terpisah — tidak berkurang saat ring buffer trim, dipakai untuk stat akurat
-- SSE: kirim `SSE_HISTORY=300` event terbaru saat client connect (bukan seluruh log)
-- Client DOM: max `MAX_ROWS=300` baris, row lama dihapus saat overflow
-- Keepalive ping setiap 25 detik agar koneksi tidak di-drop
+- **Ring buffer server**: `MON_BUF=50.000` event, `CDN_ALERT_MAX=500` alert
+- `totalEvents` counter integer terpisah — tidak berkurang saat ring buffer trim, dipakai untuk stat akurat di dashboard
+- **SSE initial load**: hanya `SSE_HISTORY=200` event terbaru dikirim ke client baru (bukan seluruh log)
+- **Virtual list client**: semua event di JS array (`allEvents[]`, newest-first); hanya baris visible di viewport (~30) yang menjadi DOM node — tidak ada DOM node limit
+- **REST pagination**: scroll ke bawah → auto-fetch `GET /monitor/log?before=<ts>&limit=200` untuk event lebih lama; append ke `allEvents[]` tanpa rebuild DOM
+- Dashboard realtime: event baru via SSE langsung prepend ke top; koneksi SSE tetap terbuka (keepalive ping tiap 25 detik, auto-reconnect 3 detik jika putus)
 
 ## Keamanan (server.js)
 - **CSP**: aktif via Helmet. `script-src` pakai `'unsafe-inline'` (wajib karena HTML masih pakai inline `<script>`) tapi **tidak pakai wildcard `https:`** — hanya domain eksplisit yang diizinkan: `cdn.jsdelivr.net` (hls.js), `pl28423230/pl28418540/pl28427857.effectivecpmnetwork.com` + `www.highperformanceformat.com` (Adsterra). `style-src` → `fonts.googleapis.com` saja. `font-src` → `fonts.gstatic.com` saja. Proteksi nyata dari `object-src 'none'`, `base-uri 'self'`, `connect-src 'self'`. **Jika menambah script/ad network baru, wajib tambahkan domainnya ke `scriptSrc` di server.js.**
 - `/embed/:id` (P1) override `frame-ancestors`-nya sendiri lewat `res.setHeader` supaya bisa di-iframe dari Firebase frontend.
 - **Rate limiting** (`express-rate-limit`): `/api/*` → 60 req/menit/IP (endpoint yang memicu scraping upstream), `/proxy/*` → 300 req/menit/IP (stream/segment/thumbnail, butuh limit lebih longgar). `app.set('trust proxy', 1)` wajib ada — tanpa ini semua pengunjung di belakang proxy Replit akan dianggap satu IP yang sama.
-- **Monitor/CDN-alert buffer**: sengaja **unlimited**, tidak di-cap — ini keputusan sadar (monitoring pengunjung), bukan oversight.
+- **Monitor buffer**: ring buffer 50.000 event di server; client pakai virtual list sehingga puluhan ribu event bisa ditampilkan tanpa lag DOM.
 
 ## User Preferences
 - Dark theme (Obsidian Archive design system)

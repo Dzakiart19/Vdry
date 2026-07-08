@@ -98,11 +98,12 @@ Returns `{ get, set, del, has, stats }`.
 
 ---
 
-## Monitor Buffer — Unlimited
+## Monitor Buffer — Ring Buffer
 
-- `monitorLog[]` — **unlimited** (tidak ada trim/eviction)
-- `cdnAlerts[]` — **unlimited** (tidak ada trim/eviction)
-- `MAX_ROWS` di dashboard live feed — **unlimited** (semua baris ditampilkan)
+- `monitorLog[]` — **ring buffer, max 50.000 event** (`MON_BUF = 50_000`); `monitorLog.shift()` saat overflow
+- `cdnAlerts[]` — **ring buffer, max 500 alert** (`CDN_ALERT_MAX = 500`)
+- `totalEvents` — integer counter terpisah, tidak berkurang saat ring buffer trim; dipakai untuk stat "Total Events" yang akurat
+- Client tidak pakai DOM limit — pakai **virtual list** (hanya visible rows yang jadi DOM node); data lama diakses via REST pagination `/monitor/log`
 
 ---
 
