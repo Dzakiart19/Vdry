@@ -5,10 +5,11 @@
    Detail per-platform ada di lib/scrapers/{p1,rb,yb}.js
 ═══════════════════════════════════════════════════════════════════════ */
 
-const express = require('express');
-const helmet  = require('helmet');
-const cors    = require('cors');
-const path    = require('path');
+const express   = require('express');
+const helmet    = require('helmet');
+const cors      = require('cors');
+const path      = require('path');
+const rateLimit = require('express-rate-limit');
 
 const { trackRequest, registerMonitorRoutes } = require('./lib/monitor');
 const p1 = require('./lib/scrapers/p1');
@@ -18,9 +19,38 @@ const yb = require('./lib/scrapers/yb');
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
-/* ── Security headers ── */
+/* Replit menempatkan app di belakang satu reverse proxy (mTLS proxy).
+   Tanpa ini, req.ip selalu mengarah ke IP proxy internal — bukan IP
+   client asli — sehingga express-rate-limit akan menganggap SEMUA
+   pengunjung sebagai satu IP yang sama dan saling membatasi satu sama
+   lain. `1` = percayai persis satu hop proxy di depan app. */
+app.set('trust proxy', 1);
+
+/* ── Security headers ──────────────────────────────────────────────────
+   CSP: 'unsafe-inline' terpaksa dipakai di script-src/style-src karena
+   index.html/rb.html/yb.html masih pakai inline <script> dan inline
+   onclick/onerror handler — tanpa itu UI akan langsung rusak total.
+   Proteksi nyata datang dari: object-src none, base-uri self,
+   frame-ancestors self, dan blokir sumber non-https/data: untuk script.
+   /embed/:id sengaja override frame-ancestors-nya sendiri (lihat p1.js)
+   supaya masih bisa di-iframe oleh Firebase frontend. ── */
 app.use(helmet({
-  contentSecurityPolicy:     false, // dihandle manual karena proxy inline script
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:     ["'self'"],
+      scriptSrc:      ["'self'", "'unsafe-inline'", 'https:'],
+      styleSrc:       ["'self'", "'unsafe-inline'", 'https:'],
+      imgSrc:         ["'self'", 'data:', 'https:'],
+      fontSrc:        ["'self'", 'https:', 'data:'],
+      mediaSrc:       ["'self'", 'blob:'],
+      connectSrc:     ["'self'"],
+      frameSrc:       ['https:'],
+      objectSrc:      ["'none'"],
+      baseUri:        ["'self'"],
+      formAction:     ["'self'"],
+      frameAncestors: ["'self'"],
+    },
+  },
   crossOriginEmbedderPolicy: false, // video HLS butuh cross-origin resource
   crossOriginOpenerPolicy:   false, // Adsterra popunder perlu window.opener
   crossOriginResourcePolicy: false, // Firebase frontend beda origin — allow cross-origin load (img, video)
@@ -54,6 +84,31 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 /* ── Monitor middleware: catat setiap request API ── */
 app.use(trackRequest);
+
+/* ── Rate limiting ────────────────────────────────────────────────────
+   Melindungi upstream (xpvid.cc/ruangbokep.ws/yobokep.com) dari spam
+   scraping dan mencegah server sendiri dibanjiri request.
+   - /api/* — endpoint scraping (folder/posts/video info), limit ketat
+     karena tiap hit memicu HTTP request baru ke situs sumber.
+   - /proxy/* — stream/HLS segment & thumbnail, limit jauh lebih longgar
+     karena satu video normal saja bisa memicu puluhan-ratusan hit
+     (tiap segmen .ts, tiap thumbnail di grid) dalam waktu singkat. ── */
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Terlalu banyak permintaan, coba lagi sebentar lagi.' },
+});
+const proxyLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Terlalu banyak permintaan, coba lagi sebentar lagi.' },
+});
+app.use('/api', apiLimiter);
+app.use('/proxy', proxyLimiter);
 
 /* ── Tiga platform, terisolasi penuh — tidak ada path yang overlap ── */
 app.use(p1.router);
