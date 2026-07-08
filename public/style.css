@@ -1039,6 +1039,18 @@ body {
   display: none;
 }
 
+.ad-display-slot {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 4px;
+  min-height: 250px;
+  overflow: hidden;
+}
+
+.ad-display-slot:empty {
+  display: none;
+}
+
 /* ══════════════════════════════════════════════
    PLATFORM 2 — RUANGBOKEP (RB) STYLES
 ══════════════════════════════════════════════ */
