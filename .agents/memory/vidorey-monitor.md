@@ -1,6 +1,6 @@
 ---
 name: Vidorey Monitor — Real-Time SSE Dashboard
-description: /monitor dan /health/detail: auth pattern, event tracking, SSE architecture, dan unlimited buffer.
+description: /monitor dan /health/detail: auth pattern, event tracking, SSE architecture, dan ring buffer limits (bukan unlimited lagi).
 ---
 
 # Vidorey Monitor
@@ -19,10 +19,8 @@ description: /monitor dan /health/detail: auth pattern, event tracking, SSE arch
 
 **How to apply:**
 ```js
-// checkMonitorKey sekarang menerima parameter action (default '/monitor')
 function checkMonitorKey(req, res, action = '/monitor') { ... }
 
-// Di route handler:
 app.get('/monitor',        (req, res) => { if (!checkMonitorKey(req, res)) return; ... });
 app.get('/health/detail',  (req, res) => { if (!checkMonitorKey(req, res, '/health/detail')) return; ... });
 ```
@@ -43,34 +41,50 @@ app.get('/health/detail',  (req, res) => { if (!checkMonitorKey(req, res, '/heal
 
 ---
 
+## Buffer — Ring Buffer (BUKAN unlimited)
+
+Buffer sekarang dibatasi supaya `/monitor` tidak lag di puluhan ribu event:
+
+```js
+MON_BUF       = 2000   // max event tersimpan di monitorLog (ring buffer)
+CDN_ALERT_MAX = 200    // max CDN alert tersimpan
+SSE_HISTORY   = 300    // max event dikirim ke client baru saat connect
+MAX_ROWS      = 300    // max baris DOM di dashboard (trim oldest)
+```
+
+`totalEvents` adalah counter integer terpisah yang selalu naik — tidak berkurang saat ring buffer trim. Dipakai untuk stat "Total Events" yang akurat di dashboard.
+
+**Why:** Dengan unlimited buffer, puluhan ribu event menyebabkan:
+1. RAM server terus naik
+2. Saat SSE connect baru, seluruh history dikirim sekaligus → browser freeze
+3. DOM feed menumpuk ribuan node → render lag
+
+**How to apply:** Jangan kembalikan ke unlimited tanpa alasan eksplisit.
+
+---
+
 ## SSE Event Architecture
 
 ```
-monitorLog[]         — unlimited array di memory (tidak ada trim)
+monitorLog[]         — ring buffer, max MON_BUF entries
+totalEvents          — integer counter, tidak berkurang
 monitorSSE[]         — array active res objects (SSE clients)
-pushMonitorEvent()   — append ke monitorLog, write ke semua SSE clients
+pushMonitorEvent()   — push ke ring buffer, trim jika > MON_BUF, write ke SSE clients
 ```
 
 On SSE connect (`/monitor/events?key=`):
-1. Send full history sebagai `event: history` (JSON array)
+1. Kirim `monitorLog.slice(-SSE_HISTORY).reverse()` sebagai `event: history` + `totalEvents`
 2. Push `res` ke `monitorSSE[]`
 3. Send `: ping` setiap 25 detik keepalive
 4. On `req.close`, remove dari `monitorSSE[]`
 
 Client JS mendengarkan dua event type:
-- `history` — bulk load semua events saat pertama connect
-- `event` — event baru di-push live
+- `history` — bulk load (max SSE_HISTORY events), render via DocumentFragment (satu reflow)
+- `event` — event live baru di-push satu per satu dengan animasi
 
----
+**Client DOM trim:** setiap `prepend` live event, cek `feed.children.length > MAX_ROWS` → `removeChild(lastChild)`.
 
-## Buffer — Unlimited
-
-Semua buffer monitoring sudah diubah ke unlimited (tidak ada batas):
-- `MON_BUF = Infinity` — `monitorLog` tidak pernah di-trim
-- `CDN_ALERT_MAX = Infinity` — `cdnAlerts` tidak pernah di-trim
-- `MAX_ROWS = Infinity` — baris di tabel live feed tidak pernah dihapus
-
-**Trade-off:** Memory server naik seiring traffic. Restart server = semua data hilang (in-memory). Untuk persistent storage perlu database.
+**History tidak animate:** row dari `event: history` tidak pakai class `.live` supaya tidak ada 300 animasi sekaligus saat load.
 
 ---
 
@@ -102,14 +116,7 @@ IP diekstrak dari `x-forwarded-for` (value pertama, trimmed) — penting karena 
   "uptime": "2h 15m 30s",
   "startedAt": "2026-07-08T00:00:00.000Z",
   "memory": { "rss": "120.5 MB", "heapUsed": "45.2 MB" },
-  "caches": [
-    { "name": "p1_videoUrl", "size": 12, "hits": 340, "misses": 12 },
-    { "name": "p2_m3u8",     "size": 8,  "hits": 120, "misses": 8  },
-    { "name": "p2_posts",    "size": 3,  "hits": 45,  "misses": 3  },
-    { "name": "p2_freshSession", ... },
-    { "name": "p3_m3u8",    ... },
-    { "name": "p3_posts",   ... }
-  ],
+  "caches": [ ... ],
   "cdnAlerts": { "total": 3, "items": [...] }
 }
 ```
@@ -119,8 +126,9 @@ IP diekstrak dari `x-forwarded-for` (value pertama, trimmed) — penting karena 
 ## Dashboard UI
 
 - Dark theme matching app (`#0d0d12` background, `#a78bfa` accent)
-- Stats bar: Total Events · Streams · Video Opens · Unique IPs
+- Stats bar: Total Events (akurat via `totalEvents`) · Streams · Video Opens · Unique IPs
 - Event rows: time · colored badge · resource ID · IP (truncated)
+- Hint text di bawah feed: "Menampilkan N event terbaru dari total X event sejak server start"
 - Tombol: **🔥 vidorey.web.app** dan **📊 Firebase Analytics**
 
 ---

@@ -167,9 +167,10 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 | `bk_posts` | `/api/bk/posts` dipanggil (P4) |
 
 ### Implementasi Monitor
-- Buffer di memory: **unlimited** — semua events tersimpan (tidak ada trim)
-- CDN alerts: **unlimited** — semua alert tersimpan
-- SSE: koneksi terbuka push event realtime; history dikirim sekali saat connect
+- Buffer di memory: **ring buffer** — `MON_BUF=2000` event, `CDN_ALERT_MAX=200` alert
+- `totalEvents` counter integer terpisah — tidak berkurang saat ring buffer trim, dipakai untuk stat akurat
+- SSE: kirim `SSE_HISTORY=300` event terbaru saat client connect (bukan seluruh log)
+- Client DOM: max `MAX_ROWS=300` baris, row lama dihapus saat overflow
 - Keepalive ping setiap 25 detik agar koneksi tidak di-drop
 
 ## Keamanan (server.js)
