@@ -23,8 +23,7 @@ const THUMB_HOSTS  = new Set(['i.xpvid.cc']);
 const STREAM_HOSTS = new Set(['vidoycdn.b-cdn.net', 'cache.cdnvdy.com', 'cache.overfetch.video']);
 
 /* ── Monitor: real-time visit log ── */
-const MONITOR_KEY   = process.env.SESSION_SECRET || '';
-const FIREBASE_URL  = process.env.FIREBASE_URL  || '';   // e.g. https://vidorey.web.app
+const MONITOR_KEY = process.env.SESSION_SECRET || '';
 const MON_BUF     = 500;       // max events disimpan di memory
 const monitorLog  = [];        // circular buffer
 let   monitorSSE  = [];        // connected SSE clients
@@ -130,7 +129,8 @@ app.use(cors({
       (hostname === 'localhost')                                        ||
       (hostname.endsWith('.replit.dev')  && proto === 'https:')        ||
       (hostname.endsWith('.replit.app')  && proto === 'https:')        ||
-      (FIREBASE_URL && origin === FIREBASE_URL)
+      origin === 'https://vidorey.web.app'                             ||
+      origin === 'https://vidorey.firebaseapp.com'
     );
     cb(ok ? null : new Error('CORS: origin tidak diizinkan'), ok);
   },
@@ -1109,7 +1109,8 @@ app.get('/embed/:id', (req, res) => {
   // frame-ancestors — hanya izinkan origin yang diketahui (Firebase + Replit)
   res.setHeader('Content-Security-Policy', [
     "frame-ancestors 'self'",
-    ...(FIREBASE_URL ? [FIREBASE_URL] : []),
+    'https://vidorey.web.app',
+    'https://vidorey.firebaseapp.com',
     'https://*.replit.app',
     'https://*.replit.dev',
     'http://localhost:*',
@@ -1238,7 +1239,7 @@ app.get('/monitor', (req, res) => {
 <div class="topbar">
   <h1>⬡ Vidorey Monitor</h1>
   <div class="toplinks">
-    ${FIREBASE_URL ? `<a class="btn-firebase" href="${FIREBASE_URL}" target="_blank" rel="noopener">🔥 ${FIREBASE_URL.replace('https://', '')}</a>` : ''}
+    <a class="btn-firebase" href="https://vidorey.web.app" target="_blank" rel="noopener">🔥 vidorey.web.app</a>
     <a class="btn-console" href="https://analytics.google.com/analytics/web/?authuser=1&hl=en-US#/a338511152p518732508/reports/dashboard?r=firebase-overview" target="_blank" rel="noopener">📊 Firebase Analytics</a>
   </div>
 </div>
