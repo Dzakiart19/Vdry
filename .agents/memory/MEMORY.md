@@ -5,5 +5,6 @@
 - [Vidorey Monitor](vidorey-monitor.md) — SSE unlimited buffer; checkMonitorKey(req,res,action) protects /monitor + /health/detail; P3 events tracked.
 - [P3 yobokep Architecture](yb-pagination-thumbnail.md) — HTML pagination broken (pakai WP REST API); thumbnail via parallel og:image fetch; self-healing handleYbSeg+reresolveYbUrl; CDN allowlist owphbf24.com.
 - [Vidorey Modular Refactor](vidorey-modular-refactor.md) — server.js split into lib/{cache,proxy,monitor,scrapers/p1,rb,yb}.js; platform isolation preserved, no cross-imports.
-- [Vidorey Deploy Config](vidorey-deploy-config.md) — config.js pakai placeholder __REPLIT_BACKEND_URL__; deploy.sh inject dari secret REPLIT_BACKEND_URL; jangan hardcode URL di file.
+- [Vidorey Deploy Config](vidorey-deploy-config.md) — config.js pakai placeholder __REPLIT_BACKEND_URL__; deploy.sh pakai trap EXIT restore + sed delimiter |; jangan hardcode URL di file.
+- [Vidorey CSP Allowlist](vidorey-csp-allowlist.md) — script-src tidak pakai https: wildcard; domain eksplisit wajib ditambah jika ada script/ad network baru.
 - [Vidorey Nav Drawer](vidorey-nav-drawer.md) — platform switcher adalah sidebar drawer (hamburger ≡), bukan dropdown; ID lama platformSwitcher/psTrigger/psMenu sudah dihapus dari semua HTML.

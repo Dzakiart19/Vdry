@@ -29,9 +29,12 @@ description: How BACKEND_URL is auto-detected at runtime and injected at Firebas
 
 ### Deploy flow (deploy.sh)
 1. Reads `$REPLIT_BACKEND_URL` env var (Replit Secret — set once)
-2. `sed` replaces `__REPLIT_BACKEND_URL__` placeholder in config.js
-3. Runs `firebase deploy --only hosting`
-4. `mv config.js.bak config.js` restores placeholder
+2. Backs up config.js → registers `trap restore_config EXIT` (restores placeholder even if deploy fails/is interrupted)
+3. `sed` with `|` delimiter replaces placeholder (delimiter `|` penting: karakter `&` dalam URL bisa jadi replacement literal jika pakai delimiter lain seperti `/`)
+4. Runs `firebase deploy --only hosting`
+5. trap EXIT restores config.js ke placeholder otomatis
+
+**Why trap:** Tanpa `trap`, jika `firebase deploy` gagal di tengah (network error, auth expired, dsb.), `config.js` tertinggal berisi URL produksi — placeholder hilang dari repo sampai di-restore manual.
 
 ### If URL changes
 Only update the **`REPLIT_BACKEND_URL` Replit Secret** — no file edits needed.

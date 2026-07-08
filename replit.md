@@ -135,7 +135,8 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 - Keepalive ping setiap 25 detik agar koneksi tidak di-drop
 
 ## Keamanan (server.js)
-- **CSP**: aktif via Helmet (`default-src 'self'`, dst). `script-src`/`style-src` pakai `'unsafe-inline'` karena `index.html`/`rb.html`/`yb.html` masih pakai inline `<script>` dan inline `onclick`/`onerror` — proteksi nyata datang dari `object-src 'none'`, `base-uri 'self'`, `frame-ancestors 'self'`, `connect-src 'self'`. `/embed/:id` (P1) override `frame-ancestors`-nya sendiri lewat `res.setHeader` supaya bisa di-iframe dari Firebase frontend.
+- **CSP**: aktif via Helmet. `script-src` pakai `'unsafe-inline'` (wajib karena HTML masih pakai inline `<script>`) tapi **tidak pakai wildcard `https:`** — hanya domain eksplisit yang diizinkan: `cdn.jsdelivr.net` (hls.js), `pl28423230/pl28418540/pl28427857.effectivecpmnetwork.com` + `www.highperformanceformat.com` (Adsterra). `style-src` → `fonts.googleapis.com` saja. `font-src` → `fonts.gstatic.com` saja. Proteksi nyata dari `object-src 'none'`, `base-uri 'self'`, `connect-src 'self'`. **Jika menambah script/ad network baru, wajib tambahkan domainnya ke `scriptSrc` di server.js.**
+- `/embed/:id` (P1) override `frame-ancestors`-nya sendiri lewat `res.setHeader` supaya bisa di-iframe dari Firebase frontend.
 - **Rate limiting** (`express-rate-limit`): `/api/*` → 60 req/menit/IP (endpoint yang memicu scraping upstream), `/proxy/*` → 300 req/menit/IP (stream/segment/thumbnail, butuh limit lebih longgar). `app.set('trust proxy', 1)` wajib ada — tanpa ini semua pengunjung di belakang proxy Replit akan dianggap satu IP yang sama.
 - **Monitor/CDN-alert buffer**: sengaja **unlimited**, tidak di-cap — ini keputusan sadar (monitoring pengunjung), bukan oversight.
 
