@@ -32,6 +32,7 @@
     modal:         $('rbPlayerModal'),
     modalBackdrop: $('rbModalBackdrop'),
     modalClose:    $('rbModalClose'),
+    modalBody:     $('rbModalBody'),
     videoTitle:    $('rbVideoTitle'),
     videoSub:      $('rbVideoSub'),
     videoEl:       $('rbVideoEl'),
@@ -39,6 +40,11 @@
     playerLoading: $('rbPlayerLoading'),
     retryBtn:      $('rbRetryBtn'),
     toast:         $('toast'),
+    watchDesc:     $('rbWatchDesc'),
+    watchDescText: $('rbWatchDescText'),
+    relatedSection:    $('rbRelatedSection'),
+    relatedGrid:       $('rbRelatedGrid'),
+    relatedPagination: $('rbRelatedPagination'),
   };
 
   /* ── Player session tracking ── */
@@ -277,21 +283,121 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  /* ── Open player modal ── */
+  /* ── Related videos (gaya XNXX: grid + pagination client-side) ── */
+  const RELATED_PAGE_SIZE = 8;
+  let relatedState = { items: [], page: 1 };
+
+  function renderWatchDesc(description) {
+    if (!description) {
+      els.watchDesc.classList.add('hidden');
+      els.watchDescText.textContent = '';
+      return;
+    }
+    els.watchDescText.textContent = description;
+    els.watchDesc.classList.remove('hidden');
+  }
+
+  function renderRelated(items) {
+    relatedState = { items: items || [], page: 1 };
+    if (!relatedState.items.length) {
+      els.relatedGrid.innerHTML = '';
+      els.relatedPagination.classList.add('hidden');
+      els.relatedSection.classList.add('hidden');
+      return;
+    }
+    els.relatedSection.classList.remove('hidden');
+    renderRelatedPage();
+  }
+
+  function renderRelatedPage() {
+    const { items, page } = relatedState;
+    const totalPages = Math.max(1, Math.ceil(items.length / RELATED_PAGE_SIZE));
+    const start = (page - 1) * RELATED_PAGE_SIZE;
+    const pageItems = items.slice(start, start + RELATED_PAGE_SIZE);
+
+    els.relatedGrid.innerHTML = pageItems.map(p => {
+      const rawThumb = p.thumb || '';
+      const thumb = rawThumb ? `${API}/proxy/rb/thumb?url=${encodeURIComponent(rawThumb)}` : '';
+      const title = escHtml(p.title);
+      const slug  = escHtml(p.slug);
+      const duration = p.duration ? `<span class="rb-card-duration">${escHtml(p.duration)}</span>` : '';
+
+      return `<div class="rb-card" data-slug="${slug}" tabindex="0" role="button" aria-label="${title}">
+        <div class="rb-card-thumb">
+          ${thumb
+            ? `<img src="${thumb}" alt="${title}" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('rb-thumb-err')" />`
+            : ''}
+          ${duration}
+          <div class="rb-card-overlay">
+            <svg class="rb-play-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="rb-card-info">
+          <p class="rb-card-title" title="${title}">${title}</p>
+        </div>
+      </div>`;
+    }).join('');
+
+    els.relatedGrid.querySelectorAll('.rb-card').forEach(card => {
+      card.addEventListener('click', () => openPlayer(card.dataset.slug));
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') openPlayer(card.dataset.slug);
+      });
+    });
+
+    renderRelatedPagination(page, totalPages);
+  }
+
+  function renderRelatedPagination(cur, total) {
+    if (total <= 1) { els.relatedPagination.classList.add('hidden'); return; }
+
+    const pages = buildPageList(cur, total);
+    let html = '';
+
+    if (cur > 1) html += `<button type="button" class="page-btn page-prev" data-page="${cur - 1}">‹</button>`;
+    pages.forEach(p => {
+      html += p === '…'
+        ? `<span class="page-ellipsis">…</span>`
+        : `<button type="button" class="page-btn ${p === cur ? 'active' : ''}" data-page="${p}">${p}</button>`;
+    });
+    if (cur < total) html += `<button type="button" class="page-btn page-next" data-page="${cur + 1}">›</button>`;
+
+    els.relatedPagination.innerHTML = html;
+    els.relatedPagination.classList.remove('hidden');
+
+    els.relatedPagination.querySelectorAll('[data-page]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = parseInt(btn.dataset.page);
+        if (p !== relatedState.page) {
+          relatedState.page = p;
+          renderRelatedPage();
+          els.relatedSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  }
+
+  /* ── Open player modal (watch view: player + info + related) ── */
   async function openPlayer(slug) {
     const session = ++playerSession;
 
     els.videoTitle.textContent = 'Memuat…';
-    els.videoSub.textContent   = 'Vidorey 2';
     els.playerLoading.classList.remove('hidden');
+    renderWatchDesc('');
+    renderRelated([]);
     destroyHls();
     openModal();
+    if (els.modalBody) els.modalBody.scrollTop = 0;
 
     try {
       const data = await apiFetch(`/api/rb/video/${encodeURIComponent(slug)}`);
       if (session !== playerSession) return;
 
       els.videoTitle.textContent = data.title || slug;
+      renderWatchDesc(data.description || '');
+      renderRelated(data.related || []);
 
       if (data.m3u8Url) {
         playHls(API + data.m3u8Url, slug);
@@ -395,6 +501,11 @@
   let modalHistoryPushed = false;
 
   function openModal() {
+    // Idempotent: kalau modal SUDAH terbuka (mis. klik video related di dalam
+    // watch view yang sedang aktif), jangan push history entry baru — cukup
+    // 1 entry /rb#player per sesi modal, supaya Back/Forward tetap konsisten.
+    if (!els.modal.classList.contains('hidden')) return;
+
     els.modal.classList.remove('hidden');
     document.body.classList.add('modal-open');
     // Push state BERBEDA (/rb#player) supaya browser bisa membedakannya dari /rb biasa.

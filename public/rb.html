@@ -160,13 +160,12 @@
   </main>
 </div>
 
-<!-- ─── PLAYER MODAL ─── -->
+<!-- ─── PLAYER MODAL (watch view: player + info + related, gaya YouTube/XNXX) ─── -->
 <div id="rbPlayerModal" class="modal hidden" role="dialog" aria-modal="true">
   <div class="modal-backdrop" id="rbModalBackdrop"></div>
-  <div class="modal-panel">
+  <div class="modal-panel modal-panel-watch">
     <div class="modal-top">
       <div class="modal-meta">
-        <h2 id="rbVideoTitle" class="modal-title">—</h2>
         <span id="rbVideoSub" class="modal-sub">Vidorey 2</span>
       </div>
       <button class="modal-close" id="rbModalClose" title="Tutup">
@@ -175,27 +174,44 @@
         </svg>
       </button>
     </div>
-    <div class="video-stage rb-video-stage">
-      <div id="rbPlayerLoading" class="rb-player-loader">
-        <div class="loader-ring"></div>
-        <p>Memuat video…</p>
+    <div class="modal-body" id="rbModalBody">
+      <div class="video-stage rb-video-stage">
+        <div id="rbPlayerLoading" class="rb-player-loader">
+          <div class="loader-ring"></div>
+          <p>Memuat video…</p>
+        </div>
+        <video
+          id="rbVideoEl"
+          class="rb-player-video hidden"
+          controls
+          playsinline
+          preload="none"
+        ></video>
+        <iframe
+          id="rbVideoFrame"
+          class="rb-player-frame hidden"
+          allowfullscreen
+          allow="autoplay; fullscreen; picture-in-picture"
+          referrerpolicy="no-referrer-when-downgrade"
+          frameborder="0"
+          scrolling="no"
+        ></iframe>
       </div>
-      <video
-        id="rbVideoEl"
-        class="rb-player-video hidden"
-        controls
-        playsinline
-        preload="none"
-      ></video>
-      <iframe
-        id="rbVideoFrame"
-        class="rb-player-frame hidden"
-        allowfullscreen
-        allow="autoplay; fullscreen; picture-in-picture"
-        referrerpolicy="no-referrer-when-downgrade"
-        frameborder="0"
-        scrolling="no"
-      ></iframe>
+
+      <!-- ─── Info video (judul + deskripsi), gaya YouTube ─── -->
+      <div class="watch-info">
+        <h1 id="rbVideoTitle" class="watch-title">—</h1>
+        <div id="rbWatchDesc" class="watch-desc hidden">
+          <p id="rbWatchDescText"></p>
+        </div>
+      </div>
+
+      <!-- ─── Video lainnya / related, gaya XNXX dengan pagination ─── -->
+      <div class="watch-related hidden" id="rbRelatedSection">
+        <h3 class="watch-related-heading">Video Lainnya</h3>
+        <div id="rbRelatedGrid" class="rb-grid rb-grid-related"></div>
+        <div id="rbRelatedPagination" class="pagination hidden"></div>
+      </div>
     </div>
   </div>
 </div>
