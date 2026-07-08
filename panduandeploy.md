@@ -12,25 +12,30 @@ firebase login --no-localhost
 
 ## Langkah Deploy Frontend (Firebase Hosting)
 
-### 1. Pastikan BACKEND_URL benar di `public/config.js`
+### 1. Pastikan Secret `REPLIT_BACKEND_URL` sudah diset
 
-Buka `public/config.js` dan pastikan `BACKEND_URL` mengarah ke URL Replit backend yang aktif:
+Buka **Secrets** di Replit (ikon kunci 🔑) dan pastikan secret ini ada:
 
-```js
-window.BACKEND_URL = 'https://vidorey--lturner686.replit.app';
-```
+| Key | Value |
+|---|---|
+| `REPLIT_BACKEND_URL` | URL Replit backend aktif, contoh: `https://vidorey--lturner686.replit.app` |
 
-> **Penting:** Kalau URL Replit berubah (misal setelah rename project), wajib update ini sebelum deploy. Kalau lupa, Firebase frontend tidak bisa konek ke backend.
+> **Penting:** Jangan edit `public/config.js` manual — file itu menyimpan placeholder `__REPLIT_BACKEND_URL__` di repo. `deploy.sh` akan otomatis inject URL dari secret ini saat deploy, lalu restore placeholder setelah selesai.
+>
+> Jika URL Replit berubah (setelah rename project), cukup update secret `REPLIT_BACKEND_URL` — tidak perlu edit file apapun.
 
 ### 2. Deploy ke Firebase Hosting
 
 ```bash
-# Masuk ke folder project
-cd path/ke/folder/vidorey
-
-# Deploy hanya Firebase Hosting (bukan Replit backend)
-firebase deploy --only hosting
+# Dari folder project di Replit terminal
+bash deploy.sh
 ```
+
+Script `deploy.sh` akan:
+1. Baca URL dari secret `REPLIT_BACKEND_URL`
+2. Inject URL ke `config.js` sementara
+3. Deploy ke Firebase Hosting (`vidorey.web.app`)
+4. Restore `config.js` ke placeholder otomatis
 
 ### 3. Deploy Replit Backend (jika ada perubahan server.js)
 

@@ -25,16 +25,25 @@ echo "[1/3] Backend URL: $REPLIT_BACKEND_URL"
 CONFIG="public/config.js"
 cp "$CONFIG" "${CONFIG}.bak"
 
-sed -i "s|__REPLIT_BACKEND_URL__|$REPLIT_BACKEND_URL|g" "$CONFIG"
+# Pastikan config.js SELALU dikembalikan ke placeholder setelah script selesai,
+# bahkan jika deploy gagal atau script di-interrupt (Ctrl+C).
+# Tanpa trap ini, config.js bisa tertinggal berisi URL produksi jika deploy error.
+restore_config() {
+  if [ -f "${CONFIG}.bak" ]; then
+    mv "${CONFIG}.bak" "$CONFIG"
+    echo "      config.js dikembalikan ke placeholder."
+  fi
+}
+trap restore_config EXIT
+
+# Gunakan delimiter | agar karakter & di URL tidak diinterpretasikan oleh sed
+# (& dalam replacement string sed = "string yang cocok" → menghasilkan URL ganda)
+sed -i "s|__REPLIT_BACKEND_URL__|${REPLIT_BACKEND_URL}|g" "$CONFIG"
 echo "[2/3] config.js sudah di-patch dengan URL backend."
 
 # ── Deploy ke Firebase Hosting ────────────────────
 echo "[3/3] Deploying ke Firebase Hosting..."
 npx firebase-tools deploy --only hosting --project vidorey
-
-# ── Restore config.js ke placeholder ─────────────
-mv "${CONFIG}.bak" "$CONFIG"
-echo "      config.js dikembalikan ke placeholder."
 
 echo ""
 echo "================================================"
