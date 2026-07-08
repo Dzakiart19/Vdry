@@ -25,6 +25,11 @@ The old dropdown (brand logo with chevron → ps-menu) was invisible to users wh
 - `id="psTrigger"` — dropdown trigger gone
 - `id="psMenu"` — dropdown menu gone
 
+### Avatar logo
+All three `.ps-avatar` elements use **`<img src="/logo.png" alt="Vidorey">`** — the same Vidorey brand logo across all platforms. Do NOT use per-platform favicons or letter initials; consistency with the topbar brand is intentional.
+
+CSS: `.ps-avatar` has `overflow:hidden`; `.ps-avatar img` fills the container with `object-fit:cover`.
+
 ### CSS dead code in style.css (harmless, not used)
 `.ps-trigger`, `.ps-menu`, `.ps-chevron`, `@keyframes psIn` — still in CSS file but no HTML uses them. `.ps-avatar`, `.ps-info`, `.ps-name`, `.ps-desc`, `.ps-check` are still ACTIVE (reused by `.nav-plat-item` inside the drawer).
 

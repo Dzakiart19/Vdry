@@ -39,7 +39,7 @@ Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri 
 - `div.nav-overlay` (id `navOverlay`) — backdrop gelap, z-index 149
 - `nav.nav-drawer` (id `navDrawer`) — panel slide-in, z-index 150
 - `.nav-drawer-head` + `.nav-drawer-close` (id `navClose`) — header drawer
-- `.nav-plat-item` + `.nav-plat-item.active` — item platform, reuse `.ps-avatar`/`.ps-info`/`.ps-check`
+- `.nav-plat-item` + `.nav-plat-item.active` — item platform; avatar selalu `<img src="/logo.png">` (logo Vidorey sama untuk semua platform, konsisten dengan topbar)
 
 **ID lama yang sudah dihapus:** `platformSwitcher`, `psTrigger`, `psMenu` — tidak ada lagi di HTML manapun. CSS `.ps-trigger`, `.ps-menu`, `.ps-chevron` di style.css adalah dead code (tidak membahayakan, tapi tidak dipakai).
 
