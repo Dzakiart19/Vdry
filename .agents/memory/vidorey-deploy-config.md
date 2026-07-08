@@ -19,13 +19,15 @@ description: How BACKEND_URL is auto-detected at runtime and injected at Firebas
   var h = window.location.hostname;
   var isReplit =
     h === 'localhost' ||
+    h === '127.0.0.1' ||
     h.endsWith('.replit.dev') ||
     h.endsWith('.replit.app');
   window.BACKEND_URL = isReplit ? '' : '__REPLIT_BACKEND_URL__';
 })();
 ```
-- On Replit dev → `BACKEND_URL = ''` (relative URL, same-origin backend)
+- On Replit dev / direct IP access → `BACKEND_URL = ''` (relative URL, same-origin backend)
 - On Firebase → `BACKEND_URL = '<injected URL>'`
+- **Why `127.0.0.1`:** Screenshot tools and internal health checkers access via IP, not hostname. Without this, `BACKEND_URL` would be the placeholder string → fetch resolves as relative path → SPA fallback returns HTML → JSON parse error.
 
 ### Deploy flow (deploy.sh)
 1. Reads `$REPLIT_BACKEND_URL` env var (Replit Secret — set once)
