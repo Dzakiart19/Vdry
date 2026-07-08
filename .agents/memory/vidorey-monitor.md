@@ -1,138 +1,110 @@
 ---
 name: Vidorey Monitor — Real-Time SSE Dashboard
-description: /monitor dan /health/detail: auth pattern, event tracking, SSE architecture, dan ring buffer limits (bukan unlimited lagi).
+description: /monitor dan /health/detail: auth pattern, SSE architecture, virtual list rendering, ring buffer + REST pagination.
 ---
 
 # Vidorey Monitor
 
 ## Overview
 
-`/monitor` dan `/health/detail` adalah endpoint monitoring yang diproteksi, dijalankan oleh Replit backend (`server.js`). Tidak ada di Firebase — Firebase hanya serve file statis.
+`/monitor` dan `/health/detail` adalah endpoint monitoring yang diproteksi, dijalankan oleh Replit backend. Firebase hanya serve file statis, tidak ada monitoring di sana.
 
 ---
 
 ## Auth Pattern — Form Login, Bukan 401
 
-**Rule:** Semua protected monitoring endpoint tanpa `?key=` menampilkan form login, bukan error mentah.
+Semua protected endpoint tanpa `?key=` tampilkan form login (bukan 401 mentah). Submit → GET dengan `?key=` → bisa di-bookmark.
 
-**Why:** User tidak selalu tahu harus append `?key=SESSION_SECRET`. Form login lebih user-friendly. Submit form → GET ke endpoint yang sama dengan `?key=`, sehingga URL bisa di-bookmark.
-
-**How to apply:**
 ```js
 function checkMonitorKey(req, res, action = '/monitor') { ... }
-
-app.get('/monitor',        (req, res) => { if (!checkMonitorKey(req, res)) return; ... });
-app.get('/health/detail',  (req, res) => { if (!checkMonitorKey(req, res, '/health/detail')) return; ... });
+// return true jika OK, false + render form jika gagal
 ```
 
-- Key benar → handler dilanjutkan, return `true`
-- Key salah → render form login dengan error, return `false`
-- Auth key = `process.env.SESSION_SECRET` (via konstanta `MONITOR_KEY`)
+Routes yang diproteksi: `/monitor`, `/monitor/events`, `/monitor/log`, `/health/detail`.
 
 ---
 
-## Endpoint yang Diproteksi
+## Buffer + Konstanta
+
+```js
+MON_BUF       = 50_000   // ring buffer monitorLog (oldest-first push)
+CDN_ALERT_MAX = 500       // ring buffer cdnAlerts
+SSE_HISTORY   = 200       // event dikirim ke client baru saat SSE connect
+```
+
+`totalEvents` = integer counter yang tidak berkurang saat ring buffer trim — dipakai untuk stat akurat.
+
+**Why:** 50k event ≈ ~10MB RAM, sangat aman. Lag bukan dari storage, tapi dari DOM rendering (virtual list solusinya).
+
+---
+
+## Arsitektur: Virtual List Client
+
+**Prinsip utama:** Data hidup di JS array (`allEvents[]`), bukan di DOM. Hanya baris yang terlihat di viewport yang menjadi DOM node.
+
+```
+allEvents[]        — newest at index 0; bisa puluhan ribu entry
+renderedMap        — Map<rowIndex, DOMElement>; hanya visible rows
+ROW_H = 35         — px per baris (fixed height 34px + 1px border)
+OVER = 12          — overscan (baris extra di atas/bawah viewport)
+```
+
+### Render loop (requestAnimationFrame)
+1. Set `vlist.style.height = allEvents.length * ROW_H`
+2. Hitung `startIdx`/`endIdx` dari `scrollTop + clientHeight`
+3. Hapus dari `renderedMap` yang keluar range → `removeChild`
+4. Tambah ke `renderedMap` yang masuk range → `appendChild` via Fragment
+5. Tidak pernah rebuild semua baris — hanya delta per scroll tick
+
+### Live events (SSE `event:`)
+- `allEvents.unshift(ev)` → semua index shift +1
+- Update `el.style.top` semua elemen di `renderedMap` (+ROW_H)
+- Update Map keys (+1)
+- Jika `scrollTop < ROW_H*3`: scroll ke 0; else `scrollTop += ROW_H` (maintain posisi visual)
+
+### History awal (SSE `event: history`)
+- Server kirim `monitorLog.slice(-SSE_HISTORY).reverse()` (newest-first) + `totalEvents`
+- Client init `allEvents`, reset stats, clear renderedMap, render
+
+### Load older events (REST pagination)
+- Trigger: scroll ke bawah dalam threshold `ROW_H * 8`
+- Fetch: `GET /monitor/log?key=&before=<oldest.ts>&limit=200`
+- Response: `{ events: oldest-first, hasMore: bool, total: int }`
+- Client: `allEvents.push(...data.events)` (append ke end = lebih lama)
+- Tidak ada index shift → renderedMap tetap valid
+
+---
+
+## Endpoints
 
 | Route | Fungsi |
 |---|---|
-| `/monitor` | Dashboard HTML real-time (SSE live feed) |
-| `/monitor/events?key=` | SSE stream (`text/event-stream`) |
-| `/health/detail?key=` | JSON: cache stats, memory, uptime, CDN alerts |
-
----
-
-## Buffer — Ring Buffer (BUKAN unlimited)
-
-Buffer sekarang dibatasi supaya `/monitor` tidak lag di puluhan ribu event:
-
-```js
-MON_BUF       = 2000   // max event tersimpan di monitorLog (ring buffer)
-CDN_ALERT_MAX = 200    // max CDN alert tersimpan
-SSE_HISTORY   = 300    // max event dikirim ke client baru saat connect
-MAX_ROWS      = 300    // max baris DOM di dashboard (trim oldest)
-```
-
-`totalEvents` adalah counter integer terpisah yang selalu naik — tidak berkurang saat ring buffer trim. Dipakai untuk stat "Total Events" yang akurat di dashboard.
-
-**Why:** Dengan unlimited buffer, puluhan ribu event menyebabkan:
-1. RAM server terus naik
-2. Saat SSE connect baru, seluruh history dikirim sekaligus → browser freeze
-3. DOM feed menumpuk ribuan node → render lag
-
-**How to apply:** Jangan kembalikan ke unlimited tanpa alasan eksplisit.
-
----
-
-## SSE Event Architecture
-
-```
-monitorLog[]         — ring buffer, max MON_BUF entries
-totalEvents          — integer counter, tidak berkurang
-monitorSSE[]         — array active res objects (SSE clients)
-pushMonitorEvent()   — push ke ring buffer, trim jika > MON_BUF, write ke SSE clients
-```
-
-On SSE connect (`/monitor/events?key=`):
-1. Kirim `monitorLog.slice(-SSE_HISTORY).reverse()` sebagai `event: history` + `totalEvents`
-2. Push `res` ke `monitorSSE[]`
-3. Send `: ping` setiap 25 detik keepalive
-4. On `req.close`, remove dari `monitorSSE[]`
-
-Client JS mendengarkan dua event type:
-- `history` — bulk load (max SSE_HISTORY events), render via DocumentFragment (satu reflow)
-- `event` — event live baru di-push satu per satu dengan animasi
-
-**Client DOM trim:** setiap `prepend` live event, cek `feed.children.length > MAX_ROWS` → `removeChild(lastChild)`.
-
-**History tidak animate:** row dari `event: history` tidak pakai class `.live` supaya tidak ada 300 animasi sekaligus saat load.
+| `/monitor` | Dashboard HTML (virtual list) |
+| `/monitor/events?key=` | SSE: `event: history` (initial) + `event: event` (live) |
+| `/monitor/log?key=&before=<ts>&limit=<n>` | REST: event lama untuk pagination, max 500/req |
+| `/health` | Public: `{status:'ok', ts}` |
+| `/health/detail?key=` | JSON: cache stats, memory, uptime, CDN alerts, monitorLog stats |
 
 ---
 
 ## Tracking Middleware
 
-Fires sebelum route handlers (didaftarkan setelah `express.static`):
-
-| Badge | Trigger |
+| Badge | Trigger path |
 |---|---|
-| `stream` | `/proxy/stream/:id` (user menonton P1) |
-| `video` | `/api/video/:id` (user buka player P1) |
-| `folder` | `/api/folder/:id` (user browse folder P1) |
-| `rb_video` | `/api/rb/video/:slug` (P2) |
-| `rb_posts` | `/api/rb/posts` (P2) |
-| `yb_video` | `/api/yb/video/:slug` (P3) |
-| `yb_posts` | `/api/yb/posts` (P3) |
-| `bk_video` | `/api/bk/video/:slug` (P4) |
-| `bk_posts` | `/api/bk/posts` (P4) |
+| `stream` | `/proxy/stream/:id` |
+| `video` | `/api/video/:id` |
+| `folder` | `/api/folder/:id` |
+| `rb_video` | `/api/rb/video/:slug` |
+| `rb_posts` | `/api/rb/posts` |
+| `yb_video` | `/api/yb/video/:slug` |
+| `yb_posts` | `/api/yb/posts` |
+| `bk_video` | `/api/bk/video/:slug` |
+| `bk_posts` | `/api/bk/posts` |
 
-IP diekstrak dari `x-forwarded-for` (value pertama, trimmed) — penting karena Replit proxy semua request.
-
----
-
-## /health/detail Response
-
-```json
-{
-  "status": "ok",
-  "uptime": "2h 15m 30s",
-  "startedAt": "2026-07-08T00:00:00.000Z",
-  "memory": { "rss": "120.5 MB", "heapUsed": "45.2 MB" },
-  "caches": [ ... ],
-  "cdnAlerts": { "total": 3, "items": [...] }
-}
-```
-
----
-
-## Dashboard UI
-
-- Dark theme matching app (`#0d0d12` background, `#a78bfa` accent)
-- Stats bar: Total Events (akurat via `totalEvents`) · Streams · Video Opens · Unique IPs
-- Event rows: time · colored badge · resource ID · IP (truncated)
-- Hint text di bawah feed: "Menampilkan N event terbaru dari total X event sejak server start"
-- Tombol: **🔥 vidorey.web.app** dan **📊 Firebase Analytics**
+IP dari `x-forwarded-for` header (first value), truncated karena Replit proxy.
 
 ---
 
 ## Yang Tidak Bisa Ditrack
 
-Firebase serve file statis dari CDN — page views dan navigasi di `vidorey.web.app` yang tidak memanggil Replit backend tidak terlihat di monitor ini. Gunakan Firebase Analytics untuk page-view-level data.
+Firebase page views (static CDN) tidak terlihat — pakai Firebase Analytics untuk itu.
