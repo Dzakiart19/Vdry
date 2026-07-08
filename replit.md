@@ -3,9 +3,26 @@
 Web app untuk browse dan nonton video dari tiga platform terpisah.
 
 ## Stack
-- **Backend**: Node.js + Express (proxy + HTML scraper) — `server.js`
+- **Backend**: Node.js + Express (proxy + HTML scraper), modular — lihat struktur di bawah
 - **Frontend**: Vanilla JS SPA (no framework), tiga halaman terpisah
 - **Port**: 5000
+
+## Struktur Backend
+`server.js` (composition root, ~90 baris) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 3 router platform → monitor/health routes → SPA fallback.
+
+```
+server.js                 ← composition root (helmet/CSP, CORS, rate limit, mount routers, listen)
+lib/
+  cache.js                ← makeCache() factory generik (dipakai semua platform, instance terpisah per platform)
+  proxy.js                ← UA string, apiError(), axios instances (ax/axNoRedirect), resolveUrl(), basenameNoQuery()
+  monitor.js              ← MONITOR_KEY, monitorLog, cdnAlerts, trackRequest, checkMonitorKey, registerMonitorRoutes (/health, /health/detail, /monitor, /monitor/events)
+  scrapers/
+    p1.js                 ← xpvid.cc: folder/video API, stream+thumb proxy, /embed/:id
+    rb.js                 ← ruangbokep.ws: PackerJS decode, self-healing CDN token, HLS proxy, /rb SPA route
+    yb.js                 ← yobokep.com: dual embed provider (bysezejataos AES-256-GCM + streamhls.to), HLS proxy, /yb SPA route
+```
+
+Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai `server.js` untuk agregasi `getCacheStats()` di `/health/detail`. **Tidak ada cross-import antar `p1.js`/`rb.js`/`yb.js`** — hanya `lib/cache.js` dan `lib/proxy.js` yang generik/stateless di-share.
 
 ## Tiga Platform (Completely Isolated)
 
@@ -97,6 +114,11 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 - CDN alerts: **unlimited** — semua alert tersimpan
 - SSE: koneksi terbuka push event realtime; history dikirim sekali saat connect
 - Keepalive ping setiap 25 detik agar koneksi tidak di-drop
+
+## Keamanan (server.js)
+- **CSP**: aktif via Helmet (`default-src 'self'`, dst). `script-src`/`style-src` pakai `'unsafe-inline'` karena `index.html`/`rb.html`/`yb.html` masih pakai inline `<script>` dan inline `onclick`/`onerror` — proteksi nyata datang dari `object-src 'none'`, `base-uri 'self'`, `frame-ancestors 'self'`, `connect-src 'self'`. `/embed/:id` (P1) override `frame-ancestors`-nya sendiri lewat `res.setHeader` supaya bisa di-iframe dari Firebase frontend.
+- **Rate limiting** (`express-rate-limit`): `/api/*` → 60 req/menit/IP (endpoint yang memicu scraping upstream), `/proxy/*` → 300 req/menit/IP (stream/segment/thumbnail, butuh limit lebih longgar). `app.set('trust proxy', 1)` wajib ada — tanpa ini semua pengunjung di belakang proxy Replit akan dianggap satu IP yang sama.
+- **Monitor/CDN-alert buffer**: sengaja **unlimited**, tidak di-cap — ini keputusan sadar (monitoring pengunjung), bukan oversight.
 
 ## User Preferences
 - Dark theme (Obsidian Archive design system)
