@@ -4,3 +4,4 @@
 - [P1 Cross-Origin Video](p1-crossorigin-video.md) — never use crossorigin attr on <video>; set video.src immediately; *.overfetch.video allowlist.
 - [Vidorey Monitor](vidorey-monitor.md) — SSE unlimited buffer; checkMonitorKey(req,res,action) protects /monitor + /health/detail; P3 events tracked.
 - [P3 yobokep Architecture](yb-pagination-thumbnail.md) — HTML pagination broken (pakai WP REST API); thumbnail via parallel og:image fetch; self-healing handleYbSeg+reresolveYbUrl; CDN allowlist owphbf24.com.
+- [Vidorey Modular Refactor](vidorey-modular-refactor.md) — server.js split into lib/{cache,proxy,monitor,scrapers/p1,rb,yb}.js; platform isolation preserved, no cross-imports.
