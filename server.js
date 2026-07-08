@@ -38,10 +38,19 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc:     ["'self'"],
-      scriptSrc:      ["'self'", "'unsafe-inline'", 'https:'],
-      styleSrc:       ["'self'", "'unsafe-inline'", 'https:'],
-      imgSrc:         ["'self'", 'data:', 'https:'],
-      fontSrc:        ["'self'", 'https:', 'data:'],
+      scriptSrc: [
+        "'self'", "'unsafe-inline'",
+        // hls.js (rb.html + yb.html)
+        'https://cdn.jsdelivr.net',
+        // Adsterra ad network
+        'https://pl28423230.effectivecpmnetwork.com',
+        'https://pl28418540.effectivecpmnetwork.com',
+        'https://pl28427857.effectivecpmnetwork.com',
+        'https://www.highperformanceformat.com',
+      ],
+      styleSrc:  ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      imgSrc:    ["'self'", 'data:', 'https:'],
+      fontSrc:   ["'self'", 'https://fonts.gstatic.com', 'data:'],
       mediaSrc:       ["'self'", 'blob:'],
       connectSrc:     ["'self'"],
       frameSrc:       ['https:'],
