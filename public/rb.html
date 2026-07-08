@@ -200,7 +200,16 @@
 
       <!-- ─── Info video (judul + deskripsi), gaya YouTube ─── -->
       <div class="watch-info">
-        <h1 id="rbVideoTitle" class="watch-title">—</h1>
+        <div class="watch-title-row">
+          <h1 id="rbVideoTitle" class="watch-title">—</h1>
+          <button type="button" id="rbShareBtn" class="watch-share-btn" title="Bagikan video">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/>
+            </svg>
+            <span>Bagikan</span>
+          </button>
+        </div>
         <div id="rbWatchDesc" class="watch-desc hidden">
           <p id="rbWatchDescText"></p>
         </div>

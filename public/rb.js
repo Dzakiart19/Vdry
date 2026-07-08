@@ -45,7 +45,11 @@
     relatedSection:    $('rbRelatedSection'),
     relatedGrid:       $('rbRelatedGrid'),
     relatedPagination: $('rbRelatedPagination'),
+    shareBtn:      $('rbShareBtn'),
   };
+
+  /* ── Slug video yang sedang tampil di watch view (untuk share link) ── */
+  let currentSlug = null;
 
   /* ── Player session tracking ── */
   let hlsInstance   = null;
@@ -379,16 +383,24 @@
     });
   }
 
-  /* ── Open player modal (watch view: player + info + related) ── */
-  async function openPlayer(slug) {
+  /* ── Open player modal (watch view: player + info + related) ──
+     opts.fromHistory = true → dipanggil dari popstate (Forward ke entry
+     rbModal) — entry history-nya SUDAH ada, jangan push/replace lagi. */
+  async function openPlayer(slug, opts = {}) {
     const session = ++playerSession;
+    currentSlug = slug;
 
     els.videoTitle.textContent = 'Memuat…';
     els.playerLoading.classList.remove('hidden');
     renderWatchDesc('');
     renderRelated([]);
     destroyHls();
-    openModal();
+    if (opts.fromHistory) {
+      els.modal.classList.remove('hidden');
+      document.body.classList.add('modal-open');
+    } else {
+      openModal(slug);
+    }
     if (els.modalBody) els.modalBody.scrollTop = 0;
 
     try {
@@ -500,18 +512,25 @@
   // Flag: apakah kita sudah push history state untuk modal ini
   let modalHistoryPushed = false;
 
-  function openModal() {
-    // Idempotent: kalau modal SUDAH terbuka (mis. klik video related di dalam
-    // watch view yang sedang aktif), jangan push history entry baru — cukup
-    // 1 entry /rb#player per sesi modal, supaya Back/Forward tetap konsisten.
-    if (!els.modal.classList.contains('hidden')) return;
+  function openModal(slug) {
+    // URL /rb/watch/<slug> — supaya address bar jadi link yang bisa langsung
+    // dibagikan (tombol Share) dan membuka video yang sama saat diakses ulang.
+    const url = slug ? `/rb/watch/${encodeURIComponent(slug)}` : '/rb/watch';
+
+    if (!els.modal.classList.contains('hidden')) {
+      // Modal SUDAH terbuka (mis. klik video related di dalam watch view) —
+      // jangan push history entry baru, cukup ganti URL entry yang sama
+      // supaya link di address bar tetap ikut video yang sedang tampil.
+      if (modalHistoryPushed) history.replaceState({ rbModal: true, rbSlug: slug }, '', url);
+      return;
+    }
 
     els.modal.classList.remove('hidden');
     document.body.classList.add('modal-open');
-    // Push state BERBEDA (/rb#player) supaya browser bisa membedakannya dari /rb biasa.
+    // Push state BERBEDA (/rb/watch/<slug>) supaya browser bisa membedakannya dari /rb biasa.
     // Ini penting karena history.back() dari dua URL /rb yang identik bisa melewati
     // keduanya sekaligus dan mendarat di P1 (/) — masalah Chrome/Safari.
-    history.pushState({ rbModal: true }, '', '/rb#player');
+    history.pushState({ rbModal: true, rbSlug: slug }, '', url);
     modalHistoryPushed = true;
   }
 
@@ -524,6 +543,7 @@
 
   function closeModal() {
     _doCloseModal();
+    currentSlug = null;
 
     if (modalHistoryPushed) {
       modalHistoryPushed = false;
@@ -536,16 +556,26 @@
 
   // Tangkap tombol Back/Forward browser
   window.addEventListener('popstate', e => {
+    const s = e.state;
+
     if (!els.modal.classList.contains('hidden')) {
       // User menekan Back saat modal terbuka → tutup modal saja, tetap di /rb
       modalHistoryPushed = false;
+      currentSlug = null;
       _doCloseModal();
-      history.replaceState(e.state || null, '', '/rb');
+      history.replaceState(s || null, '', '/rb');
+      return;
+    }
+
+    // User menekan Forward ke entry watch-view (mis. setelah Back dari modal) →
+    // buka lagi modal untuk slug itu, JANGAN push entry baru (sudah ada di history).
+    if (s && s.rbModal && s.rbSlug) {
+      modalHistoryPushed = true; // entry-nya sudah ada di history, tidak perlu push lagi
+      openPlayer(s.rbSlug, { fromHistory: true });
       return;
     }
 
     // Modal tertutup: restore halaman/search dari history state
-    const s = e.state;
     if (s && typeof s.rbPage !== 'undefined') {
       // Ada state Vidorey 2 → muat ulang halaman/search yang disimpan
       state.page        = s.rbPage  || 1;
@@ -563,6 +593,35 @@
     if (e.key === 'Escape' && !els.modal.classList.contains('hidden')) closeModal();
   });
 
+  /* ── Share ── */
+  // navigator.share() (mobile Chrome/Safari) kalau tersedia, kalau tidak
+  // fallback ke copy-to-clipboard. Link-nya /rb/watch/<slug> — link ini
+  // sendiri yang di-deep-link balik oleh init() di bawah.
+  if (els.shareBtn) {
+    els.shareBtn.addEventListener('click', async () => {
+      if (!currentSlug) return;
+      const shareUrl   = `${location.origin}/rb/watch/${encodeURIComponent(currentSlug)}`;
+      const shareTitle = els.videoTitle.textContent || 'Vidorey';
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: shareTitle, url: shareUrl });
+        } catch (e) {
+          // AbortError = user membatalkan share sheet — bukan error, diamkan saja
+          if (e.name !== 'AbortError') showToast('Gagal membagikan link.');
+        }
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        showToast('Link video disalin ke clipboard');
+      } catch {
+        showToast(shareUrl);
+      }
+    });
+  }
+
   /* ── Retry ── */
   els.retryBtn.addEventListener('click', () => loadPosts(false));
 
@@ -577,7 +636,23 @@
   }
 
   /* ── Init ── */
+  // Tangkap path SEBELUM loadPosts() dipanggil — loadPosts() memanggil
+  // saveNav() yang langsung replaceState() ke '/rb', jadi location.pathname
+  // sudah berubah kalau dibaca SESUDAH loadPosts() jalan.
+  const deepLinkMatch = location.pathname.match(/^\/rb\/watch\/([^/]+)\/?$/);
+
   // replaceState (bukan push) agar entry pertama punya state yang bisa di-restore
   loadPosts(false);
+
+  // Deep-link: kalau URL-nya /rb/watch/<slug> (dari link Share), langsung
+  // buka watch view video itu di atas listing yang baru saja dimuat.
+  if (deepLinkMatch) {
+    let slug = null;
+    try { slug = decodeURIComponent(deepLinkMatch[1]); } catch { /* % encoding rusak — abaikan deep-link */ }
+    if (slug) {
+      modalHistoryPushed = false;
+      openPlayer(slug);
+    }
+  }
 
 })();

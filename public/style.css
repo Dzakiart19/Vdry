@@ -796,12 +796,48 @@ body {
 .watch-info {
   padding: 16px 20px 4px;
 }
+.watch-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
 .watch-title {
   font-size: 16px;
   font-weight: 600;
   color: var(--text);
   line-height: 1.45;
-  margin: 0 0 8px;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+.watch-share-btn {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.watch-share-btn:hover {
+  background: var(--surface3);
+  color: var(--text);
+  border-color: var(--rose);
+}
+.watch-share-btn svg { width: 15px; height: 15px; }
+@media (max-width: 420px) {
+  .watch-share-btn span { display: none; }
+  .watch-share-btn { padding: 8px; border-radius: 50%; }
 }
 .watch-desc {
   font-size: 12.5px;
