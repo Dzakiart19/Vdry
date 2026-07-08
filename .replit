@@ -43,3 +43,4 @@ build = ["npm", "install", "--production"]
 
 [userenv.shared]
 SESSION_SECRET = "Namakamusiapa123"
+REPLIT_BACKEND_URL = "\"\""

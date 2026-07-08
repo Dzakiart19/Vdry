@@ -75,12 +75,22 @@ yobokep.com HTML listing page selalu mengembalikan 24 post yang sama di semua `/
 - `*.savefiles.com` + `savefiles.com` — streamhls.to CDN, token `i=` dikunci ke IP
 
 ## Deployment
-- **Replit (backend + dev frontend)**: server jalan di port 5000, URL `https://vidorey--lturner686.replit.app`
+- **Replit (backend + dev frontend)**: server jalan di port 5000
 - **Firebase (production frontend)**: `vidorey.web.app` — host file statis dari `public/`
   - Deploy via: `bash deploy.sh` (hanya deploy Firebase, bukan Replit backend)
-- `public/config.js` — `window.BACKEND_URL` hardcode ke `https://vidorey--lturner686.replit.app`
-  - Replit dev: override ke `''` (relatif) berdasarkan hostname `.replit.app` / `.replit.dev` / `localhost`
-  - **Wajib update** sebelum `firebase deploy` jika URL Replit berubah
+
+### config.js — Auto-detect Backend URL
+`public/config.js` mendeteksi environment saat runtime:
+- **Replit dev** (hostname `*.replit.dev` / `*.replit.app` / `localhost`) → `BACKEND_URL = ''` (relatif)
+- **Firebase production** (semua hostname lain) → `BACKEND_URL` di-inject oleh `deploy.sh`
+
+File `config.js` menyimpan placeholder `__REPLIT_BACKEND_URL__` di repo. `deploy.sh` melakukan:
+1. Baca URL dari Replit Secret **`REPLIT_BACKEND_URL`** (wajib diset sekali)
+2. `sed` inject URL ke `config.js` sementara
+3. Deploy ke Firebase
+4. Restore `config.js` ke placeholder
+
+**Jangan edit `config.js` manual** — cukup set/update secret `REPLIT_BACKEND_URL` jika URL Replit berubah.
 
 ## Monitor & Health — Protected Endpoints
 
