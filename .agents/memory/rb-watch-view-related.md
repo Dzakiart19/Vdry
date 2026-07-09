@@ -23,9 +23,11 @@ cards from unrelated sidebar widgets if the target site's markup includes more
 than one such widget.
 
 ## Modal/history gotcha (must replicate on P3/P4)
-The player modal's URL scheme is `/rb/watch/<slug>` (pushed/replaced via
-`history.pushState`/`replaceState` in `openModal()`), not a static hash marker —
-this makes the address bar itself a shareable, deep-linkable link to that video.
+The player modal's URL scheme is `/rb/watch/<token>` (an 11-char shortlink) pushed
+via `history.pushState`/`replaceState` in `openModal()`/`openPlayer()` — the
+address bar is a shareable, deep-linkable link that does NOT reveal the video title.
+History state always stores the **raw slug** (not the token), so popstate/Forward
+works without re-resolving the token.
 Rules that keep Back/Forward consistent (`public/rb.js`):
 - `openModal(slug)` is **idempotent**: no-op if the modal is already open (e.g.
   clicking a related-video card while the watch view is showing) — it only
@@ -41,18 +43,59 @@ Rules that keep Back/Forward consistent (`public/rb.js`):
   `lib/scrapers/rb.js`) already serves `rb.html` for `/rb/watch/<slug>` with no
   new backend route needed — confirm the equivalent wildcard exists for
   yb/bk before assuming this works there too.
-- On init, capture `location.pathname` for the `/rb/watch/<slug>` deep-link
+- On init, capture `location.pathname` for the `/rb/watch/<segment>` deep-link
   match **before** calling the initial `loadPosts()` — `loadPosts()`
   synchronously calls `saveNav()` which does `history.replaceState(..., '/rb')`,
-  which clobbers `location.pathname` if read afterward. Guard
-  `decodeURIComponent` with try/catch (malformed `%` sequences throw).
+  which clobbers `location.pathname` if read afterward. Then check: if segment
+  is exactly 11 alnum chars → token path (async resolve); else → `decodeSlug`
+  legacy path. No try/catch needed on the token path — `decodeSlug` has its own
+  try/catch internally.
 
-## Share button
-Watch-info title row has a "Bagikan" button: uses `navigator.share()` when
-available (mobile), falls back to `navigator.clipboard.writeText()` + toast.
-Share URL is always `${origin}/rb/watch/<slug>`. Apply the same idempotent-modal
-+ popstate-branch fixes above when building this for yb/bk, since the share
-feature is what makes the URL-based scheme necessary in the first place.
+## Share button + Short URL (11-char token)
+Watch-info title row has a "Bagikan" button: `navigator.share()` on mobile,
+fallback `navigator.clipboard.writeText()` + toast. Share URL is
+`${origin}/rb/watch/<currentToken || encodeSlug(currentSlug)>` — always the
+short 11-char token once the video has loaded, base64url fallback before that.
+
+### Short token flow (all three platforms — rb/yb/bk)
+URL in the address bar is a **short 11-char random token**, not the video slug.
+The slug is never exposed in the URL bar or share link.
+
+1. `encodeSlug(s)` / `decodeSlug(t)` — UTF-8-safe base64url helpers defined at
+   the top of each platform's JS IIFE. Used as a temporary URL while the video
+   info loads, and as a backward-compat fallback for old shared links.
+
+2. `let currentToken = null;` — declared alongside `currentSlug`.
+
+3. `openModal(slug)` pushes `/rb/watch/<encodeSlug(slug)>` immediately (so the
+   address bar updates before the API call returns). State still stores raw slug:
+   `history.pushState({ rbModal: true, rbSlug: slug }, '', url)`.
+
+4. In `openPlayer(slug)`, reset `currentToken = null` at the top. After
+   `apiFetch('/api/rb/video/:slug')` resolves:
+   ```js
+   if (data.token) {
+     currentToken = data.token;
+     history.replaceState({ rbModal: true, rbSlug: slug }, '', `/rb/watch/${data.token}`);
+   }
+   ```
+   Server returns `token` because `registerSlug('rb', slug)` is called inside
+   the scraper's video endpoint and included in the `res.json(...)` response.
+
+5. `closeModal()` and the Back-while-open popstate branch both reset
+   `currentToken = null` alongside `currentSlug = null`.
+
+6. **Deep-link on load** — two cases:
+   - Segment matches `/^[a-z0-9]{11}$/` → short token: call
+     `apiFetch('/api/s/rb/<token>')` to resolve slug, then `openPlayer(slug)`.
+   - Anything else → legacy: `decodeSlug(segment)` (base64url) → `openPlayer`.
+
+7. **Server side**: `lib/shortlink.js` — `registerSlug(platform, slug)` returns
+   idempotent 11-char token (same slug → same token until 48h TTL expires).
+   `resolveToken(platform, token)` → slug. Route `/api/s/:platform/:token` in
+   `server.js` does the lookup. No DB needed — pure in-memory cache.
+   Token registry is lost on server restart; deep-links from before the restart
+   fall through to a 404 response and the deep-link is silently ignored.
 
 ## P3 (yb) and P4 (bk) replication — actual markup found, confirms the warning above
 Both were replicated successfully using the exact same modal/history/share JS

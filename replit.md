@@ -11,11 +11,12 @@ Web app untuk browse dan nonton video dari empat platform terpisah.
 `server.js` (composition root, ~150 baris) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 4 router platform → monitor/health routes → SPA fallback.
 
 ```
-server.js                 ← composition root (helmet/CSP, CORS, rate limit, mount routers, listen)
+server.js                 ← composition root (helmet/CSP, CORS, rate limit, mount routers, /api/s/:platform/:token shortlink resolver, listen)
 lib/
   cache.js                ← makeCache() factory generik (dipakai semua platform, instance terpisah per platform)
   proxy.js                ← UA string, apiError(), axios instances (ax/axNoRedirect), resolveUrl(), basenameNoQuery()
   monitor.js              ← MONITOR_KEY, monitorLog, cdnAlerts, trackRequest, checkMonitorKey, registerMonitorRoutes (/health, /health/detail, /monitor, /monitor/events)
+  shortlink.js            ← token ↔ slug registry (in-memory, 48h TTL, 20k slots); registerSlug(platform,slug)→token; resolveToken(platform,token)→slug
   scrapers/
     p1.js                 ← xpvid.cc: folder/video API, stream+thumb proxy, /embed/:id
     rb.js                 ← ruangbokep.ws: PackerJS decode, self-healing CDN token, HLS proxy, /rb SPA route
@@ -73,20 +74,22 @@ Semua domain iklan sudah masuk allowlist `script-src` di CSP (`server.js`) — k
 ## Cara Kerja — Platform 2 (ruangbokep.ws)
 1. `/api/rb/categories` → fetch kategori via WordPress REST API
 2. `/api/rb/posts` → scrape listing HTML (`article.loop-video[data-main-thumb]`) — support pagination & kategori
-3. `/api/rb/video/:slug` → resolve iframe embed URL (putarvid/streamruby) → HLS via PackerJS decode; response juga membawa `description` (og:description) dan `related` (array video terkait, discrape dari widget "Related videos" di halaman post itu sendiri)
+3. `/api/rb/video/:slug` → resolve iframe embed URL (putarvid/streamruby) → HLS via PackerJS decode; response juga membawa `description` (og:description), `related` (array video terkait, discrape dari widget "Related videos" di halaman post itu sendiri), dan `token` (11-char shortlink dari `lib/shortlink.js`)
 4. `/proxy/rb/hls/:slug` → proxy master m3u8, rewrite semua URL ke `/proxy/rb/seg`
 5. `/proxy/rb/seg` → proxy segment/sub-manifest; self-healing saat CDN 403 via `handleRbSeg` + `reresolveUrl`
 6. `/proxy/rb/thumb?url=` → proxy thumbnail (validasi `content-type: image/*`)
 7. `/rb/watch/:slug` → SPA route (sama seperti `/rb`, serve `rb.html`) — dipakai sebagai deep-link/share URL, langsung membuka watch view video tsb saat diakses
 
 ### Watch View P2 (gaya YouTube/XNXX)
-Klik video membuka modal watch view (scrollable, **bukan** full-screen — desain sengaja): player di atas, lalu judul + deskripsi (gaya YouTube), lalu grid "Video Lainnya" + pagination client-side 8/halaman (gaya XNXX, dari `related` yang di-scrape). Tombol **Bagikan** di sebelah judul memakai `navigator.share()` (fallback copy-to-clipboard) dengan link `/rb/watch/<slug>` yang deep-link langsung ke video itu. URL address bar mengikuti video yang sedang tampil (`/rb/watch/<slug>`) via history API — lihat `openModal()`/popstate handler di `rb.js` untuk mekanisme back/forward yang harus tetap konsisten. Pola ini jadi acuan saat direplikasi ke P3/P4.
+Klik video membuka modal watch view (scrollable, **bukan** full-screen — desain sengaja): player di atas, lalu judul + deskripsi (gaya YouTube), lalu grid "Video Lainnya" + pagination client-side 8/halaman (gaya XNXX, dari `related` yang di-scrape). Tombol **Bagikan** di sebelah judul memakai `navigator.share()` (fallback copy-to-clipboard).
+
+**URL scheme — shortlink 11 karakter (bukan slug):** Address bar dan share link memakai token 11-char acak (`/rb/watch/m4k9zqr2xab`) yang tidak mengandung judul video. Flow: (1) `openModal(slug)` push URL ke `/rb/watch/<base64url(slug)>` sementara; (2) setelah API `/api/rb/video/:slug` return, server menyertakan field `token` (dihasilkan `registerSlug('rb', slug)` dari `lib/shortlink.js`); (3) client langsung `history.replaceState` ke `/rb/watch/<token>` dan simpan ke `currentToken`; (4) tombol Share pakai `currentToken || encodeSlug(currentSlug)`. Deep-link saat load: jika segment URL 11-char `[a-z0-9]` → resolve via `/api/s/rb/<token>`; jika base64url panjang → `decodeSlug()` (backward compat link lama). Token berlaku 48 jam (in-memory, hilang saat server restart). Mekanisme back/forward via popstate: state selalu menyimpan slug asli (bukan token), jadi Forward tidak perlu resolve ulang. Lihat `openModal()`/`openPlayer()`/popstate handler di `rb.js`. Pola ini identik di P3/P4.
 
 Di bawah grid "Video Lainnya" (paling bawah watch view, dipisah garis) ada satu slot iklan kecil (`.watch-ad-slot`, banner iframe 300×250 dari `highperformanceformat.com` — domain sama dengan display ad yang sudah dipakai di listing, jadi tidak perlu tambahan allowlist CSP). Sengaja dipilih ad ini (bukan popunder/social bar) karena tidak membuka tab baru atau menutupi konten — hanya satu blok statis di posisi paling akhir, jadi tidak mengganggu nonton video atau baca related videos. Identik di P2/P3/P4.
 
 ## Cara Kerja — Platform 3 (yobokep.com)
 1. `/api/yb/posts` → WP REST API untuk slug + title + totalPages; parallel-fetch `og:image` dari tiap post untuk thumbnail (cache 24 jam)
-2. `/api/yb/video/:slug` → scrape post page → resolve embed (bysezejataos.com atau streamhls.to) → HLS URL; response juga membawa `description` (og:description) dan `related` (di-scrape dari widget "Related videos" — `.under-video-block` dengan heading persis "Related videos", isi `article.loop-video[data-main-thumb]`, markup mirip P2)
+2. `/api/yb/video/:slug` → scrape post page → resolve embed (bysezejataos.com atau streamhls.to) → HLS URL; response juga membawa `description` (og:description), `related` (di-scrape dari widget "Related videos" — `.under-video-block` dengan heading persis "Related videos", isi `article.loop-video[data-main-thumb]`, markup mirip P2), dan `token` (11-char shortlink)
 3. `/proxy/yb/hls/:slug` → proxy master m3u8, rewrite semua URL ke `/proxy/yb/seg`
 4. `/proxy/yb/seg` → proxy segment/sub-manifest; self-healing saat CDN 403 via `handleYbSeg` + `reresolveYbUrl`
 5. `/proxy/yb/thumb?url=` → proxy thumbnail (validasi `content-type: image/*`)
@@ -105,7 +108,7 @@ yobokep.com HTML listing page selalu mengembalikan 24 post yang sama di semua `/
 
 ## Cara Kerja — Platform 4 (bokepking.cam)
 1. `/api/bk/posts?p=N&q=query` → WP REST API bypass (`/?rest_route=/wp/v2/posts`) untuk listing + pagination; parallel-fetch thumbnail dari `/wp/v2/media/:id` (cache 24 jam); **sentinel caching** — error/404/empty di-cache 20-30s agar tidak hammer upstream (konsisten P2/P3)
-2. `/api/bk/video/:slug` → scrape post HTML → extract `<meta itemprop="contentURL" content="...mp4">` atau `<source type="video/mp4">` → MP4 URL langsung (tidak pakai HLS); response juga membawa `description` (meta og:description/itemprop/name description, urutan fallback) dan `related` (di-scrape dari `.under-video-block > .videos-list > article[id]` — satu-satunya blok di halaman, tanpa heading pembeda; thumbnail asli ada di `img[data-src]`, bukan `src`, karena lazy-loaded)
+2. `/api/bk/video/:slug` → scrape post HTML → extract `<meta itemprop="contentURL" content="...mp4">` atau `<source type="video/mp4">` → MP4 URL langsung (tidak pakai HLS); response juga membawa `description` (meta og:description/itemprop/name description, urutan fallback), `related` (di-scrape dari `.under-video-block > .videos-list > article[id]` — satu-satunya blok di halaman, tanpa heading pembeda; thumbnail asli ada di `img[data-src]`, bukan `src`, karena lazy-loaded), dan `token` (11-char shortlink)
 3. `/proxy/bk/stream/:slug` → proxy MP4 ke `vdn.bokepking.cam` dengan Range support; evict cache & retry sekali jika CDN 403/404
 4. `/proxy/bk/thumb?url=` → proxy thumbnail (allowlist `vdn.bokepking.cam` only, validasi `content-type: image/*`)
 5. `/bk/watch/:slug` → SPA route (sama seperti `/bk`, serve `bk.html`) — deep-link/share URL, buka watch view video tsb saat diakses
