@@ -1,6 +1,6 @@
 ---
 name: Vidorey Smartlinks
-description: smartlinks.js — 5 trigger monetisasi, rotasi 3 link, dedup 200ms.
+description: smartlinks.js — 5 trigger monetisasi, rotasi 4 link (3 Smartlink + 1 Direct Link), dedup 200ms.
 ---
 
 ## File: public/smartlinks.js
@@ -17,10 +17,11 @@ description: smartlinks.js — 5 trigger monetisasi, rotasi 3 link, dedup 200ms.
 | 4 | Timer 5 detik | `setTimeout(tryFire, 5000)` | Otomatis setelah 5s halaman dibuka |
 | 5 | Exit intent | `mouseleave` (clientY≤0 desktop) + `pagehide` (mobile) | Satu kali per sesi (`exitFired` flag) |
 
-## Rotasi link
-- 3 link Adsterra/EffectiveCPM (LINKS array)
-- `idx++` mod 3 → bergantian
-- Dedup 200ms: `if (now - lastFireMs < 200) return` — cegah double-fire saat first-click dan card-click bersamaan
+## Rotasi link — 4 link
+- 3 Smartlink Adsterra/EffectiveCPM
+- 1 Direct Link (Tautan Pintar) Adsterra
+- `idx++` mod 4 → bergantian
+- Dedup 200ms: `if (now - lastFireMs < 200) return` — cegah double-fire
 
 ## Guard keamanan
 - `if (!(e.target instanceof Element)) return` — tidak crash jika target bukan DOM element

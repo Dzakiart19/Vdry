@@ -2,7 +2,7 @@
    Vidorey Smartlinks — maksimal exposure
    5 trigger: first click, video card click, platform nav click,
               timer 5s, exit intent
-   Rotate 3 links secara bergantian
+   Rotate 4 links secara bergantian (3 Smartlink + 1 Direct Link)
 ═══════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -10,7 +10,8 @@
   var LINKS = [
     'https://www.effectivecpmnetwork.com/zkphsh9h7u?key=f0ff67356a4540f8c243de58312a8121',
     'https://www.effectivecpmnetwork.com/n72teg1g?key=0cab9db782afe80175f267ef78551a08',
-    'https://www.effectivecpmnetwork.com/khj65tru?key=188aaea14e197cc95790b8dca5bbbdfd'
+    'https://www.effectivecpmnetwork.com/khj65tru?key=188aaea14e197cc95790b8dca5bbbdfd',
+    'https://www.effectivecpmnetwork.com/z6ec2ixj7?key=bafa7c785c7d84482705d8749d9b28de'
   ];
 
   var CARD_SEL = '.video-card, .rb-card, .folder-card, .tp-slide';

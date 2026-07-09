@@ -1207,6 +1207,15 @@ body {
 }
 .ad-mobile-banner-slot:empty { display: none; }
 
+.ad-468-slot {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 8px;
+  min-height: 60px;
+  overflow: hidden;
+}
+.ad-468-slot:empty { display: none; }
+
 /* ══════════════════════════════════════════════
    PLATFORM 2 — RUANGBOKEP (RB) STYLES
 ══════════════════════════════════════════════ */
