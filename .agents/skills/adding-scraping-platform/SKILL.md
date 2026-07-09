@@ -24,6 +24,8 @@ the new source site instead of inventing a new pattern:
   no manifest rewriting needed.
 - **HLS/m3u8 sites** → copy Platform 2 or 3 (`rb.js`/`yb.js`): manifest + segment
   proxy with self-healing CDN tokens.
+- **TikTok-style feed (direct MP4)** → copy Platform 6 (`lib/scrapers/rc.js` + `public/rc.html`/`rc.js`).
+- **TikTok-style feed (HLS)** → copy Platform 5 (`lib/scrapers/tp.js` + `public/tp.html`/`tp.js`).
 
 `server.js` is a thin composition root — it only wires Helmet/CSP, CORS, rate
 limiting, mounts each platform's router, the shortlink resolver route, and serves
@@ -34,6 +36,8 @@ the SPA fallback. Shared, stateless helpers live in:
 
 These are the **only** files a new platform module may import from. Never import
 one scraper module from another.
+
+---
 
 ## Why isolation + the retry/proxy pattern is the standard
 
@@ -53,118 +57,333 @@ first transient error** instead of retrying. The reference platforms avoid both:
    helper (2–3 attempts, exponential backoff) that only retries on network
    errors (ECONNRESET/timeout), never on real HTTP 4xx from the CDN.
 
-## Checklist for Platform N
+---
 
-### 1. Full isolation (non-negotiable project rule)
-Per `replit.md`: **every platform must be completely isolated** — no shared
-state, cache, or logic that leaks between platforms.
-- New route prefix, e.g. `/pN` (mirrors `/rb`, `/yb`, `/bk`).
-- New static page: `public/pN.html`, own JS: `public/pN.js`. Do not import or
-  reuse another platform's JS file — small utility duplication (fetch timeout,
-  `escHtml`, toast, pagination) is the accepted tradeoff for isolation; copy
-  the pattern, don't share the module.
-- New backend module `lib/scrapers/pN.js` exporting `{ router, caches }` —
-  `caches` is aggregated by `server.js` into `getCacheStats()` for
-  `/health/detail`. New route namespace: `/api/pN/...`, `/proxy/pN/...`. New
-  dedicated in-memory caches via `makeCache(maxSize, ttlMs)` — never reuse
-  another platform's cache map.
-- Add the platform to the **sidebar nav drawer** (not a dropdown — that pattern
-  was removed) in every HTML file: `.nav-plat-item` entries inside
-  `nav.nav-drawer` (id `navDrawer`), consistent avatar (`<img src="/logo.png">`)
-  and highlight the active platform. Update all **six** HTML files
-  (index, rb, yb, bk, tp, rc) together so the drawer always lists every platform.
-- Add the new router to `server.js`'s mount list and to the CSP `script-src`
-  domain allowlist if the new source's embeds/ads need a new external domain
-  (CSP does **not** use a `https:` wildcard — every domain must be explicit).
+## ✅ MASTER CHECKLIST — Platform N
 
-### 2. WAJIB: Tidak boleh ada iklan dari web sumber yang muncul ke user
-Ini adalah syarat mutlak — **bukan opsional**. Semua platform yang sudah ada
-(P1–P6) bebas iklan dari web aslinya karena video diproxy sepenuhnya server-side.
-Platform baru harus mengikuti standar yang sama:
+Lakukan SEMUA langkah ini tanpa terkecuali. Setiap item yang dilewati akan menyebabkan bug di production.
 
-- **Jangan pernah load halaman embed/iframe dari situs sumber di browser user.**
-  Halaman embed (putarvid, filemoon, dood, dsb.) membawa script iklan milik
-  mereka — kalau diload di browser user, iklan itu ikut muncul.
-- **Jangan kirim URL embed ke frontend.** Resolve embed → raw stream (MP4/m3u8)
-  di server, kirim hanya stream URL yang sudah dibersihkan.
-- **Jika situs sumber menggunakan chain embed bertingkat** (situs → player
-  aggregator → embed host → CDN), seluruh chain harus di-resolve server-side
-  sampai didapat URL MP4/m3u8 langsung yang bisa diproxy. Jika salah satu
-  lapisan chain memblokir server request dan tidak bisa di-resolve tanpa browser
-  (contoh: React SPA tanpa API terbuka, atau CDN yang IP-block server), platform
-  tersebut **tidak feasible** dan tidak boleh diimplementasikan — daripada
-  terpaksa fallback ke iframe embed yang membawa iklan dari sumber.
-- **Cara cek feasibility sebelum mulai build:** curl setiap lapisan chain dari
-  server (bukan dari browser). Jika ada lapisan yang return 403, SPA kosong
-  (< 2 KB HTML tanpa konten), atau butuh JS-rendering untuk dapat stream URL →
-  platform tidak layak diimplementasikan saat ini.
+---
 
-### 3. Resolve the real media URL server-side only
-- Scrape/resolve the actual CDN URL (MP4 or m3u8) inside an Express route
-  handler using `cheerio`/`axios` — never send this URL to the browser.
-- Cache the resolved URL with `makeCache(maxSize, ttlMs)`, TTL matched to how
-  long the source site's token realistically stays valid (inspect the token's
-  query params — don't guess; verify with a real curl request through the
-  backend).
-- While you're scraping the post/video page anyway, also extract `description`
-  (usually `meta[property="og:description"]`, with `meta[name="description"]`
-  and `meta[itemprop="description"]` as fallbacks — check which is most
-  detailed per site) and `related` (an array of `{slug, title, thumb,
-  duration}` for other videos on the same page) — see "Watch view" below.
+### STEP 1 — lib/scrapers/pN.js (backend module)
 
-### 3. Client always calls your backend proxy, never the CDN
-- Direct file (MP4-like): mirror `/proxy/bk/stream/:slug` — supports HTTP
-  `Range`, sets `Referer`/`User-Agent` matching what the source CDN expects,
-  streams via `stream.pipeline`.
-- Segmented (HLS-like): mirror `/proxy/rb/hls/:slug` + `/proxy/rb/seg` —
-  rewrite every URL in the manifest (including `URI="..."` attributes and
-  sub-manifests) to point back at your own `/proxy/pN/seg?url=...`, so the
-  browser only ever talks to your backend.
-- Enforce a strict host allowlist (`Set` of hostnames or hostname-suffix check)
-  for whatever CDN domain(s) the new platform's videos/thumbnails live on.
-  Reject everything else with 400, same as `isAllowedRbCdnUrl` / `THUMB_HOSTS`.
+Buat `lib/scrapers/pN.js` yang export `{ router, caches }`.
 
-### 4. Auto-recover from expired tokens — don't just error out
-- **Backend**: wrap every CDN network call (manifest fetch, segment fetch,
-  direct stream fetch) in a small retry helper — 2–3 retries with backoff, but
-  only on network errors, never on real 4xx from the CDN (those need a fresh
-  resolve, not a retry).
-- **Backend, direct-file case**: on CDN 403/404, delete the cached URL,
-  re-resolve once, retry the request — copy the eviction pattern used in
-  `/proxy/bk/stream/:slug`.
-- **Frontend, HLS case**: if using hls.js, do NOT treat every fatal error as
-  unrecoverable. Implement the standard recovery pattern — `NETWORK_ERROR` →
-  `hls.startLoad()` retry (a few attempts with delay), `MEDIA_ERROR` →
-  `hls.recoverMediaError()` retry — and only show a "playback failed" toast
-  after retries are exhausted. See `playHls()` in `public/rb.js` for the
-  reference implementation.
+- Route namespace baru: `/api/pN/...`, `/proxy/pN/...`
+- Cache baru via `makeCache(maxSize, ttlMs)` — **tidak boleh reuse cache platform lain**
+- `caches` array berisi semua cache instance — dipakai `server.js` untuk `/health/detail`
+- Enforce host allowlist (`Set` of CDN hostnames) untuk proxy — reject domain lain dengan 400
+- Scrape/resolve real CDN URL **server-side only** — jangan kirim URL CDN asli ke frontend
 
-### 5. User-facing error messages
-- Never surface raw `err.message`/stack traces to the user (toast/UI text).
-  Always map to a short, friendly Indonesian message (e.g. "Gagal memuat
-  video. Periksa koneksi internet atau coba lagi."). Log the real error with
-  `console.error` server- and client-side for debugging.
+```js
+// Template dasar:
+const express = require('express');
+const { makeCache } = require('../cache');
+const { apiError } = require('../proxy');
 
-### 6. Watch view (title + description + related videos + share)
-Every platform's video click opens a scrollable modal watch view (**not**
-full-screen — intentional), mirroring YouTube/XNXX. Copy `rb.js`/`rb.html`
-line-for-line (adapting the `<video>`/`<iframe>` player element to whatever
-the new platform needs):
+const router = express.Router();
+const pNPostsCache = makeCache(200, 10 * 60 * 1000, 'pNPostsCache');
+const pNVideoCache = makeCache(500, 4 * 60 * 60 * 1000, 'pNVideoCache');
+
+// ... routes ...
+
+module.exports = { router, caches: [pNPostsCache, pNVideoCache] };
+```
+
+---
+
+### STEP 2 — server.js (4 lokasi wajib diupdate)
+
+#### 2a. require + mount router
+```js
+const pN = require('./lib/scrapers/pN');
+// ...
+app.use(pN.router);
+```
+
+#### 2b. getCacheStats — tambah pN.caches ke array
+```js
+const allCaches = [
+  ...p1.caches, ...rb.caches, ...yb.caches,
+  ...bk.caches, ...tp.caches, ...rc.caches,
+  ...pN.caches,   // ← TAMBAH INI
+];
+```
+
+#### 2c. CSP script-src — tambah domain baru jika ada script/ad baru
+```js
+const scriptSrc = [
+  "'self'", "'unsafe-inline'",
+  'https://cdn.jsdelivr.net',
+  // ... existing domains ...
+  'https://cdn-domain-baru.com',   // ← TAMBAH jika platform butuh domain baru
+];
+```
+CSP **tidak pakai wildcard `https:`** — setiap domain harus eksplisit.
+
+#### 2d. Shortlink platform list — tambah 'pN'
+```js
+// Di route /api/s/:platform/:token:
+if (!['rb', 'yb', 'bk', 'tp', 'rc', 'pN'].includes(platform))
+  return res.status(404).json({ error: 'not found' });
+```
+
+---
+
+### STEP 3 — lib/monitor.js (2 lokasi wajib)
+
+#### 3a. trackRequest — tambah event branches
+Cari blok `if/else if` di fungsi `trackRequest`. Tambah sebelum blok `else` terakhir:
+```js
+else if (p.startsWith('/api/pN/video/'))   pushMonitorEvent('pN_video', { id: p.split('/')[4] || '?', ip, ua });
+else if (p.startsWith('/api/pN/posts'))    pushMonitorEvent('pN_posts', { ip, ua });
+```
+Untuk platform TikTok-style yang pakai `/proxy/pN/stream/`:
+```js
+else if (p.startsWith('/proxy/pN/stream/')) pushMonitorEvent('pN_video', { id: p.split('/')[4] || '?', ip, ua });
+else if (p.startsWith('/api/pN/posts'))     pushMonitorEvent('pN_posts', { ip, ua });
+```
+
+#### 3b. Monitor badge CSS — tambah warna badge di monitorDashboardHtml
+Cari blok CSS badge (`.b-rb_video`, `.b-bk_video`, dsb) di `monitorDashboardHtml`. Tambah:
+```css
+.b-pN_video{background:#WARNA_BG;color:#WARNA_TEXT}
+.b-pN_posts{background:#WARNA_BG;color:#WARNA_TEXT}
+```
+Pilih warna yang berbeda dari platform lain (lihat existing untuk referensi).
+
+---
+
+### STEP 4 — public/pN.html
+
+Copy dari platform terdekat (bk.html untuk listing biasa, rc.html untuk TikTok-style).
+
+#### 4a. Wajib ada di setiap HTML platform baru:
+- `<body class="pN-page">` — class scoping CSS
+- Topbar dengan `<img src="/logo.png">` + title "Vidorey N" (TIDAK menyebut nama web sumber)
+- Nav drawer lengkap — **semua platform existing + platform baru** (lihat 4b)
+- Slot iklan: display banner (320×50 fixed bawah topbar) + native sticky bottom + in-feed ad slide
+- `<script src="/config.js">` — wajib ada sebelum JS platform
+- `<script src="/smartlinks.js">` — wajib ada, di dalam `</body>`
+- `<script src="/pN.js">` — JS platform sendiri
+
+#### 4b. Nav drawer — update SEMUA HTML files
+Nav drawer di `pN.html` harus list semua platform existing + platform baru.
+Selain itu, **SEMUA HTML files lain** (index, rb, yb, bk, tp, rc, dll) harus di-update untuk menambah entry platform baru.
+
+Format satu nav item:
+```html
+<a class="nav-plat-item" href="/pN">
+  <div class="ps-avatar ps-avatar-pN"><img src="/logo.png" alt="Vidorey"></div>
+  <div class="ps-info">
+    <span class="ps-name">Vidorey N</span>
+    <span class="ps-desc">Deskripsi singkat</span>
+  </div>
+</a>
+```
+
+Item aktif (hanya di `pN.html` sendiri):
+```html
+<a class="nav-plat-item active" href="/pN" aria-current="page">
+```
+
+**Nama UI tidak boleh menyebut nama web sumber.** Gunakan format "Vidorey N" atau "Vidorey TikTok N".
+
+#### 4c. Burger ID untuk TikTok-style platform
+Platform dengan topbar custom (tp, rc) punya burger ID sendiri (`tpNavBurger`, `rcNavBurger`).
+Platform listing biasa (rb, yb, bk) pakai `id="navBurger"` standar.
+
+---
+
+### STEP 5 — public/pN.js
+
+Copy dari platform terdekat, ganti semua prefix (rb→pN, dsb).
+
+Untuk platform listing (non-TikTok):
+- `openPlayer(slug)` → `openPlayer(slug, opts)` pattern
+- Shortlink token flow: `currentSlug` + `currentToken` state
+- Deep-link: baca pathname SEBELUM `loadPosts()` (lihat §Watch view di bawah)
+- `encodeSlug()`/`decodeSlug()` helpers (copy verbatim)
+
+Untuk platform TikTok-style:
+- IntersectionObserver threshold 0.75 play/pause
+- `removeAttribute('src')` + `load()` saat slide keluar viewport
+- `tryScrollToDeepLink()` dipanggil setelah batch pertama render
+- `deepLinkHash` dibaca dari pathname SEBELUM reset URL
+
+---
+
+### STEP 6 — public/style.css
+
+Tambah semua CSS baru di bawah blok platform terakhir. Scope semua rule ke `body.pN-page` agar tidak bocor ke platform lain.
+
+```css
+/* ─── Platform N ─────────────────────────────────── */
+body.pN-page { overflow: hidden; } /* hanya untuk TikTok-style */
+
+/* Topbar, feed, slide, cats-bar, dll. */
+.pN-topbar { ... }
+.pN-feed   { ... }
+/* dsb. */
+```
+
+Untuk TikTok-style, perhatikan **stacking layer**:
+```
+topbar          fixed top:0       z-index: 120
+display-banner  fixed top:52px    z-index: 119
+cats-bar        fixed top:102px   z-index: 119   (jika ada)
+feed            fixed top:150px   bottom:0        (atau top:102px jika tidak ada cats-bar)
+slide height    calc(100dvh - 150px)              (sesuaikan)
+```
+Jika mengubah tinggi satu layer, **update SEMUA nilai top/height di bawahnya sekaligus**.
+
+---
+
+### STEP 7 — firebase.json (⚠️ WAJIB — penyebab "Platform N tampil Platform 1")
+
+Tambah dua baris rewrite untuk platform baru **sebelum** catch-all `"**"`:
+
+```json
+{ "source": "/pN",    "destination": "/pN.html" },
+{ "source": "/pN/**", "destination": "/pN.html" },
+```
+
+Tanpa ini, semua URL `/pN/*` di Firebase Hosting akan di-serve sebagai `index.html`
+(Platform 1), bukan `pN.html`. Bug ini sudah terjadi pada Platform 6 (RC).
+
+Setelah edit `firebase.json`, jalankan `bash deploy.sh` untuk deploy ke Firebase.
+
+---
+
+### STEP 8 — public/smartlinks.js (hanya untuk TikTok-style)
+
+Jika platform baru menggunakan slide card (TikTok-style), tambah selector ke `CARD_SEL`:
+
+```js
+var CARD_SEL = '.video-card, .rb-card, .folder-card, .tp-slide, .rc-slide, .pN-slide';
+```
+
+Untuk platform listing biasa (grid card), tambah class card-nya:
+```js
+var CARD_SEL = '.video-card, .rb-card, .folder-card, .tp-slide, .rc-slide, .pN-card';
+```
+
+---
+
+### STEP 9 — Iklan (wajib identik dengan platform lain)
+
+Setiap platform wajib punya semua slot iklan ini — identik kodenya, sama seperti platform lain:
+
+| Slot | Posisi | Key/Script |
+|---|---|---|
+| Display banner 320×50 | Fixed bawah topbar (top:52px) | `d37e31d713d11b2ddde7d3efca199c9d` via `highperformanceformat.com` |
+| Native sticky bottom | Fixed bottom | `761a1a8645cd2263043bfeb6f2e87eea` via `effectivecpmnetwork.com` |
+| In-feed ad slide | Setiap 5 video (TikTok-style) | `d50b941ac6d9bd5749dcdb0b417bf348` via `highperformanceformat.com` |
+| End slide ad | Slide terakhir | Same key sebagai in-feed |
+| Popunder | End of `<body>` | `pl28418540.effectivecpmnetwork.com` |
+| Social bar | End of `<body>` | `pl28427857.effectivecpmnetwork.com` |
+
+Script popunder + social bar sudah ada di semua platform — copy langsung dari rc.html atau tp.html.
+
+---
+
+### STEP 10 — Update dokumentasi
+
+Setelah platform selesai, update semua file dokumentasi ini:
+
+#### replit.md
+- Tabel platform: tambah baris Platform N
+- Bagian scraper list di backend section: tambah `pN.js`
+- "Enam Platform" → "Tujuh Platform" (jumlah baru)
+- Monitor events table: tambah `pN_video` / `pN_posts`
+- Cara kerja Platform N: tambah section baru
+- Nav drawer active items: tambah `pN.html → Vidorey N`
+- Iklan section: tambah `pN.html` ke daftar file
+
+#### panduandeploy.md
+- Tambah `pN.html` + `pN.js` ke daftar file yang di-deploy
+
+#### .agents/memory/vidorey-modular-refactor.md
+- Tambah `pN.js` ke scraper list
+- Update jumlah platform
+
+#### .agents/memory/vidorey-nav-drawer.md
+- Tambah Platform N ke tabel nama UI
+- Tambah `pN.html → Vidorey N` ke active items per halaman
+- Update "all N HTML files" ke jumlah baru
+
+#### .agents/memory/vidorey-caching-strategy.md
+- Tambah cache baru Platform N ke tabel
+- Update `getCacheStats Order` di bawahnya
+
+#### .agents/memory/vidorey-smartlinks.md
+- Update CARD_SEL jika ditambah selector baru
+- Tambah `pN.html` ke daftar halaman yang load smartlinks.js
+
+#### .agents/memory/vidorey-nav-drawer.md + MEMORY.md index
+- Update jumlah HTML files
+- Update "all N HTML files" count
+
+#### adding-scraping-platform/SKILL.md (file ini sendiri)
+- Tambah Platform N ke tabel di atas
+- Update "Vidorey currently has N platforms"
+- Update CARD_SEL contoh di STEP 8
+- Update jumlah HTML files di STEP 4b
+
+---
+
+### STEP 11 — Verify sebelum ship
+
+```bash
+# 1. Test backend endpoint
+curl -s "$BACKEND/api/pN/posts" | jq '.posts | length'
+curl -s "$BACKEND/api/pN/video/SAMPLE_SLUG" | jq '{title, token}'
+
+# 2. Test proxy
+curl -I "$BACKEND/proxy/pN/stream/SAMPLE_SLUG"
+
+# 3. Test shortlink
+TOKEN=$(curl -s "$BACKEND/api/pN/video/SAMPLE_SLUG" | jq -r '.token')
+curl -s "$BACKEND/api/s/pN/$TOKEN" | jq '.slug'
+
+# 4. Test SPA route (Replit dev)
+curl -I "http://localhost:5000/pN"
+curl -I "http://localhost:5000/pN/watch/SAMPLE_TOKEN"
+
+# 5. Test Firebase routing — paling penting!
+curl -I "https://vidorey.web.app/pN"
+# → Harus return rc.html (pN.html), BUKAN index.html
+# Cek header: X-Firebase-Source atau body untuk konfirmasi
+```
+
+Checklist manual:
+- [ ] Video play end-to-end (dari listing → klik → player)
+- [ ] Address bar tunjukkan `/pN/watch/<11-char-token>` setelah video load
+- [ ] Share button copy URL pendek (token)
+- [ ] Deep-link dari URL token (`/pN/watch/<token>`) buka video langsung
+- [ ] Nav drawer buka/tutup dengan benar di mobile
+- [ ] Platform ini muncul di nav drawer semua platform lain
+- [ ] Monitor dashboard (`/monitor`) menampilkan event `pN_video` dan `pN_posts`
+- [ ] Iklan muncul: display banner, native sticky, in-feed (scroll 5+ video), popunder
+- [ ] Firebase: `/pN` serve `pN.html` (bukan `index.html`)
+- [ ] Run code-review architect pass sebelum declare done
+
+---
+
+## Appendix: Watch view (listing platform)
+
+Copy `rb.js`/`rb.html` line-for-line (adapting the player element):
 
 - Markup: `.modal-panel-watch` > `.modal-body` > `.watch-info` (title +
-  `#pNShareBtn` share button + description) + `.watch-related` (`#pNRelatedGrid`
-  + `#pNRelatedPagination`), followed by `.watch-ad-slot` (see §7).
-- JS state: `let currentSlug = null; let currentToken = null;` — both declared
-  together. Also `renderWatchDesc()`, `renderRelated()`/`renderRelatedPage()`/
-  `renderRelatedPagination()` (8 items/page, client-side), `openPlayer(slug, opts)`
-  accepting `opts.fromHistory`.
+  `#pNShareBtn` + description) + `.watch-related` (`#pNRelatedGrid` +
+  `#pNRelatedPagination`), followed by `.watch-ad-slot`
+- JS state: `let currentSlug = null; let currentToken = null;`
+- `renderWatchDesc()`, `renderRelated()`/`renderRelatedPagination()` (8 items/page)
+- `openPlayer(slug, opts)` accepting `opts.fromHistory`
 
-#### URL scheme — 11-char shortlink (not slug in address bar)
+### URL scheme — 11-char shortlink
 
-Video watch URLs use a **short 11-char random token** (`/pN/watch/m4k9zqr2xab`)
-that does not expose the video title. Full flow:
-
-**Helpers (top of IIFE, copy verbatim — UTF-8-safe base64url):**
+**Helpers (copy verbatim):**
 ```js
 function encodeSlug(s) {
   try {
@@ -183,22 +402,10 @@ function decodeSlug(t) {
 }
 ```
 
-**openModal(slug)** — called immediately (before API response):
-```js
-const url = slug ? `/pN/watch/${encodeSlug(slug)}` : '/pN/watch';
-// ... idempotent modal open ...
-history.pushState({ pNModal: true, pNSlug: slug }, '', url);
-```
-State always stores the **raw slug** — not the token. This is what
-`popstate` and Forward navigation use.
-
-**openPlayer(slug)** — after API resolves:
+**openPlayer(slug):**
 ```js
 currentSlug  = slug;
-currentToken = null; // reset at top
-
-// ... openModal(slug) ... (pushes temp base64url URL)
-
+currentToken = null;
 const data = await apiFetch(`/api/pN/video/${encodeURIComponent(slug)}`);
 if (data.token) {
   currentToken = data.token;
@@ -206,7 +413,24 @@ if (data.token) {
 }
 ```
 
-**closeModal() and popstate Back-while-open branch** — reset both:
+**Deep-link on load** — baca pathname SEBELUM `loadPosts()`:
+```js
+const deepLinkMatch = location.pathname.match(/^\/pN\/watch\/([^/]+)\/?$/);
+loadPosts(false); // ini replaceState('/pN')
+if (deepLinkMatch) {
+  const segment = deepLinkMatch[1];
+  if (/^[a-z0-9]{11}$/.test(segment)) {
+    apiFetch(`/api/s/pN/${segment}`)
+      .then(d => { if (d?.slug) { modalHistoryPushed = false; openPlayer(d.slug); } })
+      .catch(() => {});
+  } else {
+    const slug = decodeSlug(segment);
+    if (slug) { modalHistoryPushed = false; openPlayer(slug); }
+  }
+}
+```
+
+**closeModal() + popstate back:**
 ```js
 currentSlug  = null;
 currentToken = null;
@@ -217,111 +441,38 @@ currentToken = null;
 const shareUrl = `${location.origin}/pN/watch/${currentToken || encodeSlug(currentSlug)}`;
 ```
 
-**Deep-link on load** — two paths, capture BEFORE `loadPosts()`:
+### Shortlink — wire token ke video endpoint
 ```js
-const deepLinkMatch = location.pathname.match(/^\/pN\/watch\/([^/]+)\/?$/);
-loadPosts(false); // replaceState('/pN') happens here
-if (deepLinkMatch) {
-  const segment = deepLinkMatch[1];
-  if (/^[a-z0-9]{11}$/.test(segment)) {
-    // Short token → resolve slug server-side
-    apiFetch(`/api/s/pN/${segment}`)
-      .then(d => { if (d?.slug) { modalHistoryPushed = false; openPlayer(d.slug); } })
-      .catch(() => {}); // expired / server restart — silently ignore
-  } else {
-    // Legacy: base64url-encoded slug (links shared before token system)
-    const slug = decodeSlug(segment);
-    if (slug) { modalHistoryPushed = false; openPlayer(slug); }
-  }
-}
+const { registerSlug } = require('../shortlink');
+// Di setiap res.json path handler (cache-hit DAN fresh-resolve):
+res.json({ slug, title, thumb, description, related, streamUrl,
+           token: registerSlug('pN', slug) });
 ```
 
-**popstate** — three branches (unchanged logic; Forward reads `pNSlug` from state,
-not from URL, so no token decode needed there):
-1. Modal open + Back → close modal, `replaceState(null, '', '/pN')`.
-2. Forward to `{ pNModal, pNSlug }` while modal is closed → `openPlayer(slug, { fromHistory: true })`.
-3. Otherwise restore listing/search state.
+### Related-video scraping
+Setiap situs punya markup berbeda — **jangan copy selector blindly**. Selalu curl HTML asli dulu:
+```bash
+curl -s "https://source-site.com/video/SAMPLE" | grep -A5 "related\|similar"
+```
 
-**No new backend route for `/pN/watch/*`** — the existing SPA wildcard route
-(`router.get('/pN/*', ...)`) already serves `pN.html`; confirm it exists in your module.
+### Ad slot di watch view
+Satu slot `300×250` display banner di `.watch-ad-slot` (bawah related pagination).
+Gunakan key `d50b941ac6d9bd5749dcdb0b417bf348` via `highperformanceformat.com`.
+**Jangan** tambah native banner atau popunder di watch view (lihat §9).
 
-**Related-video scraping selector is site-specific — do not copy blindly.**
-Every platform found a different real DOM structure (rb: `article.loop-video`
-inside a `.under-video-block` matched by heading text; yb: same class names
-but a stricter required heading match after a review caught a too-permissive
-first attempt; bk: totally different `.under-video-block > .videos-list >
-article[id]` markup with a lazy-loaded thumbnail in `img[data-src]` instead
-of `src`, and no distinguishing heading at all). **Always curl the real
-post-page HTML for the new source site and inspect it yourself** before
-writing the selector — never assume the previous platform's class names or
-heading text carry over. Scope tightly to the specific related-widget
-container; a global/permissive selector risks picking up unrelated sidebar
-cards.
+---
 
-### 7. Ad slot in the watch view
-Add one small ad slot at the very bottom of `.watch-related`, after the
-pagination controls, inside a `.watch-ad-slot` div — copy the exact
-`atOptions` + `highperformanceformat.com` `invoke.js` snippet already used for
-the listing page's 300×250 display ad. This pattern is **safe to duplicate**
-on the same page (each instance re-declares `atOptions` immediately before its
-own `invoke.js` call, and the script writes via `document.write` at its own
-tag location — no shared/unique DOM `id` required).
-- **Do NOT** reuse the native-banner ad (`.ad-native-slot`,
-  `effectivecpmnetwork.com` native invoke) in the watch view — that ad's
-  script targets a hardcoded `container-<key>` `id`, and a second instance of
-  that same `id` on the page would break (only the first match renders).
-- **Do NOT** add popunder/social-bar scripts to the watch view — those open
-  new tabs or float over content, which defeats the "not too disruptive"
-  requirement explicitly given for this placement. Those two are already
-  loaded once per page at the end of `<body>`; leave them there.
-- If the CSP `script-src` allowlist doesn't already include the new ad
-  network's domain, add it explicitly in `server.js` (no wildcard).
+## Appendix: No source ads rule
 
-### 7b. Shortlink — wire the token into the video endpoint
+Platform baru wajib proxy video langsung — tidak boleh ada iframe/embed dari situs sumber di browser user.
 
-`lib/shortlink.js` and the `/api/s/:platform/:token` resolver already exist in
-`server.js`. For a new platform you only need three things:
+**Cara cek feasibility:**
+```bash
+# Curl setiap lapisan chain dari server:
+curl -sI "https://source-site.com/video/SAMPLE"
+curl -sI "https://embed-host.com/e/HASH"
+# Jika ada layer yang return 403 atau SPA < 2KB → TIDAK FEASIBLE
+```
 
-1. **Scraper** — require and call `registerSlug` in the video endpoint:
-   ```js
-   const { registerSlug } = require('../shortlink');
-   // In /api/pN/video/:slug handler, before res.json:
-   res.json({ slug, title, thumb, description, related, [streamKey]: ...,
-              token: registerSlug('pN', slug) });
-   ```
-   Do this for every `res.json` path in that handler (cache-hit path AND
-   fresh-resolve path), otherwise some responses won't carry the token.
-
-2. **server.js** — add the new platform code to the `/api/s/:platform/:token`
-   route's `includes()` check:
-   ```js
-   if (!['rb', 'yb', 'bk', 'tp', 'rc', 'pN'].includes(platform)) return res.status(404)...
-   ```
-
-3. **Client JS** — all the client-side token logic is covered in §6 above;
-   copy it verbatim from `rb.js` substituting `rb`/`rbModal`/`rbSlug`/`rbPage`
-   with `pN`/`pNModal`/`pNSlug`/`pNPage` etc.
-
-Token lifetime: 48h in-memory. Deep-links silently degrade to listing page if
-the server has restarted since the link was shared.
-
-### 8. Verify before shipping
-- Curl the new `/proxy/pN/hls/:slug` (or `/proxy/pN/seg` / `/proxy/pN/stream`)
-  endpoint directly and inspect the CDN's signed URL params to confirm actual
-  token TTL — don't assume "expired" means the token; it's usually a
-  transient network/recovery gap.
-- Curl `/api/pN/video/:slug` and confirm the JSON contains `description`,
-  `related`, and `token` (11-char `[a-z0-9]` string).
-- Curl `/api/s/pN/<token>` using the token from the step above — confirm it
-  returns `{ "slug": "<original-slug>" }`.
-- Restart the workflow and manually play a video end-to-end after adding the
-  platform, on both an existing cached entry and a freshly resolved one.
-- Verify the address bar shows `/pN/watch/<11-char-token>` (not the slug) after
-  a video loads, and that the Share button copies the short URL.
-- Open the short URL in a new tab/incognito to confirm deep-link via token works.
-- Curl `/pN/watch/<token>` to confirm the SPA wildcard route serves the page
-  (200), and screenshot the watch view to sanity-check title/description/
-  related grid/share button/ad slot render.
-- Run a code-review (architect) subagent pass with `includeGitDiff: true`
-  before considering the platform done — pay special attention to the
-  related-video selector's scoping accuracy against the real site markup.
+Jika chain tidak bisa di-resolve server-side → platform tidak boleh diimplementasikan
+(daripada terpaksa fallback ke iframe yang membawa iklan sumber).
