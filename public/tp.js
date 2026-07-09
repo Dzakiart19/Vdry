@@ -20,6 +20,7 @@
   let deepLinkId   = null;  // id numerik untuk deep-link scroll
   let targetSlideId = null; // ID slide yang user INGINKAN — untuk cancel race condition
   let isMuted      = true;  // mulai muted agar autoplay bisa jalan
+  const seenIds    = new Set(); // dedup: cegah video sama tampil dua kali saat pagination
 
   /* ── Toast ─────────────────────────────────────────────────── */
   let toastTimer;
@@ -357,6 +358,7 @@
     currentPage    = 1;
     hasMore        = true;
     lastSlide      = null;
+    seenIds.clear(); // reset dedup tracker saat feed baru
   }
 
   /* ── Muat batch video dari API ──────────────────────────────── */
@@ -384,7 +386,13 @@
         return;
       }
 
+      var newSlides = 0;
       videos.forEach(function (video) {
+        /* Skip video yang sudah pernah ditampilkan (duplikat antar pagination) */
+        var vid_id = String(video.id);
+        if (seenIds.has(vid_id)) return;
+        seenIds.add(vid_id);
+
         var slide = buildSlide(video);
 
         /* Unobserve lastSlide dari ioEnd sebelum diganti */
@@ -393,6 +401,7 @@
         feed.appendChild(slide);
         ioPlay.observe(slide);
         lastSlide = slide;
+        newSlides++;
 
         /* Scroll ke slide deep-link jika ada di batch ini */
         if (deepLinkId && String(video.id) === String(deepLinkId)) {
@@ -408,6 +417,12 @@
 
       if (!hasMore) {
         appendEndSlide(mode, currentQuery);
+      } else if (newSlides === 0 && videos.length > 0) {
+        /* Seluruh batch duplikat — langsung fetch halaman berikutnya tanpa tampilkan end slide */
+        isLoading = false;
+        document.getElementById('tpLoader').classList.add('hidden');
+        loadPosts();
+        return;
       }
 
     } catch (err) {
