@@ -20,15 +20,26 @@ The old dropdown (brand logo with chevron → ps-menu) was invisible to users wh
 | Close button (inside drawer) | `navClose` | `.nav-drawer-close` |
 | Platform items | — | `.nav-plat-item` / `.nav-plat-item.active` |
 
+**Exception — tp.html:** topbar di TP adalah custom (bukan `.topbar` standar), sehingga ID burger-nya adalah `tpNavBurger` (bukan `navBurger`). Nav drawer dan overlay tetap pakai ID yang sama: `navDrawer`, `navOverlay`, `navClose`.
+
 ### Removed from HTML (dead — do NOT reference)
 - `id="platformSwitcher"` — wrapper div gone
 - `id="psTrigger"` — dropdown trigger gone
 - `id="psMenu"` — dropdown menu gone
 
 ### Avatar logo
-All three `.ps-avatar` elements use **`<img src="/logo.png" alt="Vidorey">`** — the same Vidorey brand logo across all platforms. Do NOT use per-platform favicons or letter initials; consistency with the topbar brand is intentional.
+All five `.ps-avatar` elements use **`<img src="/logo.png" alt="Vidorey">`** — the same Vidorey brand logo across all platforms. Do NOT use per-platform favicons or letter initials; consistency with the topbar brand is intentional.
 
 CSS: `.ps-avatar` has `overflow:hidden`; `.ps-avatar img` fills the container with `object-fit:cover`.
+
+### Per-platform avatar class
+| Platform | Avatar class |
+|---|---|
+| P1 (index) | `.ps-avatar` |
+| P2 (rb) | `.ps-avatar` |
+| P3 (yb) | `.ps-avatar` |
+| P4 (bk) | `.ps-avatar-bk` |
+| P5 (tp) | `.ps-avatar-tp` |
 
 ### CSS dead code in style.css (harmless, not used)
 `.ps-trigger`, `.ps-menu`, `.ps-chevron`, `@keyframes psIn` — still in CSS file but no HTML uses them. `.ps-avatar`, `.ps-info`, `.ps-name`, `.ps-desc`, `.ps-check` are still ACTIVE (reused by `.nav-plat-item` inside the drawer).
@@ -48,12 +59,13 @@ Drawer must stay BELOW modal. Overlay must stay BELOW drawer.
 - Drawer does NOT add any body class — purely CSS transform + pointer-events.
 
 ## How to Apply
-When modifying platform nav: always use `navBurger/navDrawer/navOverlay/navClose` IDs. Never reference the old `psTrigger/psMenu/platformSwitcher` IDs — they no longer exist in any HTML file.
+When modifying platform nav: always use `navBurger/navDrawer/navOverlay/navClose` IDs (exception: `tpNavBurger` for tp.html). Never reference the old `psTrigger/psMenu/platformSwitcher` IDs — they no longer exist in any HTML file.
 
 Active item per page:
 - `index.html` → Vidorey 1 item has `.active` + `aria-current="page"`
 - `rb.html` → Vidorey 2 item has `.active` + `aria-current="page"`
 - `yb.html` → Vidorey 3 item has `.active` + `aria-current="page"`
 - `bk.html` → Vidorey 4 item has `.active` + `aria-current="page"`
+- `tp.html` → Vidorey 5 item has `.active` + `aria-current="page"`
 
-All four HTML files include all four platform items in their nav drawer. P4 avatar class is `.ps-avatar-bk`.
+All five HTML files include all five platform items in their nav drawer. When adding a Platform 6, update ALL FIVE HTML files.

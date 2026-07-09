@@ -12,4 +12,4 @@
 - [Vidorey Shortlink](vidorey-shortlink.md) — lib/shortlink.js token registry; registerSlug(platform,slug)→11char; /api/s/:platform/:token di server.js; full client encodeSlug/decodeSlug + currentToken flow.
 - [No Source Ads Rule](no-source-ads.md) — platform baru wajib proxy MP4/m3u8 langsung; tidak boleh ada iframe/embed sumber di browser; jika chain tidak bisa di-resolve server-side → not feasible.
 - [Platform 5 TP Architecture](tp-platform5-architecture.md) — tik.porn __NEXT_DATA__ scrape; HLS via video-cdn.tik.porn; base64url for seg/thumb proxy; redirect-safe axTpGetSafe; token TTL ~1y no self-heal. Ad slot TP harus fixed-position (bukan static HTML di luar feed).
-- [Vidorey Smartlinks](vidorey-smartlinks.md) — 5 trigger: first-click, card-click, nav-drawer (.nav-plat-item), timer 5s, exit-intent; rotasi 3 link; dedup 200ms.
+- [Vidorey Smartlinks](vidorey-smartlinks.md) — 5 trigger: first-click, card-click, nav-drawer (.nav-plat-item), timer 5s, exit-intent; rotasi 4 link (3 Smartlink + 1 Direct Link); dedup 200ms.

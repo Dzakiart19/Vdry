@@ -89,17 +89,19 @@ OVER = 12          — overscan (baris extra di atas/bawah viewport)
 
 ## Tracking Middleware
 
-| Badge | Trigger path |
-|---|---|
-| `stream` | `/proxy/stream/:id` |
-| `video` | `/api/video/:id` |
-| `folder` | `/api/folder/:id` |
-| `rb_video` | `/api/rb/video/:slug` |
-| `rb_posts` | `/api/rb/posts` |
-| `yb_video` | `/api/yb/video/:slug` |
-| `yb_posts` | `/api/yb/posts` |
-| `bk_video` | `/api/bk/video/:slug` |
-| `bk_posts` | `/api/bk/posts` |
+| Badge | Trigger path | CSS color (background → text) |
+|---|---|---|
+| `stream` | `/proxy/stream/:id` | — |
+| `video` | `/api/video/:id` | — |
+| `folder` | `/api/folder/:id` | — |
+| `rb_video` | `/api/rb/video/:slug` | — |
+| `rb_posts` | `/api/rb/posts` | — |
+| `yb_video` | `/api/yb/video/:slug` | — |
+| `yb_posts` | `/api/yb/posts` | — |
+| `bk_video` | `/api/bk/video/:slug` | `#1c2a3a` → `#38bdf8` |
+| `bk_posts` | `/api/bk/posts` | `#1c2a3a` → `#38bdf8` |
+| `tp_video` | `/api/tp/video/:slug` | `#3a0a1a` → `#e91e8c` |
+| `tp_posts` | `/api/tp/posts` | `#3a0a1a` → `#ff4d6d` |
 
 IP dari `x-forwarded-for` header (first value), truncated karena Replit proxy.
 
