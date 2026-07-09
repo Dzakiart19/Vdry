@@ -1,71 +1,77 @@
 ---
 name: Vidorey Nav Drawer (Platform Switcher)
-description: Platform switcher is now a hamburger sidebar drawer, not a dropdown. Old IDs are gone. Key z-index and scroll constraints.
+description: Platform switcher adalah hamburger sidebar drawer. Nama platform tidak menyebut sumber asli. 6 platform, 6 HTML files.
 ---
 
 ## The Rule
-Platform navigation is a **sidebar drawer** (hamburger ≡ button), NOT a dropdown in the topbar. The old dropdown structure has been fully removed.
+Platform navigation adalah **sidebar drawer** (hamburger ≡ button), BUKAN dropdown. Nama platform di UI **tidak boleh menyebut nama web sumber** (ruangbokep, yobokep, bokepsex, reddclips, tik.porn, dst).
 
 ## Why
-The old dropdown (brand logo with chevron → ps-menu) was invisible to users who didn't know to click it. Replaced with a visible hamburger ≡ button in the topbar that opens a ChatGPT-style slide-in panel.
+Dropdown lama tidak terlihat user. Diganti hamburger ChatGPT-style. Nama sumber disembunyikan atas permintaan user eksplisit.
 
-## IDs and classes — current state
+## Nama Platform (UI — nav drawer & topbar)
+| Platform | URL | Nama UI | Deskripsi Nav |
+|---|---|---|---|
+| P1 | `/` | Vidorey 1 | Platform 1 · pencarian video |
+| P2 | `/rb` | Vidorey 2 | Platform 2 · streaming video |
+| P3 | `/yb` | Vidorey 3 | Platform 3 · video premium |
+| P4 | `/bk` | Vidorey 4 | Platform 4 · video dewasa |
+| P5 | `/tp` | Vidorey TikTok 1 | TikTok 1 · scroll vertikal |
+| P6 | `/rc` | Vidorey TikTok 2 | TikTok 2 · per kategori |
 
-### Still in HTML (new)
+## IDs dan classes — state saat ini
+
+### HTML (aktif)
 | Element | ID | Class |
 |---|---|---|
-| Hamburger button (in topbar .brand) | `navBurger` | `.nav-burger` |
+| Hamburger button (P1–P4) | `navBurger` | `.nav-burger` |
+| Hamburger button (P5 tp.html) | `tpNavBurger` | `.nav-burger` |
+| Hamburger button (P6 rc.html) | `rcNavBurger` | `.nav-burger` |
 | Backdrop overlay | `navOverlay` | `.nav-overlay` |
 | Drawer panel | `navDrawer` | `.nav-drawer` |
-| Close button (inside drawer) | `navClose` | `.nav-drawer-close` |
+| Close button | `navClose` | `.nav-drawer-close` |
 | Platform items | — | `.nav-plat-item` / `.nav-plat-item.active` |
 
-**Exception — tp.html:** topbar di TP adalah custom (bukan `.topbar` standar), sehingga ID burger-nya adalah `tpNavBurger` (bukan `navBurger`). Nav drawer dan overlay tetap pakai ID yang sama: `navDrawer`, `navOverlay`, `navClose`.
+**Catatan:** P5 dan P6 punya topbar custom, sehingga burger ID-nya berbeda dari P1–P4. Nav drawer & overlay tetap pakai ID yang sama: `navDrawer`, `navOverlay`, `navClose`.
 
-### Removed from HTML (dead — do NOT reference)
-- `id="platformSwitcher"` — wrapper div gone
-- `id="psTrigger"` — dropdown trigger gone
-- `id="psMenu"` — dropdown menu gone
+### Dihapus dari HTML (jangan referensikan)
+- `id="platformSwitcher"` — gone
+- `id="psTrigger"` — gone
+- `id="psMenu"` — gone
 
 ### Avatar logo
-All five `.ps-avatar` elements use **`<img src="/logo.png" alt="Vidorey">`** — the same Vidorey brand logo across all platforms. Do NOT use per-platform favicons or letter initials; consistency with the topbar brand is intentional.
+Semua `.ps-avatar` pakai **`<img src="/logo.png" alt="Vidorey">`** — logo Vidorey yang sama untuk semua platform.
 
-CSS: `.ps-avatar` has `overflow:hidden`; `.ps-avatar img` fills the container with `object-fit:cover`.
-
-### Per-platform avatar class
-| Platform | Avatar class |
+### Per-platform avatar CSS class
+| Platform | Extra class |
 |---|---|
-| P1 (index) | `.ps-avatar` |
-| P2 (rb) | `.ps-avatar` |
-| P3 (yb) | `.ps-avatar` |
+| P1 (index) | `.ps-avatar-p1` |
+| P2 (rb) | `.ps-avatar-rb` |
+| P3 (yb) | `.ps-avatar-yb` |
 | P4 (bk) | `.ps-avatar-bk` |
 | P5 (tp) | `.ps-avatar-tp` |
+| P6 (rc) | `.ps-avatar-rc` (gradient merah-oranye) |
 
-### CSS dead code in style.css (harmless, not used)
-`.ps-trigger`, `.ps-menu`, `.ps-chevron`, `@keyframes psIn` — still in CSS file but no HTML uses them. `.ps-avatar`, `.ps-info`, `.ps-name`, `.ps-desc`, `.ps-check` are still ACTIVE (reused by `.nav-plat-item` inside the drawer).
+### CSS dead code di style.css (tidak berbahaya, tidak dipakai)
+`.ps-trigger`, `.ps-menu`, `.ps-chevron`, `@keyframes psIn` — masih di CSS tapi tidak ada HTML yang pakai.
 
 ## Z-index hierarchy
 | Layer | z-index |
 |---|---|
-| `.topbar` | 100 |
-| `.nav-overlay` | 149 |
+| `.topbar` (P1–P4) | 100 |
+| `body.rc-page .nav-overlay` | 149 |
+| `body.rc-page .nav-drawer` | 150 |
+| `.nav-overlay` (umum) | 149 |
 | `.nav-drawer` | 150 |
 | `.modal` (video player) | 500 |
 
-Drawer must stay BELOW modal. Overlay must stay BELOW drawer.
-
-## Scroll interaction
-- Drawer open/close does NOT touch `body.modal-open` — no conflict with P2/P3 modal scroll-lock.
-- Drawer does NOT add any body class — purely CSS transform + pointer-events.
+## Active item per halaman
+- `index.html` → Vidorey 1 `.active` + `aria-current="page"`
+- `rb.html` → Vidorey 2 `.active` + `aria-current="page"`
+- `yb.html` → Vidorey 3 `.active` + `aria-current="page"`
+- `bk.html` → Vidorey 4 `.active` + `aria-current="page"`
+- `tp.html` → Vidorey TikTok 1 `.active` + `aria-current="page"`
+- `rc.html` → Vidorey TikTok 2 `.active` + `aria-current="page"`
 
 ## How to Apply
-When modifying platform nav: always use `navBurger/navDrawer/navOverlay/navClose` IDs (exception: `tpNavBurger` for tp.html). Never reference the old `psTrigger/psMenu/platformSwitcher` IDs — they no longer exist in any HTML file.
-
-Active item per page:
-- `index.html` → Vidorey 1 item has `.active` + `aria-current="page"`
-- `rb.html` → Vidorey 2 item has `.active` + `aria-current="page"`
-- `yb.html` → Vidorey 3 item has `.active` + `aria-current="page"`
-- `bk.html` → Vidorey 4 item has `.active` + `aria-current="page"`
-- `tp.html` → Vidorey 5 item has `.active` + `aria-current="page"`
-
-All five HTML files include all five platform items in their nav drawer. When adding a Platform 6, update ALL FIVE HTML files.
+Saat menambah platform baru: update SEMUA 6 HTML files (index, rb, yb, bk, tp, rc). Gunakan burger ID yang sesuai dengan topbar masing-masing (custom topbar → ID custom). Nama platform di UI tidak boleh menyebut nama web sumber.

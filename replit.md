@@ -1,14 +1,14 @@
 # Vidorey — Multi-Platform Video Browser
 
-Web app untuk browse dan nonton video dari lima platform terpisah.
+Web app untuk browse dan nonton video dari enam platform terpisah.
 
 ## Stack
 - **Backend**: Node.js + Express (proxy + HTML scraper), modular — lihat struktur di bawah
-- **Frontend**: Vanilla JS SPA (no framework), empat halaman terpisah
+- **Frontend**: Vanilla JS SPA (no framework), enam halaman terpisah
 - **Port**: 5000
 
 ## Struktur Backend
-`server.js` (composition root, ~150 baris) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 4 router platform → monitor/health routes → SPA fallback.
+`server.js` (composition root, ~170 baris) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 6 router platform → monitor/health routes → SPA fallback.
 
 ```
 server.js                 ← composition root (helmet/CSP, CORS, rate limit, mount routers, /api/s/:platform/:token shortlink resolver, listen)
@@ -22,31 +22,36 @@ lib/
     rb.js                 ← ruangbokep.ws: PackerJS decode, self-healing CDN token, HLS proxy, /rb SPA route
     yb.js                 ← yobokep.com: dual embed provider (bysezejataos AES-256-GCM + streamhls.to), HLS proxy, /yb SPA route
     bk.js                 ← bokepking.cam: WP REST API listing, direct MP4 proxy, /bk SPA route
+    tp.js                 ← tik.porn: __NEXT_DATA__ scrape, HLS via hls.js, TikTok-style feed, /tp SPA route
+    rc.js                 ← api.reddclips.com: JSON API, direct MP4 proxy, kategori tabs feed, /rc SPA route
 ```
 
-Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai `server.js` untuk agregasi `getCacheStats()` di `/health/detail`. **Tidak ada cross-import antar `p1.js`/`rb.js`/`yb.js`/`bk.js`/`tp.js`** — hanya `lib/cache.js` dan `lib/proxy.js` yang generik/stateless di-share.
+Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai `server.js` untuk agregasi `getCacheStats()` di `/health/detail`. **Tidak ada cross-import antar scraper files** — hanya `lib/cache.js` dan `lib/proxy.js` yang generik/stateless di-share.
 
-## Lima Platform (Completely Isolated)
+## Enam Platform (Completely Isolated)
 
-| Platform | URL | Source | HTML | JS |
-|---|---|---|---|---|
-| Platform 1 | `/` | xpvid.cc | `index.html` | `app.js` |
-| Platform 2 | `/rb` | ruangbokep.ws | `rb.html` | `rb.js` |
-| Platform 3 | `/yb` | yobokep.com | `yb.html` | `yb.js` |
-| Platform 4 | `/bk` | bokepking.cam | `bk.html` | `bk.js` |
-| Platform 5 | `/tp` | tik.porn | `tp.html` | `tp.js` |
+| Platform | URL | Source | HTML | JS | Nama UI |
+|---|---|---|---|---|---|
+| Platform 1 | `/` | xpvid.cc | `index.html` | `app.js` | Vidorey 1 |
+| Platform 2 | `/rb` | ruangbokep.ws | `rb.html` | `rb.js` | Vidorey 2 |
+| Platform 3 | `/yb` | yobokep.com | `yb.html` | `yb.js` | Vidorey 3 |
+| Platform 4 | `/bk` | bokepking.cam | `bk.html` | `bk.js` | Vidorey 4 |
+| Platform 5 | `/tp` | tik.porn | `tp.html` | `tp.js` | Vidorey TikTok 1 |
+| Platform 6 | `/rc` | api.reddclips.com | `rc.html` | `rc.js` | Vidorey TikTok 2 |
 
-Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan Vidorey 1 / 2 / 3 / 4 / 5 dengan highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
+**Nama UI tidak menyebut nama web sumber** — user hanya melihat "Vidorey 1", "Vidorey 2", dst.
+
+Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan Vidorey 1–4 + TikTok 1–2 dengan highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
 
 ## Iklan (Adsterra)
-Tiga jenis slot iklan dipakai, semuanya identik di `index.html`/`rb.html`/`yb.html`/`bk.html`:
+Tiga jenis slot iklan dipakai, semuanya identik di `index.html`/`rb.html`/`yb.html`/`bk.html`/`tp.html`/`rc.html`:
 1. **Native banner** (`.ad-native-slot`, di bawah grid listing) — key `761a1a8645cd2263043bfeb6f2e87eea`, invoke.js dari `pl28423230.effectivecpmnetwork.com`. Punya container `id` tetap (`container-<key>`) yang di-hardcode oleh jaringan iklan — **jangan diduplikasi di halaman yang sama** (duplicate `id` bikin script hanya render ke elemen pertama).
 2. **Display banner 300×250** (`.ad-display-slot` di listing, `.watch-ad-slot` di watch view) — pola `atOptions` + invoke.js dari `highperformanceformat.com`, **aman diduplikasi** berkali-kali di halaman yang sama karena scriptnya `document.write` langsung di lokasi tag, tidak butuh id unik (deklarasi `atOptions` di-reset tepat sebelum tiap invoke.js dipanggil).
 3. **Popunder + Social Bar** (di akhir `<body>`, sekali per halaman) — dua script dari `effectivecpmnetwork.com` (`pl28418540`, `pl28427857`), sengaja tidak dipakai di watch view karena bersifat mengganggu (buka tab baru / overlay mengambang).
 
 Semua domain iklan sudah masuk allowlist `script-src` di CSP (`server.js`) — kalau nambah jaringan iklan baru, domain barunya wajib ditambah eksplisit (CSP tidak pakai wildcard `https:`).
 
-### Struktur Nav Drawer (sama di keempat HTML)
+### Struktur Nav Drawer (sama di keenam HTML)
 - `.nav-burger` (id `navBurger`) — tombol hamburger di dalam `.brand` di topbar
 - `div.nav-overlay` (id `navOverlay`) — backdrop gelap, z-index 149
 - `nav.nav-drawer` (id `navDrawer`) — panel slide-in, z-index 150
@@ -123,6 +128,29 @@ Pola watch view direplikasi dari P2/P3 — player (elemen `<video>` MP4 langsung
 ### Kenapa Direct MP4 (bukan HLS) untuk P4
 bokepking.cam menyimpan video sebagai MP4 langsung di `vdn.bokepking.cam` — tidak ada playlist `.m3u8`. Proksi dilakukan via `/proxy/bk/stream/:slug` dengan Range support supaya seek/scrubbing berfungsi.
 
+## Cara Kerja — Platform 5 (tik.porn)
+1. `/api/tp/posts` → scrape `__NEXT_DATA__` dari tik.porn; home: `initialRelatedVideos.data[]` (10 item, tidak bisa pagination); search: `initialVideoResults.data[]`
+2. `/api/tp/video/:id` → scrape `__NEXT_DATA__` → ambil `firstVideo.sources[].type === 'application/x-mpegURL'` untuk HLS URL
+3. `/proxy/tp/hls/:id` → proxy master m3u8, rewrite semua URL ke `/proxy/tp/seg`
+4. `/proxy/tp/seg` → proxy segment/sub-manifest; `axTpGetSafe` untuk validasi redirect CDN
+5. `/proxy/tp/thumb?url=` → proxy thumbnail (base64url encode)
+
+### Feed P5 (TikTok-style)
+TikTok-style vertical scroll-snap feed (`tp-feed` position:fixed, `body.tp-page { overflow:hidden }`). Tidak ada modal. IntersectionObserver threshold 0.75 play/pause. Ad slide setiap 5 video + end slide.
+
+## Cara Kerja — Platform 6 (api.reddclips.com)
+1. `/api/rc/categories` → fetch `api.reddclips.com/categories` → `data.categories[]`; cache 1 jam
+2. `/api/rc/posts?categoryId=N&sort=hot&limit=25&after=cursor` → fetch `api.reddclips.com/categories/:id/posts`; filter `mediaType === 'video'`; extract hash dari `mediaUrl /video/{hash}.mp4`; cache 10 mnt
+3. `/proxy/rc/stream/:hash` → proxy MP4 langsung dari `api.reddclips.com/video/:hash.mp4` dengan Range support (seeking)
+4. `/proxy/rc/thumb?url=BASE64URL` → proxy thumbnail dari `external-preview.redd.it`/`preview.redd.it`/`i.redd.it`
+
+### Feed P6 (TikTok-style dengan kategori tabs)
+TikTok-style vertical scroll-snap (`rc-feed` position:fixed, `body.rc-page { overflow:hidden }`). Layout: topbar 52px → display banner 50px → cats bar 48px → feed mulai top:150px. Kategori tabs scroll horizontal. Tidak ada sort button (dihapus — fungsi tidak nyata di API sumber). Ad slide setiap 5 video + end slide. Deep-link: `/rc/video/:hash` — init parse pathname, set target hash sebelum reset URL.
+
+### CDN Allowlist P6
+- Video: `api.reddclips.com`
+- Thumbnail: `external-preview.redd.it`, `preview.redd.it`, `i.redd.it`
+
 ## Deployment
 - **Replit (backend + dev frontend)**: server jalan di port 5000
 - **Firebase (production frontend)**: `vidorey.web.app` — host file statis dari `public/`
@@ -170,6 +198,10 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 | `yb_posts` | `/api/yb/posts` dipanggil (P3) |
 | `bk_video` | `/api/bk/video/:slug` dipanggil (P4) |
 | `bk_posts` | `/api/bk/posts` dipanggil (P4) |
+| `tp_video` | `/proxy/tp/hls/:id` dipanggil (P5) |
+| `tp_posts` | `/api/tp/posts` dipanggil (P5) |
+| `rc_video` | `/proxy/rc/stream/:hash` dipanggil (P6) |
+| `rc_posts` | `/api/rc/posts` dipanggil (P6) |
 
 ### Implementasi Monitor
 - **Ring buffer server**: `MON_BUF=50.000` event, `CDN_ALERT_MAX=500` alert

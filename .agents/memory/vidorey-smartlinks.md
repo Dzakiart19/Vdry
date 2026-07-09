@@ -5,15 +5,15 @@ description: smartlinks.js — 5 trigger monetisasi, rotasi 4 link (3 Smartlink 
 
 ## File: public/smartlinks.js
 
-## IIFE, tidak ada export/global — diload via `<script src="/smartlinks.js">` di semua 5 HTML.
+## IIFE, tidak ada export/global — diload via `<script src="/smartlinks.js">` di semua 6 HTML.
 
 ## 5 Trigger aktif
 
 | # | Trigger | Selector/Event | Catatan |
 |---|---|---|---|
 | 1 | First click | `document click` (one-time, self-removes) | Buka tab baru pertama kali user klik di manapun |
-| 2 | Video card click | `.video-card, .rb-card, .folder-card, .tp-slide` | Setiap klik thumbnail/card |
-| 3 | Platform nav click | `.nav-plat-item` | Klik item di nav drawer (semua 5 platform) |
+| 2 | Video card click | `.video-card, .rb-card, .folder-card, .tp-slide, .rc-slide` | Setiap klik thumbnail/card/slide |
+| 3 | Platform nav click | `.nav-plat-item` | Klik item di nav drawer (semua 6 platform) |
 | 4 | Timer 5 detik | `setTimeout(tryFire, 5000)` | Otomatis setelah 5s halaman dibuka |
 | 5 | Exit intent | `mouseleave` (clientY≤0 desktop) + `pagehide` (mobile) | Satu kali per sesi (`exitFired` flag) |
 
@@ -29,4 +29,4 @@ description: smartlinks.js — 5 trigger monetisasi, rotasi 4 link (3 Smartlink 
 - `exitFired` flag — exit intent hanya satu kali per page load
 
 ## Diload di semua platform
-index.html, rb.html, yb.html, bk.html, tp.html — semua sudah punya `<script src="/smartlinks.js">` sebelum `</body>`.
+index.html, rb.html, yb.html, bk.html, tp.html, rc.html — semua sudah punya `<script src="/smartlinks.js">` sebelum `</body>`.

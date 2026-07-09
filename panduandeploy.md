@@ -49,14 +49,21 @@ Replit backend di-deploy terpisah lewat Replit UI:
 
 ```
 public/
-  index.html     ← Platform 1 (/)
+  index.html     ← Platform 1 — Vidorey 1 (/)
   app.js
-  rb.html        ← Platform 2 (/rb)
+  rb.html        ← Platform 2 — Vidorey 2 (/rb)
   rb.js
-  yb.html        ← Platform 3 (/yb)
+  yb.html        ← Platform 3 — Vidorey 3 (/yb)
   yb.js
+  bk.html        ← Platform 4 — Vidorey 4 (/bk)
+  bk.js
+  tp.html        ← Platform 5 — Vidorey TikTok 1 (/tp)
+  tp.js
+  rc.html        ← Platform 6 — Vidorey TikTok 2 (/rc)
+  rc.js
   config.js      ← BACKEND_URL config
   style.css
+  smartlinks.js
   ...
 ```
 
