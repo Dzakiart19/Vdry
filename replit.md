@@ -74,7 +74,7 @@ Semua domain iklan sudah masuk allowlist `script-src` di CSP (`server.js`) — k
 ## Cara Kerja — Platform 2 (ruangbokep.ws)
 1. `/api/rb/categories` → fetch kategori via WordPress REST API
 2. `/api/rb/posts` → scrape listing HTML (`article.loop-video[data-main-thumb]`) — support pagination & kategori
-3. `/api/rb/video/:slug` → resolve iframe embed URL (putarvid/streamruby) → HLS via PackerJS decode; response juga membawa `description` (og:description), `related` (array video terkait, discrape dari widget "Related videos" di halaman post itu sendiri), dan `token` (11-char shortlink dari `lib/shortlink.js`)
+3. `/api/rb/video/:slug` → cek `rbVideoCache` (30 mnt) lebih dulu; miss: resolve iframe embed URL (putarvid/streamruby, dengan m3u8Cache fast-path untuk skip putarvid round-trip jika URL CDN sudah di-cache) → HLS via PackerJS decode → cache hasil di `rbVideoCache`; response membawa `description`, `related`, dan `token` (11-char shortlink dari `lib/shortlink.js`). Cache hit kembali dalam <1ms → `history.replaceState` ke token URL selalu berhasil sebelum client timeout 15s.
 4. `/proxy/rb/hls/:slug` → proxy master m3u8, rewrite semua URL ke `/proxy/rb/seg`
 5. `/proxy/rb/seg` → proxy segment/sub-manifest; self-healing saat CDN 403 via `handleRbSeg` + `reresolveUrl`
 6. `/proxy/rb/thumb?url=` → proxy thumbnail (validasi `content-type: image/*`)

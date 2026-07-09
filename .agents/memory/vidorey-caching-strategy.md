@@ -1,6 +1,6 @@
 ---
 name: Vidorey Caching Strategy
-description: All in-memory caches: structure, TTLs, eviction, sentinel values — P1, P2, P3
+description: All in-memory caches: structure, TTLs, eviction, sentinel values — P1, P2, P3, P4
 ---
 
 # Caching Strategy — server.js
@@ -48,6 +48,15 @@ Returns `{ get, set, del, has, stats }`.
 - Stores: `{ masterUrl, masterContent: string|null, subs: Map<string,string> }`
 - TTL: 20 detik | Max: 100 | Name: `p2_freshSession`
 - Mencegah flood re-resolve: banyak segment gagal berurutan hanya trigger SATU re-fetch per 20s window
+
+### rbVideoCache — Full video response cache
+- Key: slug
+- Stores: `{ slug, title, thumb, description, related, m3u8Url }` atau `{ slug, title, thumb, description, related, embedUrl }` (tanpa `token` — token selalu fresh dari `registerSlug`)
+- TTL: **30 menit** | Max: 300 | Name: `p2_video`
+- Sentinel: `{ _status: 404, _msg: '...' }` → 60s, `{ _error: true }` → 20s
+- **Why:** P2 butuh 2 network requests (ruangbokep.ws + putarvid.com) per video load. Client timeout 15s bisa terjadi sebelum token ter-set → URL address bar tetap base64 panjang. Cache memastikan warm request <1ms → `history.replaceState` ke 11-char token selalu berhasil.
+- **m3u8Cache fast-path**: sebelum memanggil `resolveRbVideoUrl` (putarvid fetch), handler cek `m3u8Cache` lebih dulu — jika URL CDN valid sudah ada, skip putarvid round-trip sama sekali.
+- Cache index di `module.exports.caches`: `[m3u8Cache, postsCache, freshSessionCache, rbVideoCache]` (index 3)
 
 ---
 
