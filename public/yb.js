@@ -6,6 +6,25 @@
 (function () {
   'use strict';
 
+  /* ── Slug encode/decode (acak URL, judul tidak terlihat di address bar) ── */
+  // UTF-8-safe base64url: TextEncoder → binary → btoa, kebalikannya saat decode.
+  function encodeSlug(s) {
+    try {
+      const bytes = new TextEncoder().encode(s);
+      let bin = '';
+      bytes.forEach(b => { bin += String.fromCharCode(b); });
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    } catch { return encodeURIComponent(s); } // fallback graceful
+  }
+  function decodeSlug(t) {
+    try {
+      const pad = t.length % 4;
+      const bin = atob((pad ? t + '='.repeat(4 - pad) : t).replace(/-/g, '+').replace(/_/g, '/'));
+      const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+      return new TextDecoder().decode(bytes) || null;
+    } catch { return null; }
+  }
+
   /* ── Config ── */
   const API = (typeof BACKEND_URL !== 'undefined' ? BACKEND_URL : '');
 
@@ -507,7 +526,7 @@
   function openModal(slug) {
     // URL /yb/watch/<slug> — supaya address bar jadi link yang bisa langsung
     // dibagikan (tombol Share) dan membuka video yang sama saat diakses ulang.
-    const url = slug ? `/yb/watch/${encodeURIComponent(slug)}` : '/yb/watch';
+    const url = slug ? `/yb/watch/${encodeSlug(slug)}` : '/yb/watch';
 
     if (!els.modal.classList.contains('hidden')) {
       // Modal SUDAH terbuka (mis. klik video related di dalam watch view) —
@@ -584,7 +603,7 @@
   if (els.shareBtn) {
     els.shareBtn.addEventListener('click', async () => {
       if (!currentSlug) return;
-      const shareUrl   = `${location.origin}/yb/watch/${encodeURIComponent(currentSlug)}`;
+      const shareUrl   = `${location.origin}/yb/watch/${encodeSlug(currentSlug)}`;
       const shareTitle = els.videoTitle.textContent || 'Vidorey';
 
       if (navigator.share) {
@@ -629,8 +648,7 @@
   // Deep-link: kalau URL-nya /yb/watch/<slug> (dari link Share), langsung
   // buka watch view video itu di atas listing yang baru saja dimuat.
   if (deepLinkMatch) {
-    let slug = null;
-    try { slug = decodeURIComponent(deepLinkMatch[1]); } catch { /* % encoding rusak — abaikan deep-link */ }
+    const slug = decodeSlug(deepLinkMatch[1]);
     if (slug) {
       modalHistoryPushed = false;
       openPlayer(slug);
