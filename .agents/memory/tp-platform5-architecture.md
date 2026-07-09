@@ -41,6 +41,15 @@ description: tik.porn (Vidorey TikTok) — scraping, proxy, and client architect
 - Topbar burger ID: `tpNavBurger` (bukan `navBurger` — karena topbar custom, bukan `.topbar`)
 - Nav drawer IDs tetap sama: `navDrawer`, `navOverlay`, `navClose`
 
+## History / Browser Back Button
+- `tpNav(push, mode, q, tag)` — helper pushState/replaceState; mode: `'home'|'search'|'tag'`
+- Init: `replaceState` dengan `{ tpMode: 'home' }` → back dari home keluar platform (benar)
+- Search/tag/trend chip: `pushState` → back dari search kembali ke home dalam platform
+- Video `replaceState` menyertakan context `{ tpMode, q, tag }` agar popstate tahu mode sebelumnya
+- `popstate` handler: restore feed (`resetFeed` + set `currentQuery`/`currentTag` + `loadPosts`)
+- URL: `/tp` (home), `/tp?q=...` (search), `/tp?tag=...` (tag), `/tp/video/:token` (watching)
+- Init juga parse `location.search` agar shared link `/tp?q=...` langsung load hasil search
+
 ## CSP additions
 - `https://pl26548697.profitableratecpm.com` dan `https://pl26548687.profitableratecpm.com` ditambah ke `scriptSrc` di server.js
 

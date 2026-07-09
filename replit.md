@@ -1,6 +1,6 @@
-# Vidorey — Quad-Platform Video Browser
+# Vidorey — Multi-Platform Video Browser
 
-Web app untuk browse dan nonton video dari empat platform terpisah.
+Web app untuk browse dan nonton video dari lima platform terpisah.
 
 ## Stack
 - **Backend**: Node.js + Express (proxy + HTML scraper), modular — lihat struktur di bawah

@@ -22,6 +22,18 @@
   let isMuted      = true;  // mulai muted agar autoplay bisa jalan
   var cachedTrends = []; // trending searches dari home mode, untuk end slide
 
+  /* ── History helper: push/replace state + sinkronisasi URL ────── */
+  function tpNav(push, mode, q, tag) {
+    var url = '/tp';
+    if (mode === 'search' && q)   url += '?q='   + encodeURIComponent(q);
+    else if (mode === 'tag' && tag) url += '?tag=' + encodeURIComponent(tag);
+    var state = { tpMode: mode, q: q || '', tag: tag || '' };
+    try {
+      if (push) history.pushState(state, '', url);
+      else       history.replaceState(state, '', url);
+    } catch (_) {}
+  }
+
   /* ── Toast ─────────────────────────────────────────────────── */
   let toastTimer;
   function showToast(msg) {
@@ -150,7 +162,9 @@
         if (!slug) return;
         resetFeed();
         currentTag = slug;
+        currentQuery = '';
         document.getElementById('tpSearchInput').value = '';
+        tpNav(true, 'tag', '', slug);
         loadPosts();
       });
     });
@@ -220,8 +234,12 @@
       var vid = slide.querySelector('.tp-video');
       if (!vid) return;
 
-      /* Update address bar */
-      history.replaceState(null, '', '/tp/video/' + (data.token || id));
+      /* Update address bar — sertakan mode saat ini agar popstate bisa restore */
+      history.replaceState(
+        { tpMode: currentQuery ? 'search' : currentTag ? 'tag' : 'home',
+          q: currentQuery || '', tag: currentTag || '' },
+        '', '/tp/video/' + (data.token || id)
+      );
 
       var hlsProxyUrl = API + data.hlsUrl;
 
@@ -356,6 +374,7 @@
         resetFeed();
         currentQuery = q;
         currentTag   = '';
+        tpNav(true, 'search', q, '');
         loadPosts();
       });
     });
@@ -465,6 +484,7 @@
     resetFeed();
     currentQuery = q;
     currentTag   = '';
+    tpNav(true, q ? 'search' : 'home', q, '');
     loadPosts();
   });
 
@@ -474,8 +494,22 @@
       resetFeed();
       currentQuery = '';
       currentTag   = '';
+      tpNav(false, 'home', '', '');
       loadPosts();
     }
+  });
+
+  /* ── Popstate: back/forward HP dalam Platform 5 ─────────────── */
+  window.addEventListener('popstate', function (e) {
+    var s = e.state;
+    if (!s || !s.tpMode) return;
+    var q   = s.q   || '';
+    var tag = s.tag || '';
+    searchInput.value = q;
+    resetFeed();
+    currentQuery = q;
+    currentTag   = tag;
+    loadPosts();
   });
 
   /* ── Nav Drawer toggle ───────────────────────────────────────── */
@@ -502,8 +536,19 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
   })();
 
-  /* ── Init: deep-link detection SEBELUM loadPosts ────────────── */
+  /* ── Init: deep-link detection + initial history state ─────── */
   (function init() {
+    /* Parse query-string untuk state awal (mis. shared link /tp?q=...) */
+    var urlParams = new URLSearchParams(location.search);
+    var initQ   = urlParams.get('q')   || '';
+    var initTag = urlParams.get('tag') || '';
+    if (initQ)   { currentQuery = initQ;   searchInput.value = initQ; }
+    if (initTag) { currentTag   = initTag; }
+
+    /* Set initial history entry — replaceState supaya back keluar platform saat di home */
+    tpNav(false, initQ ? 'search' : initTag ? 'tag' : 'home', initQ, initTag);
+
+    /* Deep-link: /tp/video/:id */
     var match = location.pathname.match(/^\/tp\/video\/([^/]+)\/?$/);
     if (match) {
       var seg = match[1];
