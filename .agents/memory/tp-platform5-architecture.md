@@ -60,3 +60,15 @@ description: tik.porn (Vidorey TikTok) — scraping, proxy, and client architect
 ## Nav drawer pattern untuk platform baru
 - Tambah `<hr class="nav-section-divider">` + `<div class="nav-drawer-label">Fitur Lain</div>` sebelum item baru
 - Update SEMUA 5 HTML (index, rb, yb, bk, tp) — jangan lupa satu pun
+
+## Ad slot TP — struktur yang benar (PENTING)
+`body.tp-page { overflow: hidden }` + `#tpFeed { position: fixed; inset: 0 }` — static HTML slot di luar feed (leaderboard/skyscraper/mobile) TIDAK TERLIHAT karena tertimpa feed fixed. Sudah dibersihkan.
+
+Slot iklan aktif di TP:
+1. `#tpNativeAd .tp-native-ad` — native sticky bottom (`position: fixed; z-index: 130`)
+2. `#tpDisplayTop .tp-display-top` — mobile banner 320×50 fixed di bawah topbar (`z-index: 119`)
+3. `tp.js createAdSlide()` — display banner 300×250 sebagai full-screen slide setiap 5 video
+4. `tp.js appendEndSlide()` — display banner 300×250 di end slide
+5. Popunder & Social Bar script — bekerja global tanpa tergantung posisi DOM
+
+**Why:** Jangan tambahkan static `ad-leaderboard-slot`/`ad-skyscraper-slot` ke tp.html — mereka invisible di balik feed fixed dan hanya membuang request network.

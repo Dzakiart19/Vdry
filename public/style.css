@@ -2165,6 +2165,21 @@ body.tp-page .nav-drawer  { z-index: 150; }
    2. Ad slide full-screen setiap 5 video (.tp-slide-ad)
 ═══════════════════════════════════════════════ */
 
+/* ── Display banner fixed — di bawah topbar (320×50) ── */
+.tp-display-top {
+  position: fixed;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 119;          /* di bawah topbar (120) tapi di atas feed */
+  height: 50px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
 /* ── Native banner sticky bottom ── */
 .tp-native-ad {
   position: fixed;
