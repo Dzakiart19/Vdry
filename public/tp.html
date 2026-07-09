@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vidorey TikTok</title>
+  <link rel="icon" href="/logo.png" type="image/png">
+  <link rel="stylesheet" href="/style.css">
+  <meta name="theme-color" content="#121212">
+</head>
+<body class="tp-page">
+
+<!-- ── Nav Overlay ── -->
+<div class="nav-overlay" id="navOverlay"></div>
+
+<!-- ── Nav Drawer ── -->
+<nav class="nav-drawer" id="navDrawer" aria-label="Navigasi platform">
+  <div class="nav-drawer-head">
+    <img src="/logo.png" alt="Vidorey" class="brand-logo">
+    <span class="brand-name">Vidorey</span>
+    <button class="nav-drawer-close" id="navClose" aria-label="Tutup menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="nav-drawer-label">Platform Video</div>
+
+  <a class="nav-plat-item" href="/">
+    <div class="ps-avatar ps-avatar-p1"><img src="/logo.png" alt="Vidorey"></div>
+    <div class="ps-info">
+      <span class="ps-name">Vidorey Classic</span>
+      <span class="ps-desc">Platform 1 · pencarian video</span>
+    </div>
+  </a>
+
+  <a class="nav-plat-item" href="/rb">
+    <div class="ps-avatar ps-avatar-rb"><img src="/logo.png" alt="Vidorey"></div>
+    <div class="ps-info">
+      <span class="ps-name">Vidorey RB</span>
+      <span class="ps-desc">Platform 2 · streaming HLS</span>
+    </div>
+  </a>
+
+  <a class="nav-plat-item" href="/yb">
+    <div class="ps-avatar ps-avatar-yb"><img src="/logo.png" alt="Vidorey"></div>
+    <div class="ps-info">
+      <span class="ps-name">Vidorey YB</span>
+      <span class="ps-desc">Platform 3 · yobokep</span>
+    </div>
+  </a>
+
+  <a class="nav-plat-item" href="/bk">
+    <div class="ps-avatar ps-avatar-bk"><img src="/logo.png" alt="Vidorey"></div>
+    <div class="ps-info">
+      <span class="ps-name">Vidorey BK</span>
+      <span class="ps-desc">Platform 4 · bokepsex.me</span>
+    </div>
+  </a>
+
+  <hr class="nav-section-divider">
+  <div class="nav-drawer-label">Fitur Lain</div>
+
+  <a class="nav-plat-item active" href="/tp" aria-current="page">
+    <div class="ps-avatar ps-avatar-tp"><img src="/logo.png" alt="Vidorey"></div>
+    <div class="ps-info">
+      <span class="ps-name">Vidorey TikTok</span>
+      <span class="ps-desc">Short video · scroll vertikal</span>
+    </div>
+    <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </a>
+</nav>
+
+<!-- ── TP Topbar (fixed, di dalam feed) ── -->
+<header class="tp-topbar">
+  <button id="tpNavBurger" class="nav-burger" aria-label="Menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <line x1="3" y1="6"  x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <span class="tp-topbar-title">Vidorey TikTok</span>
+  <form id="tpSearchForm" class="tp-search-form" role="search">
+    <input
+      id="tpSearchInput"
+      class="tp-search-input"
+      type="search"
+      placeholder="Cari video…"
+      autocomplete="off"
+      maxlength="200"
+    >
+    <button type="submit" class="tp-search-btn" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <circle cx="11" cy="11" r="7"/>
+        <line x1="17" y1="17" x2="22" y2="22"/>
+      </svg>
+    </button>
+  </form>
+</header>
+
+<!-- ── Feed ── -->
+<main id="tpFeed" class="tp-feed"></main>
+
+<!-- ── Loader indicator ── -->
+<div id="tpLoader" class="tp-loader hidden">
+  <div class="tp-spinner"></div>
+  <span>Memuat video…</span>
+</div>
+
+<!-- ── End of feed ── -->
+<div id="tpEnd" class="tp-end hidden">Semua video sudah ditampilkan.</div>
+
+<!-- ── Toast notification ── -->
+<div id="tpToast" class="tp-toast hidden"></div>
+
+<!-- ── Scripts ── -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+<script src="/config.js"></script>
+<script src="/tp.js"></script>
+
+<!-- ── Ads: popunder (tidak mengganggu feed) ── -->
+<script async src="//pl26548697.profitableratecpm.com/c5cc08a52e6b665e32cd0fdeeb1c78c3/invoke.js"></script>
+<div id="container-c5cc08a52e6b665e32cd0fdeeb1c78c3"></div>
+<!-- social bar -->
+<script async src="//pl26548687.profitableratecpm.com/e5/a7/2f/e5a72f0cc4f6571ea7c1d21ad98e8073.js"></script>
+</body>
+</html>

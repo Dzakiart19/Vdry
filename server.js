@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   Vidorey — Quad-Platform Video Browser
-   Composition root: security middleware + mount empat platform (terisolasi
+   Vidorey — Penta-Platform Video Browser
+   Composition root: security middleware + mount lima platform (terisolasi
    penuh satu sama lain) + monitor/health routes + SPA fallback.
    Detail per-platform ada di lib/scrapers/{p1,rb,yb,bk}.js
 ═══════════════════════════════════════════════════════════════════════ */
@@ -17,6 +17,7 @@ const p1 = require('./lib/scrapers/p1');
 const rb = require('./lib/scrapers/rb');
 const yb = require('./lib/scrapers/yb');
 const bk = require('./lib/scrapers/bk');
+const tp = require('./lib/scrapers/tp');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -49,6 +50,9 @@ app.use(helmet({
         'https://pl28418540.effectivecpmnetwork.com',
         'https://pl28427857.effectivecpmnetwork.com',
         'https://www.highperformanceformat.com',
+        // Adsterra / profitableratecpm (Platform 5 tp.html)
+        'https://pl26548697.profitableratecpm.com',
+        'https://pl26548687.profitableratecpm.com',
       ],
       styleSrc:  ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       imgSrc:    ["'self'", 'data:', 'https:'],
@@ -121,11 +125,12 @@ const proxyLimiter = rateLimit({
 app.use('/api', apiLimiter);
 app.use('/proxy', proxyLimiter);
 
-/* ── Empat platform, terisolasi penuh — tidak ada path yang overlap ── */
+/* ── Lima platform, terisolasi penuh — tidak ada path yang overlap ── */
 app.use(p1.router);
 app.use(rb.router);
 app.use(yb.router);
 app.use(bk.router);
+app.use(tp.router);
 
 /* ── Monitor & health — cache stats digabung read-only dari semua platform.
    Urutan & daftar persis meniru server.js lama (ybFreshSessionCache sengaja
@@ -136,13 +141,14 @@ registerMonitorRoutes(app, {
     rb.caches[0], rb.caches[1], rb.caches[2], rb.caches[3], // p2: m3u8Cache, postsCache, freshSessionCache, rbVideoCache
     yb.caches[0], yb.caches[1],                      // p3: ybM3u8Cache, ybPostsCache
     bk.caches[0], bk.caches[1], bk.caches[2],        // p4: bkPostsCache, bkVideoUrlCache, bkThumbCache
+    tp.caches[0], tp.caches[1], tp.caches[2],        // p5: tpPostsCache, tpVideoCache, tpThumbCache
   ].map(c => c.stats()),
 });
 
 /* ── Shortlink resolver — /api/s/:platform/:token → { slug } ── */
 app.get('/api/s/:platform/:token', (req, res) => {
   const { platform, token } = req.params;
-  if (!['rb', 'yb', 'bk'].includes(platform)) return res.status(404).json({ error: 'not found' });
+  if (!['rb', 'yb', 'bk', 'tp'].includes(platform)) return res.status(404).json({ error: 'not found' });
   if (!/^[a-z0-9]{11}$/.test(token)) return res.status(400).json({ error: 'invalid token' });
   const slug = resolveToken(platform, token);
   if (!slug) return res.status(404).json({ error: 'Link kadaluarsa atau tidak ditemukan' });
