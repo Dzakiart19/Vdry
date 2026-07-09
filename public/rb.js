@@ -438,12 +438,6 @@
 
       if (data.m3u8Url) {
         playHls(API + data.m3u8Url, slug);
-      } else if (data.embedUrl) {
-        els.videoFrame.onload = () => {
-          els.playerLoading.classList.add('hidden');
-          els.videoFrame.classList.remove('hidden');
-        };
-        els.videoFrame.src = data.embedUrl;
       } else {
         throw new Error('Sumber video tidak ditemukan');
       }

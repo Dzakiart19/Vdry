@@ -1,132 +1,50 @@
 ---
 name: Vidorey Caching Strategy
-description: All in-memory caches: structure, TTLs, eviction, sentinel values — P1, P2, P3, P4
+description: makeCache helper, semua cache per platform + TTL, sentinel values, conventions
 ---
 
-# Caching Strategy — server.js
+## makeCache helper
+`makeCache(maxSize, defaultTtlMs, name)` — returns object dengan `.get(key)→null|value`, `.set(key, val, ttlMs?)`, `.stats()`.
+- **Selalu return `null` saat miss** — bukan `undefined`, bukan `false`. Semua callers harus check `!== null`.
+- FIFO eviction setelah expired-entry scan.
 
-## makeCache helper (generic)
+**Why:** Kode yang check `if (cached)` (falsy) akan salah handle value cache yang falsy (0, '', false). Pattern eksplisit `!== null` wajib dipakai.
 
-```js
-makeCache(maxSize, defaultTtlMs, name)
+## Cache per Platform
+
+| Cache | Platform | TTL | Kapasitas | Notes |
+|---|---|---|---|---|
+| `videoUrlCache` | P1 | 4 jam | 500 | Direct MP4 URL |
+| `m3u8Cache` / `ybM3u8Cache` | P2/P3 | 3 mnt | 500 | M3U8 URL — token CDN cepat expire |
+| `postsCache` / `ybPostsCache` | P2/P3 | 3 mnt | 200 | Listing page result |
+| `freshSessionCache` / `ybFreshSessionCache` | P2/P3 | 20 detik | 100 | Self-healing CDN token |
+| `rbVideoCache` | P2 | 30 mnt | 300 | Full video payload (slug→response) |
+| `ybVideoCache` | P3 | 30 mnt | 300 | Full video payload — sama seperti P2 |
+| `ybThumbCache` | P3 | 24 jam | 2000 | Thumbnail URL per slug |
+| `bkPostsCache` | P4 | 1 jam | 100 | WP REST listing |
+| `bkVideoUrlCache` | P4 | 4 jam | 500 | Direct MP4 URL |
+| `bkThumbCache` | P4 | 24 jam | 2000 | Thumbnail URL per ID |
+| `tpPostsCache` | P5 | 10 mnt | 500 | Feed listing |
+| `tpVideoCache` | P5 | 24 jam | 1000 | Full video payload (token TTL ~1yr) |
+
+**P5 tidak punya tpThumbCache** — URL thumbnail sudah ada di dalam payload `tpVideoCache` (field `thumbnailSm`/`thumbnailMd`).
+
+## Sentinel Values
+Untuk mencegah upstream hammering saat error, semua video-level cache menyimpan sentinel:
+- `{ _error: true }` — error 502, TTL pendek (20 detik)
+- `{ _status: 404, _msg: '...' }` — not found, TTL 60 detik
+
+Callers check di awal: `if (cached._error) return 502; if (cached._status === 404) return 404;`
+
+## getCacheStats Order (server.js)
+```
+p1.caches[0]                           // videoUrlCache
+rb.caches[0..3]                        // m3u8, posts, freshSession, rbVideoCache
+yb.caches[0..3]                        // m3u8, posts, ybVideoCache, ybThumbCache
+// yb.caches[4] = ybFreshSessionCache  ← SENGAJA tidak dimasukkan (konvensi lama)
+bk.caches[0..2]                        // posts, videoUrl, thumb
+tp.caches[0..1]                        // posts, video
 ```
 
-Returns `{ get, set, del, has, stats }`.
-- `set(key, val, ttlMs?)` — optional 3rd arg overrides default TTL per-entry
-- `get(key)` → returns **`null`** (not `undefined`) on cache miss
-- `del(key)` — explicit eviction (dipakai untuk stale CDN URL recovery)
-- `has(key)` → `this.get(key) !== null`
-- `stats()` → `{ name, size, hits, misses }` — dipakai oleh `/health/detail`
-
-**Critical:** `get()` returns `null` for missing keys. Always check `=== null`, never `=== undefined`.
-
----
-
-## Platform 1 — xpvid.cc
-
-### videoUrlCache — MP4 URLs
-- Stores: `{src, title, thumb}` payload
-- TTL: 5 min | Max: 300 | Name: `p1_videoUrl`
-- Eviction: `/proxy/stream/:id` calls `resolveP1Mp4(evictFirst=true)` if CDN returns 403/404
-
----
-
-## Platform 2 — ruangbokep.ws
-
-### m3u8Cache — HLS URLs
-- Stores: resolved m3u8 URL string
-- TTL: 5 min | Max: 500 | Name: `p2_m3u8`
-- Shim: `m3u8CacheSet(slug, url)` wraps `m3u8Cache.set()` untuk backward compat
-
-### postsCache — Post listings
-- Key: `"page:cat:q"`
-- TTL: 3 min (normal), 30s (empty/404), 20s (_error) | Name: `p2_posts`
-- Sentinel values: `{_error: true}` → 502, `{_status: 404}` → 404
-
-### freshSessionCache — Self-healing token sessions
-- Key: slug
-- Stores: `{ masterUrl, masterContent: string|null, subs: Map<string,string> }`
-- TTL: 20 detik | Max: 100 | Name: `p2_freshSession`
-- Mencegah flood re-resolve: banyak segment gagal berurutan hanya trigger SATU re-fetch per 20s window
-
-### rbVideoCache — Full video response cache
-- Key: slug
-- Stores: `{ slug, title, thumb, description, related, m3u8Url }` atau `{ slug, title, thumb, description, related, embedUrl }` (tanpa `token` — token selalu fresh dari `registerSlug`)
-- TTL: **30 menit** | Max: 300 | Name: `p2_video`
-- Sentinel: `{ _status: 404, _msg: '...' }` → 60s, `{ _error: true }` → 20s
-- **Why:** P2 butuh 2 network requests (ruangbokep.ws + putarvid.com) per video load. Client timeout 15s bisa terjadi sebelum token ter-set → URL address bar tetap base64 panjang. Cache memastikan warm request <1ms → `history.replaceState` ke 11-char token selalu berhasil.
-- **m3u8Cache fast-path**: sebelum memanggil `resolveRbVideoUrl` (putarvid fetch), handler cek `m3u8Cache` lebih dulu — jika URL CDN valid sudah ada, skip putarvid round-trip sama sekali.
-- Cache index di `module.exports.caches`: `[m3u8Cache, postsCache, freshSessionCache, rbVideoCache]` (index 3)
-
----
-
-## Platform 3 — yobokep.com
-
-### ybM3u8Cache — HLS URLs
-- Stores: resolved m3u8 URL string
-- TTL: 3 min | Max: 500 | Name: `p3_m3u8`
-
-### ybPostsCache — Post listings
-- Key: `"page:q"`
-- TTL: 3 min (normal), 30s (empty/404), 20s (_error) | Name: `p3_posts`
-- Sentinel values sama dengan postsCache P2
-
-### ybThumbCache — Thumbnail URLs
-- Key: slug
-- Stores: `og:image` URL dari halaman post individual
-- TTL: **24 jam** | Max: 2000 | Name: `p3_thumb`
-- **Why 24 jam:** thumbnail yobokep tidak tersedia di WP REST API — harus fetch satu per satu dari halaman post; cache panjang meminimalkan request upstream
-
-### ybFreshSessionCache — Self-healing token sessions
-- Key: slug
-- Stores: `{ masterUrl, masterContent: string|null, subs: Map<string,string> }`
-- TTL: 20 detik | Max: 100 | Name: `p3_freshSession`
-- Mirror pola P2 `freshSessionCache`; dipakai bersama oleh `/proxy/yb/hls/:slug` dan `handleYbSeg`
-
----
-
-## Platform 4 — bokepking.cam
-
-### bkPostsCache — Post listings
-- Key: `"page:q"`
-- TTL: 3 min | Max: 200 | Name: `p4_posts`
-- Sentinel values: `{_error: true}` → 502 (20s), `{_status: 404}` → 404 (30s), `{_status: 400}` → 400 (30s), empty result → 30s throttle — **sekarang konsisten dengan P2/P3**
-
-### bkThumbCache — Thumbnail URLs
-- Key: featured_media ID (integer)
-- Stores: `source_url` string ('' if not found — sentinel empty string)
-- TTL: **24 jam** | Max: 2000 | Name: `p4_thumb`
-- **Why 24 jam:** WP media attachments don't change; avoids per-request parallel fetch after warm-up
-
-### bkVideoUrlCache — MP4 URLs
-- Key: slug
-- Stores: `{mp4Url, title, thumb, description, related}` or sentinel `{_error}` / `{_status: 404}`
-- TTL: **30 min** | Max: 300 | Name: `p4_videoUrl`
-- **Why 30 min:** vdn.bokepking.cam CDN has no signed tokens (confirmed via recon) → longer TTL is safe
-- Eviction: `/proxy/bk/stream/:slug` calls `resolveBkMp4(evictFirst=true)` if CDN returns 403/404
-- Sentinel: 404 → 30s, error → 20s — konsisten dengan P2/P3
-
----
-
-## Monitor Buffer — Ring Buffer
-
-- `monitorLog[]` — **ring buffer, max 50.000 event** (`MON_BUF = 50_000`); `monitorLog.shift()` saat overflow
-- `cdnAlerts[]` — **ring buffer, max 500 alert** (`CDN_ALERT_MAX = 500`)
-- `totalEvents` — integer counter terpisah, tidak berkurang saat ring buffer trim; dipakai untuk stat "Total Events" yang akurat
-- Client tidak pakai DOM limit — pakai **virtual list** (hanya visible rows yang jadi DOM node); data lama diakses via REST pagination `/monitor/log`
-
----
-
-## Sentinel Value Pattern (P2 & P3)
-
-```js
-cache.set(key, { _error: true }, 20_000);   // upstream error → 502
-cache.set(key, { _status: 404 }, 30_000);   // not found → 404
-cache.set(key, result, 30_000);             // empty result → throttle 30s
-
-// Check di route handler:
-if (cached._error)          return apiError(res, 502, '...');
-if (cached._status === 404) return apiError(res, 404, '...');
-```
-
-**Why:** Tanpa negative cache, request ke page gagal/kosong hammer upstream terus tanpa throttle.
+## Monitor Buffer
+Ring buffer 50k events di monitor.js — `Array.shift()` O(n). Acceptable untuk traffic moderate Replit; jika traffic tinggi bisa jadi bottleneck.

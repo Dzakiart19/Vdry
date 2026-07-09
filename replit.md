@@ -24,9 +24,9 @@ lib/
     bk.js                 ← bokepking.cam: WP REST API listing, direct MP4 proxy, /bk SPA route
 ```
 
-Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai `server.js` untuk agregasi `getCacheStats()` di `/health/detail`. **Tidak ada cross-import antar `p1.js`/`rb.js`/`yb.js`/`bk.js`** — hanya `lib/cache.js` dan `lib/proxy.js` yang generik/stateless di-share.
+Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai `server.js` untuk agregasi `getCacheStats()` di `/health/detail`. **Tidak ada cross-import antar `p1.js`/`rb.js`/`yb.js`/`bk.js`/`tp.js`** — hanya `lib/cache.js` dan `lib/proxy.js` yang generik/stateless di-share.
 
-## Empat Platform (Completely Isolated)
+## Lima Platform (Completely Isolated)
 
 | Platform | URL | Source | HTML | JS |
 |---|---|---|---|---|
@@ -34,8 +34,9 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 | Platform 2 | `/rb` | ruangbokep.ws | `rb.html` | `rb.js` |
 | Platform 3 | `/yb` | yobokep.com | `yb.html` | `yb.js` |
 | Platform 4 | `/bk` | bokepking.cam | `bk.html` | `bk.js` |
+| Platform 5 | `/tp` | tik.porn | `tp.html` | `tp.js` |
 
-Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan Vidorey 1 / 2 / 3 / 4 dengan highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
+Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan Vidorey 1 / 2 / 3 / 4 / 5 dengan highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
 
 ## Iklan (Adsterra)
 Tiga jenis slot iklan dipakai, semuanya identik di `index.html`/`rb.html`/`yb.html`/`bk.html`:

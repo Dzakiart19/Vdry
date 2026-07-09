@@ -2,7 +2,7 @@
    Vidorey — Penta-Platform Video Browser
    Composition root: security middleware + mount lima platform (terisolasi
    penuh satu sama lain) + monitor/health routes + SPA fallback.
-   Detail per-platform ada di lib/scrapers/{p1,rb,yb,bk}.js
+   Detail per-platform ada di lib/scrapers/{p1,rb,yb,bk,tp}.js
 ═══════════════════════════════════════════════════════════════════════ */
 
 const express   = require('express');
@@ -139,9 +139,9 @@ registerMonitorRoutes(app, {
   getCacheStats: () => [
     p1.caches[0],                                   // p1: videoUrlCache
     rb.caches[0], rb.caches[1], rb.caches[2], rb.caches[3], // p2: m3u8Cache, postsCache, freshSessionCache, rbVideoCache
-    yb.caches[0], yb.caches[1],                      // p3: ybM3u8Cache, ybPostsCache
-    bk.caches[0], bk.caches[1], bk.caches[2],        // p4: bkPostsCache, bkVideoUrlCache, bkThumbCache
-    tp.caches[0], tp.caches[1], tp.caches[2],        // p5: tpPostsCache, tpVideoCache, tpThumbCache
+    yb.caches[0], yb.caches[1], yb.caches[2], yb.caches[3], // p3: ybM3u8Cache, ybPostsCache, ybVideoCache, ybThumbCache
+    bk.caches[0], bk.caches[1], bk.caches[2],               // p4: bkPostsCache, bkVideoUrlCache, bkThumbCache
+    tp.caches[0], tp.caches[1],                              // p5: tpPostsCache, tpVideoCache
   ].map(c => c.stats()),
 });
 
