@@ -284,6 +284,57 @@
     });
   }, { threshold: 0.5 });
 
+  /* ── "End slide" — slide penutup yang bisa di-scroll secara natural ── */
+  function appendEndSlide(mode, query) {
+    var feed = document.getElementById('tpFeed');
+    /* Jangan duplikat jika sudah ada */
+    if (feed.querySelector('.tp-slide-end')) return;
+
+    var msg = (mode === 'search' && query)
+      ? 'Semua hasil untuk \u201c' + query + '\u201d sudah ditampilkan.'
+      : 'Semua video ditampilkan. Cari lebih banyak di atas.';
+
+    var slide = document.createElement('div');
+    slide.className = 'tp-slide tp-slide-end';
+    /* Bangun struktur tanpa script dulu — innerHTML tidak execute <script> */
+    slide.innerHTML = [
+      '<div class="tp-end-body">',
+        '<div class="tp-end-icon">&#128269;</div>',
+        '<p class="tp-end-msg">' + msg + '</p>',
+        '<button class="tp-end-search-btn" id="tpEndSearchBtn">Ketik kata kunci</button>',
+        '<div class="tp-end-ad" id="tpEndAdSlot">',
+          '<div id="container-761a1a8645cd2263043bfeb6f2e87eea"></div>',
+        '</div>',
+      '</div>',
+    ].join('');
+
+    feed.appendChild(slide);
+
+    /* Inject native banner script secara programatik agar bisa execute */
+    var adSlot = slide.querySelector('#tpEndAdSlot');
+    if (adSlot) {
+      var sc = document.createElement('script');
+      sc.async = true;
+      sc.setAttribute('data-cfasync', 'false');
+      sc.src = 'https://pl28423230.effectivecpmnetwork.com/761a1a8645cd2263043bfeb6f2e87eea/invoke.js';
+      adSlot.insertBefore(sc, adSlot.firstChild);
+    }
+
+    /* Klik tombol → fokus search input di topbar */
+    var btn = slide.querySelector('#tpEndSearchBtn');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        var inp = document.getElementById('tpSearchInput');
+        if (inp) { inp.focus(); inp.select(); }
+        slide.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        /* scroll ke atas feed */
+        setTimeout(function () {
+          feed.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 300);
+      });
+    }
+  }
+
   /* ── Reset feed state (untuk search baru) ────────────────────── */
   function resetFeed() {
     stopActive();
@@ -297,7 +348,6 @@
     currentPage    = 1;
     hasMore        = true;
     lastSlide      = null;
-    document.getElementById('tpEnd').classList.add('hidden');
   }
 
   /* ── Muat batch video dari API ──────────────────────────────── */
@@ -321,9 +371,7 @@
       var mode = data.mode || (currentQuery ? 'search' : currentTag ? 'tag' : 'home');
 
       if (videos.length === 0 && feed.children.length === 0) {
-        var endEl = document.getElementById('tpEnd');
-        endEl.textContent = 'Tidak ada video ditemukan.';
-        endEl.classList.remove('hidden');
+        appendEndSlide(mode, currentQuery);
         return;
       }
 
@@ -350,18 +398,7 @@
       if (lastSlide) ioEnd.observe(lastSlide);
 
       if (!hasMore) {
-        var endEl = document.getElementById('tpEnd');
-        if (mode === 'home' || mode === 'tag') {
-          endEl.innerHTML = '🔍 Ketik kata kunci di atas untuk temukan lebih banyak video';
-        } else if (mode === 'search' && currentQuery) {
-          endEl.textContent = 'Semua hasil untuk "' + currentQuery + '" sudah ditampilkan.';
-        } else {
-          endEl.textContent = 'Semua video sudah ditampilkan.';
-        }
-        endEl.classList.remove('hidden');
-        // Klik end banner → fokus ke search input
-        endEl.style.cursor = 'pointer';
-        endEl.onclick = function () { searchInput.focus(); };
+        appendEndSlide(mode, currentQuery);
       }
 
     } catch (err) {
