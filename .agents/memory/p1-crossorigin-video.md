@@ -47,7 +47,7 @@ if (u.hostname.endsWith('.overfetch.video')) return true;
 ## Firebase ↔ Replit Deployment
 
 - Firebase (`vidorey.web.app`) hosts the static `public/` files.
-- Replit (`vidorey--lturner686.replit.app`) runs the backend.
-- `public/config.js` hardcodes the Replit backend URL.
+- Replit runs the backend.
+- `public/config.js` uses a **placeholder** `__REPLIT_BACKEND_URL__` — NOT hardcoded. `deploy.sh` injects the real URL from `REPLIT_BACKEND_URL` secret at deploy time, then restores the placeholder.
 - `deploy.sh` deploys only Firebase frontend — Replit backend must be published separately via Replit UI.
-- When testing from `vidorey--lturner686.replit.app` directly, `config.js` detects `.replit.app` hostname and overrides `BACKEND_URL` to `''` (relative), so no cross-origin issues.
+- When testing from `*.replit.app` / `*.replit.dev` / `localhost` / `127.0.0.1`, `config.js` detects the hostname and sets `BACKEND_URL = ''` (relative), so no cross-origin issues.
