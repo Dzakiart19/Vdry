@@ -1964,6 +1964,15 @@ body.tp-page {
   line-height: 1;
   margin-bottom: 2px;
 }
+.tp-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  margin-bottom: 3px;
+  flex-shrink: 0;
+  color: rgba(255,255,255,.9);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.5));
+}
 .tp-duration {
   font-size: .68rem;
   color: rgba(255,255,255,.6);
@@ -2064,9 +2073,14 @@ body.tp-page .nav-drawer  { z-index: 150; }
   max-width: 320px;
 }
 .tp-end-icon {
-  font-size: 2.8rem;
   line-height: 1;
   filter: drop-shadow(0 0 16px rgba(233,30,140,.5));
+}
+.tp-end-icon svg {
+  width: 48px;
+  height: 48px;
+  display: block;
+  stroke: rgba(255,255,255,.8);
 }
 .tp-end-msg {
   font-size: .88rem;

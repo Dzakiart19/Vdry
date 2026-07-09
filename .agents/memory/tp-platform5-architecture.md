@@ -5,9 +5,10 @@ description: tik.porn (Vidorey TikTok) — scraping, proxy, and client architect
 
 ## Core approach
 - Scrape `__NEXT_DATA__` dari halaman tik.porn (cheerio `$('#__NEXT_DATA__').text()`)
-- Listing → `.props.pageProps.videos.data[]`
+- **Homepage listing (home mode):** `/?page=N` → `pageProps.initialRelatedVideos.data[]` (10 video/page); `pageProps.videos.pagination.hasMore` untuk deteksi halaman berikutnya. JANGAN pakai `pageProps.videos.data[]` untuk listing — itu hanya 1 featured video per page. `/new`, `/popular`, `/trending` semua 404.
 - Search → `.props.pageProps.initialVideoResults.data[]` (bukan `.videos`)
 - Video detail → `.props.pageProps.firstVideo`; HLS URL di `firstVideo.sources[].type === 'application/x-mpegURL'`
+- Cache key home: `posts:home:{page}` (include page number — setiap page kontennya berbeda)
 
 ## CDN allowlist
 - Video: `video-cdn.tik.porn` (exact + subdomain)
