@@ -20,7 +20,8 @@
   let deepLinkId   = null;  // id numerik untuk deep-link scroll
   let targetSlideId = null; // ID slide yang user INGINKAN — untuk cancel race condition
   let isMuted      = true;  // mulai muted agar autoplay bisa jalan
-  var cachedTrends = []; // trending searches dari home mode, untuk end slide
+  var cachedTrends     = []; // trending searches dari home mode, untuk end slide
+  var totalSlidesAdded = 0;  // counter global untuk sisipkan ad slide setiap 5 video
 
   /* ── History helper: push/replace state + sinkronisasi URL ────── */
   function tpNav(push, mode, q, tag) {
@@ -317,6 +318,40 @@
     });
   }, { threshold: 0.5 });
 
+  /* ── Ad slide — full-screen slide dengan display banner 300×250 ────────
+     Disisipkan setiap 5 video. Tidak di-observe ioPlay (tidak ada video).
+     Setiap instance inject atOptions baru agar tidak konflik antar slide.
+  ── */
+  function createAdSlide() {
+    var slide = document.createElement('div');
+    slide.className = 'tp-slide tp-slide-ad';
+    slide.setAttribute('aria-hidden', 'true');
+
+    var body = document.createElement('div');
+    body.className = 'tp-ad-body';
+
+    var label = document.createElement('p');
+    label.className = 'tp-ad-label';
+    label.textContent = 'Iklan';
+
+    var adSlot = document.createElement('div');
+    adSlot.className = 'tp-ad-display';
+
+    body.appendChild(label);
+    body.appendChild(adSlot);
+    slide.appendChild(body);
+
+    /* Inject display banner (300×250) secara programatik */
+    var scOpt = document.createElement('script');
+    scOpt.textContent = "atOptions={'key':'d50b941ac6d9bd5749dcdb0b417bf348','format':'iframe','height':250,'width':300,'params':{}};";
+    adSlot.appendChild(scOpt);
+    var scInv = document.createElement('script');
+    scInv.src = 'https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js';
+    adSlot.appendChild(scInv);
+
+    return slide;
+  }
+
   /* ── "End slide" — slide penutup yang bisa di-scroll secara natural ── */
   function appendEndSlide(mode, query, trends) {
     var feed = document.getElementById('tpFeed');
@@ -345,22 +380,24 @@
         '<p class="tp-end-msg">' + msg + '</p>',
         trendsHtml,
         '<button class="tp-end-search-btn" id="tpEndSearchBtn">Atau ketik kata kunci</button>',
-        '<div class="tp-end-ad" id="tpEndAdSlot">',
-          '<div id="container-761a1a8645cd2263043bfeb6f2e87eea"></div>',
-        '</div>',
+        /* Display banner 300×250 — native banner dipakai di sticky bottom (satu instance per halaman) */
+        '<div class="tp-end-ad" id="tpEndAdSlot"></div>',
       '</div>',
     ].join('');
 
     feed.appendChild(slide);
 
-    /* Inject native banner script secara programatik agar bisa execute */
+    /* Inject display banner (300×250) secara programatik agar bisa execute.
+       Native banner tidak dipakai di sini karena sudah ada di #tpNativeAd (sticky bottom)
+       — key yang sama tidak boleh duplikat dalam satu halaman. */
     var adSlot = slide.querySelector('#tpEndAdSlot');
     if (adSlot) {
-      var sc = document.createElement('script');
-      sc.async = true;
-      sc.setAttribute('data-cfasync', 'false');
-      sc.src = 'https://pl28423230.effectivecpmnetwork.com/761a1a8645cd2263043bfeb6f2e87eea/invoke.js';
-      adSlot.insertBefore(sc, adSlot.firstChild);
+      var scOpt = document.createElement('script');
+      scOpt.textContent = "atOptions={'key':'d50b941ac6d9bd5749dcdb0b417bf348','format':'iframe','height':250,'width':300,'params':{}};";
+      adSlot.appendChild(scOpt);
+      var scInv = document.createElement('script');
+      scInv.src = 'https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js';
+      adSlot.appendChild(scInv);
     }
 
     /* Klik chip trending search → langsung search */
@@ -402,10 +439,11 @@
       ioPlay.unobserve(s);
     });
     if (lastSlide) { ioEnd.unobserve(lastSlide); }
-    feed.innerHTML = '';
-    currentPage    = 1;
-    hasMore        = true;
-    lastSlide      = null;
+    feed.innerHTML   = '';
+    currentPage      = 1;
+    hasMore          = true;
+    lastSlide        = null;
+    totalSlidesAdded = 0;
   }
 
   /* ── Muat batch video dari API ──────────────────────────────── */
@@ -445,8 +483,9 @@
         if (lastSlide) ioEnd.unobserve(lastSlide);
 
         feed.appendChild(slide);
-        ioPlay.observe(slide);
+        ioPlay.observe(slide);  // Ad slide TIDAK di-observe ioPlay — hanya video slide
         lastSlide = slide;
+        totalSlidesAdded++;
 
         /* Scroll ke slide deep-link jika ada di batch ini */
         if (deepLinkId && String(video.id) === String(deepLinkId)) {
@@ -455,9 +494,18 @@
             slide.scrollIntoView({ behavior: 'instant', block: 'start' });
           }, 50);
         }
+
+        /* Sisipkan ad slide setiap 5 video — natural seperti iklan TikTok */
+        if (totalSlidesAdded % 5 === 0) {
+          if (lastSlide) ioEnd.unobserve(lastSlide);
+          var adSlide = createAdSlide();
+          feed.appendChild(adSlide);
+          lastSlide = adSlide;
+          // Tidak di-observe ioPlay — tidak ada video. Observe ioEnd di luar loop.
+        }
       });
 
-      /* Observe lastSlide untuk trigger load berikutnya */
+      /* Observe lastSlide (video atau ad slide terakhir) untuk infinite scroll */
       if (lastSlide) ioEnd.observe(lastSlide);
 
       if (!hasMore) {

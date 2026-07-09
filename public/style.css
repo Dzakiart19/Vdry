@@ -2132,3 +2132,67 @@ body.tp-page .nav-drawer  { z-index: 150; }
   min-height: 50px;
 }
 
+/* ═══════════════════════════════════════════════
+   P5: Slot iklan tambahan
+   1. Native banner sticky bottom (#tpNativeAd)
+   2. Ad slide full-screen setiap 5 video (.tp-slide-ad)
+═══════════════════════════════════════════════ */
+
+/* ── Native banner sticky bottom ── */
+.tp-native-ad {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 130;                     /* di atas tp-feed (fixed, inset:0) */
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 4px 8px 8px;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  max-height: 130px;                /* batasi tinggi agar tidak makan terlalu banyak layar */
+  overflow: hidden;
+  box-shadow: 0 -1px 0 rgba(255,255,255,.06);
+}
+/* Sembunyikan jika belum ada konten (ad belum dimuat) */
+.tp-native-ad:empty { display: none; }
+/* Naikkan loader sedikit agar tidak tertimpa banner */
+body.tp-page .tp-loader { bottom: 140px; }
+
+/* ── Ad slide (disisipkan setiap 5 video) ── */
+.tp-slide-ad {
+  background: radial-gradient(ellipse at 50% 40%, #120a22 0%, #080810 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tp-ad-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 16px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+}
+.tp-ad-label {
+  font-size: .68rem;
+  color: rgba(255, 255, 255, .35);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin: 0;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  padding: 3px 12px;
+}
+.tp-ad-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+  width: 100%;
+}
+
