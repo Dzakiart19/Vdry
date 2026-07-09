@@ -108,7 +108,7 @@
       .join('');
 
     el.innerHTML = [
-      '<video class="tp-video" playsinline preload="none"',
+      '<video class="tp-video" playsinline muted preload="none"',
       thumbUrl ? (' poster="' + thumbUrl + '"') : '',
       '></video>',
       '<div class="tp-overlay">',
