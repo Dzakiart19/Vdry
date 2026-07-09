@@ -442,19 +442,6 @@
     });
   }
 
-  /* ── Sort buttons ───────────────────────────────────────────── */
-  document.getElementById('rcSortGroup').addEventListener('click', function (e) {
-    var btn = e.target.closest('.rc-sort-btn');
-    if (!btn) return;
-    var sort = btn.dataset.sort;
-    if (sort === currentSort) return;
-    document.querySelectorAll('.rc-sort-btn').forEach(function (b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-    currentSort = sort;
-    resetFeed();
-    loadPosts();
-  });
-
   /* ── Nav Drawer toggle ──────────────────────────────────────── */
   (function initNavDrawer() {
     var burger  = document.getElementById('rcNavBurger');
