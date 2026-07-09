@@ -20,7 +20,7 @@
   let deepLinkId   = null;  // id numerik untuk deep-link scroll
   let targetSlideId = null; // ID slide yang user INGINKAN — untuk cancel race condition
   let isMuted      = true;  // mulai muted agar autoplay bisa jalan
-  const seenIds    = new Set(); // dedup: cegah video sama tampil dua kali saat pagination
+  var cachedTrends = []; // trending searches dari home mode, untuk end slide
 
   /* ── Toast ─────────────────────────────────────────────────── */
   let toastTimer;
@@ -104,7 +104,12 @@
       : '';
 
     const userName  = video.user ? escHtml(video.user.name) : '';
-    const captionRaw = (video.caption || '').replace(/#\{\{tag:\d+\}\}/g, '').trim();
+    const captionRaw = (video.caption || '')
+      .replace(/#\{\{tag:\d+\}\}/g, '')
+      .replace(/@\{\{[a-z]+:\d+\}\}/g, '')
+      .replace(/\*\(/g, '').replace(/\)\*/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
     const caption    = escHtml(captionRaw.slice(0, 120));
     const tagsHtml   = (video.tags || []).slice(0, 4)
       .map(t => `<span class="tp-tag" data-tag="${escHtml(t.slug)}">#${escHtml(t.name)}</span>`)
@@ -295,14 +300,23 @@
   }, { threshold: 0.5 });
 
   /* ── "End slide" — slide penutup yang bisa di-scroll secara natural ── */
-  function appendEndSlide(mode, query) {
+  function appendEndSlide(mode, query, trends) {
     var feed = document.getElementById('tpFeed');
     /* Jangan duplikat jika sudah ada */
     if (feed.querySelector('.tp-slide-end')) return;
 
     var msg = (mode === 'search' && query)
-      ? 'Semua hasil untuk \u201c' + query + '\u201d sudah ditampilkan.'
-      : 'Semua video ditampilkan. Cari lebih banyak di atas.';
+      ? 'Semua hasil untuk \u201c' + escHtml(query) + '\u201d sudah ditampilkan.'
+      : 'Semua video ditampilkan. Coba kata kunci di bawah:';
+
+    /* Chip trending searches (hanya ada di home mode) */
+    var trendsHtml = '';
+    if (trends && trends.length) {
+      var chips = trends.map(function (r) {
+        return '<button class="tp-trend-chip" data-qs="' + escHtml(r.qs) + '">' + escHtml(r.term) + '</button>';
+      }).join('');
+      trendsHtml = '<div class="tp-end-trends">' + chips + '</div>';
+    }
 
     var slide = document.createElement('div');
     slide.className = 'tp-slide tp-slide-end';
@@ -311,7 +325,8 @@
       '<div class="tp-end-body">',
         '<div class="tp-end-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="17" y1="17" x2="22" y2="22"/></svg></div>',
         '<p class="tp-end-msg">' + msg + '</p>',
-        '<button class="tp-end-search-btn" id="tpEndSearchBtn">Ketik kata kunci</button>',
+        trendsHtml,
+        '<button class="tp-end-search-btn" id="tpEndSearchBtn">Atau ketik kata kunci</button>',
         '<div class="tp-end-ad" id="tpEndAdSlot">',
           '<div id="container-761a1a8645cd2263043bfeb6f2e87eea"></div>',
         '</div>',
@@ -330,6 +345,21 @@
       adSlot.insertBefore(sc, adSlot.firstChild);
     }
 
+    /* Klik chip trending search → langsung search */
+    slide.querySelectorAll('.tp-trend-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var params = new URLSearchParams(chip.dataset.qs || '');
+        var q = params.get('s') || '';
+        if (!q) return;
+        var inp = document.getElementById('tpSearchInput');
+        if (inp) inp.value = q;
+        resetFeed();
+        currentQuery = q;
+        currentTag   = '';
+        loadPosts();
+      });
+    });
+
     /* Klik tombol → fokus search input di topbar */
     var btn = slide.querySelector('#tpEndSearchBtn');
     if (btn) {
@@ -337,7 +367,6 @@
         var inp = document.getElementById('tpSearchInput');
         if (inp) { inp.focus(); inp.select(); }
         slide.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        /* scroll ke atas feed */
         setTimeout(function () {
           feed.scrollTo({ top: 0, behavior: 'smooth' });
         }, 300);
@@ -358,7 +387,6 @@
     currentPage    = 1;
     hasMore        = true;
     lastSlide      = null;
-    seenIds.clear(); // reset dedup tracker saat feed baru
   }
 
   /* ── Muat batch video dari API ──────────────────────────────── */
@@ -386,13 +414,12 @@
         return;
       }
 
-      var newSlides = 0;
-      videos.forEach(function (video) {
-        /* Skip video yang sudah pernah ditampilkan (duplikat antar pagination) */
-        var vid_id = String(video.id);
-        if (seenIds.has(vid_id)) return;
-        seenIds.add(vid_id);
+      /* Simpan trending searches dari home mode untuk end slide */
+      if (data.relatedSearches && data.relatedSearches.length) {
+        cachedTrends = data.relatedSearches;
+      }
 
+      videos.forEach(function (video) {
         var slide = buildSlide(video);
 
         /* Unobserve lastSlide dari ioEnd sebelum diganti */
@@ -401,7 +428,6 @@
         feed.appendChild(slide);
         ioPlay.observe(slide);
         lastSlide = slide;
-        newSlides++;
 
         /* Scroll ke slide deep-link jika ada di batch ini */
         if (deepLinkId && String(video.id) === String(deepLinkId)) {
@@ -416,13 +442,7 @@
       if (lastSlide) ioEnd.observe(lastSlide);
 
       if (!hasMore) {
-        appendEndSlide(mode, currentQuery);
-      } else if (newSlides === 0 && videos.length > 0) {
-        /* Seluruh batch duplikat — langsung fetch halaman berikutnya tanpa tampilkan end slide */
-        isLoading = false;
-        document.getElementById('tpLoader').classList.add('hidden');
-        loadPosts();
-        return;
+        appendEndSlide(mode, currentQuery, cachedTrends);
       }
 
     } catch (err) {
