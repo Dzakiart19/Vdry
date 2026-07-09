@@ -12,6 +12,7 @@ const path      = require('path');
 const rateLimit = require('express-rate-limit');
 
 const { trackRequest, registerMonitorRoutes } = require('./lib/monitor');
+const { resolveToken } = require('./lib/shortlink');
 const p1 = require('./lib/scrapers/p1');
 const rb = require('./lib/scrapers/rb');
 const yb = require('./lib/scrapers/yb');
@@ -136,6 +137,16 @@ registerMonitorRoutes(app, {
     yb.caches[0], yb.caches[1],                      // p3: ybM3u8Cache, ybPostsCache
     bk.caches[0], bk.caches[1], bk.caches[2],        // p4: bkPostsCache, bkVideoUrlCache, bkThumbCache
   ].map(c => c.stats()),
+});
+
+/* ── Shortlink resolver — /api/s/:platform/:token → { slug } ── */
+app.get('/api/s/:platform/:token', (req, res) => {
+  const { platform, token } = req.params;
+  if (!['rb', 'yb', 'bk'].includes(platform)) return res.status(404).json({ error: 'not found' });
+  if (!/^[a-z0-9]{11}$/.test(token)) return res.status(400).json({ error: 'invalid token' });
+  const slug = resolveToken(platform, token);
+  if (!slug) return res.status(404).json({ error: 'Link kadaluarsa atau tidak ditemukan' });
+  res.json({ slug });
 });
 
 /* ═══════════════════════════════════════

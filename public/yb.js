@@ -68,7 +68,8 @@
   };
 
   /* ── Slug video yang sedang tampil di watch view (untuk share link) ── */
-  let currentSlug = null;
+  let currentSlug  = null;
+  let currentToken = null;
 
   /* ── Player session tracking ── */
   let hlsInstance   = null;
@@ -403,7 +404,8 @@
      ybModal) — entry history-nya SUDAH ada, jangan push/replace lagi. */
   async function openPlayer(slug, opts = {}) {
     const session = ++playerSession;
-    currentSlug = slug;
+    currentSlug  = slug;
+    currentToken = null;
 
     els.videoTitle.textContent = 'Memuat…';
     els.playerLoading.classList.remove('hidden');
@@ -422,6 +424,10 @@
       const data = await apiFetch(`/api/yb/video/${encodeURIComponent(slug)}`);
       if (session !== playerSession) return;
 
+      if (data.token) {
+        currentToken = data.token;
+        history.replaceState({ ybModal: true, ybSlug: slug }, '', `/yb/watch/${data.token}`);
+      }
       els.videoTitle.textContent = data.title || slug;
       renderWatchDesc(data.description || '');
       renderRelated(data.related || []);
@@ -554,7 +560,8 @@
 
   function closeModal() {
     _doCloseModal();
-    currentSlug = null;
+    currentSlug  = null;
+    currentToken = null;
 
     if (modalHistoryPushed) {
       modalHistoryPushed = false;
@@ -570,7 +577,8 @@
     if (!els.modal.classList.contains('hidden')) {
       // User menekan Back saat modal terbuka → tutup modal saja, tetap di /yb
       modalHistoryPushed = false;
-      currentSlug = null;
+      currentSlug  = null;
+      currentToken = null;
       _doCloseModal();
       history.replaceState(s || null, '', '/yb');
       return;
@@ -603,7 +611,7 @@
   if (els.shareBtn) {
     els.shareBtn.addEventListener('click', async () => {
       if (!currentSlug) return;
-      const shareUrl   = `${location.origin}/yb/watch/${encodeSlug(currentSlug)}`;
+      const shareUrl   = `${location.origin}/yb/watch/${currentToken || encodeSlug(currentSlug)}`;
       const shareTitle = els.videoTitle.textContent || 'Vidorey';
 
       if (navigator.share) {
@@ -648,10 +656,16 @@
   // Deep-link: kalau URL-nya /yb/watch/<slug> (dari link Share), langsung
   // buka watch view video itu di atas listing yang baru saja dimuat.
   if (deepLinkMatch) {
-    const slug = decodeSlug(deepLinkMatch[1]);
-    if (slug) {
-      modalHistoryPushed = false;
-      openPlayer(slug);
+    const segment = deepLinkMatch[1];
+    if (/^[a-z0-9]{11}$/.test(segment)) {
+      // Short token (11 char) — resolve server-side
+      apiFetch(`/api/s/yb/${segment}`)
+        .then(d => { if (d?.slug) { modalHistoryPushed = false; openPlayer(d.slug); } })
+        .catch(() => {/* token expired / tidak ditemukan — abaikan deep-link */});
+    } else {
+      // Legacy: base64-encoded slug (link lama)
+      const slug = decodeSlug(segment);
+      if (slug) { modalHistoryPushed = false; openPlayer(slug); }
     }
   }
 
