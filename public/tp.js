@@ -18,6 +18,8 @@
   let activeVideo  = null;
   let lastSlide    = null;
   let deepLinkId   = null;  // id numerik untuk deep-link scroll
+  let targetSlideId = null; // ID slide yang user INGINKAN — untuk cancel race condition
+  let isMuted      = true;  // mulai muted agar autoplay bisa jalan
 
   /* ── Toast ─────────────────────────────────────────────────── */
   let toastTimer;
@@ -141,54 +143,85 @@
     return el;
   }
 
+  /* ── Mute/unmute: sinkronisasi ikon topbar ─────────────────── */
+  function applyMuteState(vid) {
+    if (!vid) return;
+    vid.muted = isMuted;
+    document.getElementById('tpIconMute').style.display   = isMuted ? '' : 'none';
+    document.getElementById('tpIconUnmute').style.display = isMuted ? 'none' : '';
+    var btn = document.getElementById('tpMuteBtn');
+    btn.setAttribute('aria-label', isMuted ? 'Aktifkan suara' : 'Matikan suara');
+    btn.setAttribute('title',      isMuted ? 'Aktifkan suara' : 'Matikan suara');
+  }
+
+  document.getElementById('tpMuteBtn').addEventListener('click', function () {
+    isMuted = !isMuted;
+    applyMuteState(activeVideo);
+  });
+
   /* ── Stop active HLS / video ──────────────────────────────── */
   function stopActive() {
     if (activeVideo) { activeVideo.pause(); activeVideo = null; }
     if (activeHls)   { activeHls.destroy(); activeHls   = null; }
   }
 
-  /* ── Load & play HLS dalam sebuah slide ─────────────────────── */
+  /* ── Mulai play pada video yang sudah siap ─────────────────── */
+  function startPlay(vid, slide, hls) {
+    stopActive();
+    activeVideo = vid;
+    activeHls   = hls || null;
+    vid.muted   = isMuted;
+    vid.play().catch(() => {});
+  }
+
+  /* ── Load & play HLS dalam sebuah slide ─────────────────────────
+     Race-condition fix: `targetSlideId` dicatat sebelum await.
+     Jika setelah await targetSlideId sudah berubah (user scroll ke
+     slide lain), request ini dibatalkan — video tidak ikut play.
+  ─────────────────────────────────────────────────────────────── */
   async function loadAndPlaySlide(slide) {
-    /* Sudah dimuat — langsung play */
+    var id = slide.dataset.id;
+
+    /* Slide sudah dimuat sebelumnya — langsung play jika masih target */
     if (slide.dataset.loaded === '1') {
-      const vid = slide.querySelector('.tp-video');
-      if (vid && activeVideo !== vid) {
-        if (activeVideo) activeVideo.pause();
-        activeVideo = vid;
-        activeHls   = slide._hlsInst || null;
-        vid.play().catch(() => {});
-      } else if (vid) {
-        vid.play().catch(() => {});
-      }
+      if (targetSlideId !== id) return;  // user sudah scroll ke slide lain
+      var vid = slide.querySelector('.tp-video');
+      if (vid) startPlay(vid, slide, slide._hlsInst || null);
       return;
     }
 
-    const id = slide.dataset.id;
+    /* Tandai sedang dimuat agar tidak double-fetch */
     slide.dataset.loaded = '1';
 
     try {
-      const data  = await apiFetch('/api/tp/video/' + id);
-      const vid   = slide.querySelector('.tp-video');
+      var data = await apiFetch('/api/tp/video/' + id);
+
+      /* Batalkan jika user sudah scroll ke slide lain selama fetch */
+      if (targetSlideId !== id) {
+        slide.dataset.loaded = '0'; // reset agar bisa di-load ulang nanti
+        return;
+      }
+
+      var vid = slide.querySelector('.tp-video');
       if (!vid) return;
 
       /* Update address bar */
-      const token = data.token;
-      history.replaceState(null, '', '/tp/video/' + (token || id));
+      history.replaceState(null, '', '/tp/video/' + (data.token || id));
 
-      stopActive();
-
-      const hlsProxyUrl = API + data.hlsUrl;
+      var hlsProxyUrl = API + data.hlsUrl;
 
       if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-        const hls = new Hls({ enableWorker: false });
+        var hls = new Hls({ enableWorker: false });
         hls.loadSource(hlsProxyUrl);
         hls.attachMedia(vid);
 
         hls.on(Hls.Events.MANIFEST_PARSED, function () {
-          vid.play().catch(() => {});
+          /* Cek lagi: mungkin user scroll saat manifest loading */
+          if (targetSlideId !== id) { hls.destroy(); return; }
+          startPlay(vid, slide, hls);
         });
 
-        let mediaErrCount = 0;
+        var mediaErrCount = 0;
         hls.on(Hls.Events.ERROR, function (_, errData) {
           if (!errData.fatal) return;
           if (errData.type === Hls.ErrorTypes.NETWORK_ERROR) {
@@ -198,19 +231,16 @@
             hls.recoverMediaError();
           } else {
             hls.destroy();
-            showToast('Gagal memutar video. Geser ke video lain.');
+            if (targetSlideId === id) showToast('Gagal memutar video. Geser ke video lain.');
           }
         });
 
         slide._hlsInst = hls;
-        activeHls  = hls;
-        activeVideo = vid;
 
       } else if (vid.canPlayType('application/vnd.apple.mpegurl')) {
         /* Native HLS — Safari / iOS */
         vid.src = hlsProxyUrl;
-        vid.play().catch(() => {});
-        activeVideo = vid;
+        startPlay(vid, slide, null);
 
       } else {
         showToast('Browser tidak mendukung format video ini.');
@@ -219,7 +249,7 @@
     } catch (err) {
       console.error('[tp] loadAndPlaySlide error:', err.message);
       slide.dataset.loaded = '0';
-      showToast('Gagal memuat video. Coba geser ke video lain.');
+      if (targetSlideId === id) showToast('Gagal memuat video. Coba geser ke video lain.');
     }
   }
 
@@ -229,19 +259,15 @@
       var slide = entry.target;
       var vid   = slide.querySelector('.tp-video');
       if (entry.intersectionRatio >= 0.75) {
-        /* Slide masuk viewport dominan */
-        if (activeVideo && vid && activeVideo !== vid) {
+        /* Slide ini sekarang dominan — set sebagai target */
+        targetSlideId = slide.dataset.id;
+        /* Pause video slide sebelumnya segera (tanpa destroy — biar bisa resume) */
+        if (activeVideo && activeVideo !== vid) {
           activeVideo.pause();
-          // destroy HLS instance slide lain jika beda
-          if (activeHls && slide._hlsInst !== activeHls) {
-            activeHls.destroy();
-            activeHls = null;
-          }
-          activeVideo = null;
         }
         loadAndPlaySlide(slide);
       } else {
-        /* Slide keluar viewport — pause saja (jangan destroy) */
+        /* Slide keluar viewport — pause saja */
         if (vid && activeVideo === vid) {
           vid.pause();
         }

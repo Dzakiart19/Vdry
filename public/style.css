@@ -1778,6 +1778,26 @@ body.tp-page {
   text-shadow: 0 1px 4px rgba(0,0,0,.6);
 }
 
+/* ── Mute/unmute button ── */
+.tp-mute-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background .15s;
+}
+.tp-mute-btn:hover { background: rgba(255,255,255,.25); }
+.tp-mute-btn svg   { width: 15px; height: 15px; pointer-events: none; }
+
 /* ── Search bar di topbar ── */
 .tp-search-form {
   display: flex;
