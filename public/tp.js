@@ -318,6 +318,8 @@
       hasMore     = !!(data.pagination && data.pagination.hasMore);
       currentPage = (data.pagination && data.pagination.page ? data.pagination.page : currentPage) + 1;
 
+      var mode = data.mode || (currentQuery ? 'search' : currentTag ? 'tag' : 'home');
+
       if (videos.length === 0 && feed.children.length === 0) {
         var endEl = document.getElementById('tpEnd');
         endEl.textContent = 'Tidak ada video ditemukan.';
@@ -348,7 +350,18 @@
       if (lastSlide) ioEnd.observe(lastSlide);
 
       if (!hasMore) {
-        document.getElementById('tpEnd').classList.remove('hidden');
+        var endEl = document.getElementById('tpEnd');
+        if (mode === 'home' || mode === 'tag') {
+          endEl.innerHTML = '🔍 Ketik kata kunci di atas untuk temukan lebih banyak video';
+        } else if (mode === 'search' && currentQuery) {
+          endEl.textContent = 'Semua hasil untuk "' + currentQuery + '" sudah ditampilkan.';
+        } else {
+          endEl.textContent = 'Semua video sudah ditampilkan.';
+        }
+        endEl.classList.remove('hidden');
+        // Klik end banner → fokus ke search input
+        endEl.style.cursor = 'pointer';
+        endEl.onclick = function () { searchInput.focus(); };
       }
 
     } catch (err) {
