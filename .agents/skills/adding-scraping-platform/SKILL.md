@@ -5,14 +5,18 @@ description: Add a new scraping platform (Platform N) to Vidorey following the P
 
 # Adding a New Scraping Platform to Vidorey
 
-Vidorey currently has **four** platforms, all completely isolated from each other:
+Vidorey currently has **six** platforms, all completely isolated from each other:
 
-| Platform | URL | Source | Delivery | Backend module | HTML | JS |
-|---|---|---|---|---|---|---|
-| Platform 1 | `/` | xpvid.cc | direct MP4 | `lib/scrapers/p1.js` | `index.html` | `app.js` |
-| Platform 2 | `/rb` | ruangbokep.ws | HLS (m3u8) | `lib/scrapers/rb.js` | `rb.html` | `rb.js` |
-| Platform 3 | `/yb` | yobokep.com | HLS (m3u8) | `lib/scrapers/yb.js` | `yb.html` | `yb.js` |
-| Platform 4 | `/bk` | bokepking.cam | direct MP4 | `lib/scrapers/bk.js` | `bk.html` | `bk.js` |
+| Platform | URL | Source | Delivery | Backend module | HTML | JS | Nama UI |
+|---|---|---|---|---|---|---|---|
+| Platform 1 | `/` | xpvid.cc | direct MP4 | `lib/scrapers/p1.js` | `index.html` | `app.js` | Vidorey 1 |
+| Platform 2 | `/rb` | ruangbokep.ws | HLS (m3u8) | `lib/scrapers/rb.js` | `rb.html` | `rb.js` | Vidorey 2 |
+| Platform 3 | `/yb` | yobokep.com | HLS (m3u8) | `lib/scrapers/yb.js` | `yb.html` | `yb.js` | Vidorey 3 |
+| Platform 4 | `/bk` | bokepking.cam | direct MP4 | `lib/scrapers/bk.js` | `bk.html` | `bk.js` | Vidorey 4 |
+| Platform 5 | `/tp` | tik.porn | HLS (m3u8) | `lib/scrapers/tp.js` | `tp.html` | `tp.js` | Vidorey TikTok 1 |
+| Platform 6 | `/rc` | api.reddclips.com | direct MP4 | `lib/scrapers/rc.js` | `rc.html` | `rc.js` | Vidorey TikTok 2 |
+
+**Nama UI tidak menyebut nama web sumber** — ini aturan eksplisit dari user.
 
 Both delivery styles are proven reference implementations — copy whichever matches
 the new source site instead of inventing a new pattern:
@@ -67,15 +71,15 @@ state, cache, or logic that leaks between platforms.
 - Add the platform to the **sidebar nav drawer** (not a dropdown — that pattern
   was removed) in every HTML file: `.nav-plat-item` entries inside
   `nav.nav-drawer` (id `navDrawer`), consistent avatar (`<img src="/logo.png">`)
-  and highlight the active platform. Update all four (soon five) HTML files
-  together so the drawer always lists every platform.
+  and highlight the active platform. Update all **six** HTML files
+  (index, rb, yb, bk, tp, rc) together so the drawer always lists every platform.
 - Add the new router to `server.js`'s mount list and to the CSP `script-src`
   domain allowlist if the new source's embeds/ads need a new external domain
   (CSP does **not** use a `https:` wildcard — every domain must be explicit).
 
 ### 2. WAJIB: Tidak boleh ada iklan dari web sumber yang muncul ke user
 Ini adalah syarat mutlak — **bukan opsional**. Semua platform yang sudah ada
-(P1–P4) bebas iklan dari web aslinya karena video diproxy sepenuhnya server-side.
+(P1–P6) bebas iklan dari web aslinya karena video diproxy sepenuhnya server-side.
 Platform baru harus mengikuti standar yang sama:
 
 - **Jangan pernah load halaman embed/iframe dari situs sumber di browser user.**
@@ -291,7 +295,7 @@ tag location — no shared/unique DOM `id` required).
 2. **server.js** — add the new platform code to the `/api/s/:platform/:token`
    route's `includes()` check:
    ```js
-   if (!['rb', 'yb', 'bk', 'pN'].includes(platform)) return res.status(404)...
+   if (!['rb', 'yb', 'bk', 'tp', 'rc', 'pN'].includes(platform)) return res.status(404)...
    ```
 
 3. **Client JS** — all the client-side token logic is covered in §6 above;

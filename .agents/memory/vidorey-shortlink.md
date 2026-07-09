@@ -19,8 +19,10 @@ res.json({ slug, title, ..., token: registerSlug('rb', slug) });
 - One cache entry per direction: `platform:slug:X` → token, `platform:token:Y` → slug.
 
 ## Server — /api/s/:platform/:token (server.js)
-Route already in `server.js` (not inside any scraper). Validates platform ∈ {rb,yb,bk} and
+Route already in `server.js` (not inside any scraper). Validates platform ∈ `{rb,yb,bk,tp,rc}` and
 token matches `/^[a-z0-9]{11}$/`, then calls `resolveToken`. Returns `{ slug }` or 404.
+
+**Catatan P5 & P6:** TP dan RC terdaftar di platform list tapi keduanya tidak aktif memanggil `registerSlug` — TP pakai ID numerik langsung di URL, RC pakai hash hex langsung (sudah URL-safe tanpa token). Route `/api/s/tp/:token` dan `/api/s/rc/:token` ada di server tapi tidak akan pernah resolve (tidak ada token yang didaftarkan). Ini tidak masalah — route tetap aman karena hanya return 404.
 No new route needed when adding a new platform — just add the platform name to the allowlist
 in that route and call `registerSlug` in the new scraper's video endpoint.
 

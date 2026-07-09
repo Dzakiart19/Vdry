@@ -26,8 +26,13 @@ description: makeCache helper, semua cache per platform + TTL, sentinel values, 
 | `bkThumbCache` | P4 | 24 jam | 2000 | Thumbnail URL per ID |
 | `tpPostsCache` | P5 | 10 mnt | 500 | Feed listing |
 | `tpVideoCache` | P5 | 24 jam | 1000 | Full video payload (token TTL ~1yr) |
+| `rcCategoriesCache` | P6 | 1 jam | 10 | Daftar kategori (sedikit entry) |
+| `rcPostsCache` | P6 | 10 mnt | 300 | Listing per categoryId+sort+cursor |
+| `rcThumbCache` | P6 | 5 mnt | 100 | Boolean flag = URL pernah sukses |
 
 **P5 tidak punya tpThumbCache** — URL thumbnail sudah ada di dalam payload `tpVideoCache` (field `thumbnailSm`/`thumbnailMd`).
+
+**P6 rcThumbCache** — tidak menyimpan binary, hanya `true` sebagai flag "URL ini valid". Fetch ulang tiap request tapi skip validasi content-type lebih awal.
 
 ## Sentinel Values
 Untuk mencegah upstream hammering saat error, semua video-level cache menyimpan sentinel:
@@ -44,6 +49,7 @@ yb.caches[0..3]                        // m3u8, posts, ybVideoCache, ybThumbCach
 // yb.caches[4] = ybFreshSessionCache  ← SENGAJA tidak dimasukkan (konvensi lama)
 bk.caches[0..2]                        // posts, videoUrl, thumb
 tp.caches[0..1]                        // posts, video
+rc.caches[0..2]                        // categories, posts, thumb
 ```
 
 ## Monitor Buffer
