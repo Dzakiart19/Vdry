@@ -2316,10 +2316,25 @@ body.rc-page {
 }
 .rc-sort-btn:hover { background: rgba(255,255,255,.22); }
 
+/* ── Display Banner 320×50 fixed bawah topbar ── */
+.rc-display-top {
+  position: fixed;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 119;
+  height: 50px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
 /* ── Category tabs bar ── */
 .rc-cats-bar {
   position: fixed;
-  top: 52px; left: 0; right: 0;
+  top: 102px; left: 0; right: 0;
   z-index: 119;
   height: 48px;
   display: flex;
@@ -2374,10 +2389,10 @@ body.rc-page {
   font-weight: 700;
 }
 
-/* ── Feed container — top: 100px (52+48) ── */
+/* ── Feed container — top: 150px (52+50+48) ── */
 .rc-feed {
   position: fixed;
-  top: 100px; left: 0; right: 0; bottom: 0;
+  top: 150px; left: 0; right: 0; bottom: 0;
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   -webkit-overflow-scrolling: touch;
@@ -2389,7 +2404,7 @@ body.rc-page {
 .rc-slide {
   position: relative;
   width: 100%;
-  height: calc(100dvh - 100px);
+  height: calc(100dvh - 150px);
   scroll-snap-align: start;
   scroll-snap-stop: always;
   display: flex;
