@@ -1180,6 +1180,33 @@ body {
   display: none;
 }
 
+.ad-leaderboard-slot {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 4px;
+  min-height: 90px;
+  overflow: hidden;
+}
+.ad-leaderboard-slot:empty { display: none; }
+
+.ad-skyscraper-slot {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 4px;
+  min-height: 300px;
+  overflow: hidden;
+}
+.ad-skyscraper-slot:empty { display: none; }
+
+.ad-mobile-banner-slot {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 12px;
+  min-height: 50px;
+  overflow: hidden;
+}
+.ad-mobile-banner-slot:empty { display: none; }
+
 /* ══════════════════════════════════════════════
    PLATFORM 2 — RUANGBOKEP (RB) STYLES
 ══════════════════════════════════════════════ */
