@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   Vidorey — Penta-Platform Video Browser
-   Composition root: security middleware + mount lima platform (terisolasi
+   Vidorey — Hexa-Platform Video Browser
+   Composition root: security middleware + mount enam platform (terisolasi
    penuh satu sama lain) + monitor/health routes + SPA fallback.
    Detail per-platform ada di lib/scrapers/{p1,rb,yb,bk,tp,rc}.js
 ═══════════════════════════════════════════════════════════════════════ */

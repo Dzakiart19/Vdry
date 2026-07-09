@@ -20,6 +20,7 @@
   var targetSlideHash   = null;
   var isMuted           = true;
   var totalSlidesAdded  = 0;
+  var deepLinkHash      = null;  // hash dari URL saat halaman dibuka (deep-link)
 
   /* ── Toast ──────────────────────────────────────────────────── */
   var toastTimer;
@@ -139,6 +140,17 @@
     ].join('');
 
     return slide;
+  }
+
+  /* ── Deep-link: scroll ke slide dengan hash tertentu setelah render ── */
+  function tryScrollToDeepLink() {
+    if (!deepLinkHash) return;
+    var feed = document.getElementById('rcFeed');
+    var target = feed.querySelector('.rc-slide[data-hash="' + deepLinkHash + '"]');
+    if (target) {
+      deepLinkHash = null; // sudah ditemukan, tidak perlu cari lagi
+      target.scrollIntoView({ behavior: 'instant' });
+    }
   }
 
   /* ── Load & play video dalam sebuah slide ───────────────────── */
@@ -344,6 +356,9 @@
       if (lastSlide) ioEnd.observe(lastSlide);
       if (!hasMore)  appendEndSlide();
 
+      /* Setelah batch pertama selesai render, coba scroll ke deep-link hash */
+      tryScrollToDeepLink();
+
     }).catch(function (err) {
       console.error('[rc] loadPosts error:', err.message);
       showToast('Gagal memuat video. Periksa koneksi internet.');
@@ -471,7 +486,14 @@
 
   /* ── Init ───────────────────────────────────────────────────── */
   (function init() {
-    /* Set initial history entry */
+    /* Baca deep-link hash dari URL sebelum direset.
+       Format deep-link: /rc/video/:hash */
+    var m = window.location.pathname.match(/^\/rc\/video\/([a-f0-9]{8,20})$/i);
+    if (m) {
+      deepLinkHash   = m[1];
+      targetSlideHash = m[1]; /* Langsung set agar IntersectionObserver langsung play saat muncul */
+    }
+    /* Normalize URL ke /rc (hilangkan path detail, preserve state di deepLinkHash) */
     try { history.replaceState(null, '', '/rc'); } catch (_) {}
     /* Load categories terlebih dahulu, baru load posts */
     loadCategories().then(function () { loadPosts(); });
