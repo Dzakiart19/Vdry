@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════
    Vidorey Smartlinks — maksimal exposure
-   4 trigger: first click, video card click, timer 5s, exit intent
+   5 trigger: first click, video card click, platform nav click,
+              timer 5s, exit intent
    Rotate 3 links secara bergantian
 ═══════════════════════════════════════════════════ */
 (function () {
@@ -38,7 +39,13 @@
     if (e.target.closest(CARD_SEL)) tryFire();
   });
 
-  /* ── 3. Timer — buka tab baru setelah 5 detik ── */
+  /* ── 3. Klik platform di nav drawer ── */
+  document.addEventListener('click', function (e) {
+    if (!(e.target instanceof Element)) return;
+    if (e.target.closest('.nav-plat-item')) tryFire();
+  });
+
+  /* ── 4. Timer — buka tab baru setelah 5 detik ── */
   setTimeout(tryFire, 5000);
 
   /* ── 4. Exit intent ── */
