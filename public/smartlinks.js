@@ -14,7 +14,7 @@
     'https://www.effectivecpmnetwork.com/z6ec2ixj7?key=bafa7c785c7d84482705d8749d9b28de'
   ];
 
-  var CARD_SEL = '.video-card, .rb-card, .folder-card, .tp-slide';
+  var CARD_SEL = '.video-card, .rb-card, .folder-card, .tp-slide, .rc-slide';
 
   var idx = 0;
   var lastFireMs = 0;

@@ -2,7 +2,7 @@
    Vidorey — Penta-Platform Video Browser
    Composition root: security middleware + mount lima platform (terisolasi
    penuh satu sama lain) + monitor/health routes + SPA fallback.
-   Detail per-platform ada di lib/scrapers/{p1,rb,yb,bk,tp}.js
+   Detail per-platform ada di lib/scrapers/{p1,rb,yb,bk,tp,rc}.js
 ═══════════════════════════════════════════════════════════════════════ */
 
 const express   = require('express');
@@ -18,6 +18,7 @@ const rb = require('./lib/scrapers/rb');
 const yb = require('./lib/scrapers/yb');
 const bk = require('./lib/scrapers/bk');
 const tp = require('./lib/scrapers/tp');
+const rc = require('./lib/scrapers/rc');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -125,12 +126,13 @@ const proxyLimiter = rateLimit({
 app.use('/api', apiLimiter);
 app.use('/proxy', proxyLimiter);
 
-/* ── Lima platform, terisolasi penuh — tidak ada path yang overlap ── */
+/* ── Enam platform, terisolasi penuh — tidak ada path yang overlap ── */
 app.use(p1.router);
 app.use(rb.router);
 app.use(yb.router);
 app.use(bk.router);
 app.use(tp.router);
+app.use(rc.router);
 
 /* ── Monitor & health — cache stats digabung read-only dari semua platform.
    Urutan & daftar persis meniru server.js lama (ybFreshSessionCache sengaja
@@ -142,13 +144,14 @@ registerMonitorRoutes(app, {
     yb.caches[0], yb.caches[1], yb.caches[2], yb.caches[3], // p3: ybM3u8Cache, ybPostsCache, ybVideoCache, ybThumbCache
     bk.caches[0], bk.caches[1], bk.caches[2],               // p4: bkPostsCache, bkVideoUrlCache, bkThumbCache
     tp.caches[0], tp.caches[1],                              // p5: tpPostsCache, tpVideoCache
+    rc.caches[0], rc.caches[1], rc.caches[2],               // p6: rcCategoriesCache, rcPostsCache, rcThumbCache
   ].map(c => c.stats()),
 });
 
 /* ── Shortlink resolver — /api/s/:platform/:token → { slug } ── */
 app.get('/api/s/:platform/:token', (req, res) => {
   const { platform, token } = req.params;
-  if (!['rb', 'yb', 'bk', 'tp'].includes(platform)) return res.status(404).json({ error: 'not found' });
+  if (!['rb', 'yb', 'bk', 'tp', 'rc'].includes(platform)) return res.status(404).json({ error: 'not found' });
   if (!/^[a-z0-9]{11}$/.test(token)) return res.status(400).json({ error: 'invalid token' });
   const slug = resolveToken(platform, token);
   if (!slug) return res.status(404).json({ error: 'Link kadaluarsa atau tidak ditemukan' });

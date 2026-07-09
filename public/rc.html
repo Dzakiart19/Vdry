@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vidorey TikTok</title>
+  <title>Vidorey Reddit</title>
   <link rel="icon" href="/logo.png" type="image/png">
   <link rel="stylesheet" href="/style.css">
   <meta name="theme-color" content="#121212">
 </head>
-<body class="tp-page">
+<body class="rc-page">
 
 <!-- ── Nav Overlay ── -->
 <div class="nav-overlay" id="navOverlay"></div>
@@ -62,94 +62,79 @@
   <hr class="nav-section-divider">
   <div class="nav-drawer-label">Fitur Lain</div>
 
-  <a class="nav-plat-item active" href="/tp" aria-current="page">
+  <a class="nav-plat-item" href="/tp">
     <div class="ps-avatar ps-avatar-tp"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey TikTok</span>
       <span class="ps-desc">Short video · scroll vertikal</span>
     </div>
-    <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <polyline points="20 6 9 17 4 12"/>
-    </svg>
   </a>
 
-  <a class="nav-plat-item" href="/rc">
+  <a class="nav-plat-item active" href="/rc" aria-current="page">
     <div class="ps-avatar ps-avatar-rc"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey Reddit</span>
       <span class="ps-desc">Reddit clips · per kategori</span>
     </div>
+    <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
   </a>
 </nav>
 
-<!-- ── TP Topbar (fixed, di dalam feed) ── -->
-<header class="tp-topbar">
-  <button id="tpNavBurger" class="nav-burger" aria-label="Menu" aria-expanded="false">
+<!-- ── RC Topbar ── -->
+<header class="rc-topbar">
+  <button id="rcNavBurger" class="nav-burger" aria-label="Menu" aria-expanded="false">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
       <line x1="3" y1="6"  x2="21" y2="6"/>
       <line x1="3" y1="12" x2="21" y2="12"/>
       <line x1="3" y1="18" x2="21" y2="18"/>
     </svg>
   </button>
-  <span class="tp-topbar-title">Vidorey TikTok</span>
-  <button id="tpMuteBtn" class="tp-mute-btn" aria-label="Aktifkan suara" title="Aktifkan suara">
-    <svg id="tpIconMute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+  <span class="rc-topbar-title">Vidorey Reddit</span>
+
+  <!-- Sort selector -->
+  <div class="rc-sort-group" id="rcSortGroup" role="group" aria-label="Urutkan">
+    <button class="rc-sort-btn active" data-sort="hot"           title="Terpopuler">🔥</button>
+    <button class="rc-sort-btn"        data-sort="new"           title="Terbaru">✨</button>
+    <button class="rc-sort-btn"        data-sort="top"           title="Teratas">🏆</button>
+    <button class="rc-sort-btn"        data-sort="rising"        title="Naik daun">📈</button>
+  </div>
+
+  <!-- Mute toggle -->
+  <button id="rcMuteBtn" class="tp-mute-btn" aria-label="Aktifkan suara" title="Aktifkan suara">
+    <svg id="rcIconMute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
       <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
     </svg>
-    <svg id="tpIconUnmute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:none">
+    <svg id="rcIconUnmute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:none">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
     </svg>
   </button>
-  <form id="tpSearchForm" class="tp-search-form" role="search">
-    <input
-      id="tpSearchInput"
-      class="tp-search-input"
-      type="search"
-      placeholder="Cari video…"
-      autocomplete="off"
-      maxlength="200"
-    >
-    <button type="submit" class="tp-search-btn" aria-label="Cari">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-        <circle cx="11" cy="11" r="7"/>
-        <line x1="17" y1="17" x2="22" y2="22"/>
-      </svg>
-    </button>
-  </form>
 </header>
 
-<!-- ── Display Banner fixed — bawah topbar, 320×50, terlihat user ── -->
-<div id="tpDisplayTop" class="tp-display-top">
-  <script>
-    atOptions = {
-      'key' : 'd37e31d713d11b2ddde7d3efca199c9d',
-      'format' : 'iframe',
-      'height' : 50,
-      'width' : 320,
-      'params' : {}
-    };
-  </script>
-  <script src="https://www.highperformanceformat.com/d37e31d713d11b2ddde7d3efca199c9d/invoke.js"></script>
+<!-- ── Category tabs bar ── -->
+<div class="rc-cats-bar" id="rcCatsBar" role="tablist" aria-label="Kategori">
+  <!-- tabs di-render oleh rc.js -->
+  <div class="rc-cats-loading">Memuat kategori…</div>
 </div>
 
 <!-- ── Feed ── -->
-<main id="tpFeed" class="tp-feed"></main>
+<main id="rcFeed" class="rc-feed"></main>
 
 <!-- ── Loader indicator ── -->
-<div id="tpLoader" class="tp-loader hidden">
-  <div class="tp-spinner"></div>
+<div id="rcLoader" class="rc-loader hidden">
+  <div class="rc-spinner"></div>
   <span>Memuat video…</span>
 </div>
 
 <!-- ── Toast notification ── -->
-<div id="tpToast" class="tp-toast hidden"></div>
+<div id="rcToast" class="rc-toast hidden"></div>
 
 <!-- ── Scripts ── -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
 <script src="/config.js"></script>
-<script src="/tp.js"></script>
+<script src="/rc.js"></script>
 
 <!-- ── Adsterra: Popunder ── -->
 <script src="https://pl28418540.effectivecpmnetwork.com/e2/23/51/e223516a3660ad6a4214cb47e436c599.js"></script>
@@ -157,8 +142,7 @@
 <script src="https://pl28427857.effectivecpmnetwork.com/96/e9/ff/96e9ff95727320b49c1ea1aa80add9b6.js"></script>
 
 <!-- ── Adsterra: Native banner sticky bottom ── -->
-<!-- Hanya satu instance key ini per halaman — end slide pakai display banner agar tidak konflik -->
-<div id="tpNativeAd" class="tp-native-ad">
+<div id="rcNativeAd" class="rc-native-ad">
   <script async="async" data-cfasync="false" src="https://pl28423230.effectivecpmnetwork.com/761a1a8645cd2263043bfeb6f2e87eea/invoke.js"></script>
 </div>
 

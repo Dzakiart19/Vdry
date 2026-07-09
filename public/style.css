@@ -2247,3 +2247,418 @@ body.tp-page .tp-loader { bottom: 140px; }
   width: 100%;
 }
 
+/* ══════════════════════════════════════════════
+   PLATFORM 6 — VIDOREY REDDIT (RC)
+   body.rc-page + .rc-feed vertical scroll-snap
+   Category tabs scrollable horizontal di bawah topbar.
+══════════════════════════════════════════════ */
+
+body.rc-page {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+/* ── RC Topbar ── */
+.rc-topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 120;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px 0 4px;
+  background: linear-gradient(to bottom, rgba(0,0,0,.85) 0%, rgba(0,0,0,.6) 100%);
+  pointer-events: none;
+}
+.rc-topbar > * { pointer-events: auto; }
+
+.rc-topbar-title {
+  font-size: .9rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: .01em;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 4px rgba(0,0,0,.6);
+}
+
+/* ── Sort pills ── */
+.rc-sort-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.rc-sort-btn {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  color: #fff;
+  font-size: .78rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.rc-sort-btn.active {
+  background: rgba(255,80,0,.55);
+  border-color: rgba(255,80,0,.7);
+}
+.rc-sort-btn:hover { background: rgba(255,255,255,.22); }
+
+/* ── Category tabs bar ── */
+.rc-cats-bar {
+  position: fixed;
+  top: 52px; left: 0; right: 0;
+  z-index: 119;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  white-space: nowrap;
+  pointer-events: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.rc-cats-bar::-webkit-scrollbar { display: none; }
+
+.rc-cats-loading {
+  font-size: .78rem;
+  color: rgba(255,255,255,.4);
+  white-space: nowrap;
+}
+
+/* ── Category tab pills ── */
+.rc-cat-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.16);
+  color: rgba(255,255,255,.8);
+  font-size: .76rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.rc-cat-tab:hover {
+  background: rgba(255,80,0,.25);
+  color: #fff;
+  border-color: rgba(255,80,0,.4);
+}
+.rc-cat-tab.active {
+  background: rgba(255,80,0,.5);
+  border-color: rgba(255,80,0,.75);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ── Feed container — top: 100px (52+48) ── */
+.rc-feed {
+  position: fixed;
+  top: 100px; left: 0; right: 0; bottom: 0;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.rc-feed::-webkit-scrollbar { display: none; }
+
+/* ── Individual slide ── */
+.rc-slide {
+  position: relative;
+  width: 100%;
+  height: calc(100dvh - 100px);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* ── Video element ── */
+.rc-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+
+/* ── Overlay meta info ── */
+.rc-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 60px 14px 24px;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,.72) 0%,
+    rgba(0,0,0,.15) 45%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+.rc-overlay > * { pointer-events: auto; }
+
+.rc-meta-left {
+  flex: 1;
+  min-width: 0;
+  padding-right: 12px;
+}
+
+.rc-subreddit {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #ff6633;
+  text-shadow: 0 1px 3px rgba(0,0,0,.7);
+  margin-bottom: 5px;
+  background: rgba(0,0,0,.4);
+  border-radius: 10px;
+  padding: 2px 8px;
+  border: 1px solid rgba(255,80,0,.3);
+}
+
+.rc-title {
+  font-size: .79rem;
+  color: rgba(255,255,255,.92);
+  line-height: 1.4;
+  margin: 0;
+  text-shadow: 0 1px 3px rgba(0,0,0,.6);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.rc-meta-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+  padding-bottom: 4px;
+}
+
+.rc-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: .68rem;
+  color: rgba(255,255,255,.85);
+  text-shadow: 0 1px 3px rgba(0,0,0,.6);
+  line-height: 1.3;
+  white-space: nowrap;
+  gap: 3px;
+}
+
+.rc-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex-shrink: 0;
+  color: rgba(255,255,255,.9);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.5));
+}
+
+/* ── Loader ── */
+.rc-loader {
+  position: fixed;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,.7);
+  font-size: .78rem;
+  z-index: 130;
+  background: rgba(0,0,0,.55);
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.rc-loader.hidden { display: none; }
+
+.rc-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.25);
+  border-top-color: #ff5500;
+  border-radius: 50%;
+  animation: rc-spin .7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes rc-spin { to { transform: rotate(360deg); } }
+
+/* ── Toast notification ── */
+.rc-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20,14,10,.92);
+  color: #fff;
+  font-size: .78rem;
+  padding: 9px 18px;
+  border-radius: 20px;
+  z-index: 200;
+  max-width: min(320px, 90vw);
+  text-align: center;
+  border: 1px solid rgba(255,80,0,.2);
+  box-shadow: 0 4px 20px rgba(0,0,0,.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: tp-fadein .2s ease;
+}
+.rc-toast.hidden { display: none; }
+
+/* ── Nav drawer above rc-feed ── */
+body.rc-page .nav-overlay { z-index: 149; }
+body.rc-page .nav-drawer  { z-index: 150; }
+
+/* ── Nav burger positioned above cats bar ── */
+body.rc-page .rc-loader { bottom: 140px; }
+
+/* ── End slide ── */
+.rc-slide-end {
+  background: radial-gradient(ellipse at center, #1a0800 0%, #0a0805 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.rc-end-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 320px;
+}
+.rc-end-icon {
+  line-height: 1;
+  filter: drop-shadow(0 0 16px rgba(255,85,0,.4));
+}
+.rc-end-icon svg {
+  width: 44px; height: 44px;
+  display: block;
+  stroke: rgba(255,255,255,.7);
+}
+.rc-end-msg {
+  font-size: .88rem;
+  color: rgba(255,255,255,.7);
+  line-height: 1.5;
+  margin: 0;
+}
+.rc-end-back-btn {
+  background: linear-gradient(135deg, #ff4500, #ff7733);
+  border: none;
+  border-radius: 22px;
+  color: #fff;
+  font-size: .88rem;
+  font-weight: 700;
+  padding: 11px 28px;
+  cursor: pointer;
+  letter-spacing: .03em;
+  box-shadow: 0 4px 18px rgba(255,69,0,.4);
+  transition: opacity .15s, transform .1s;
+}
+.rc-end-back-btn:hover  { opacity: .9; }
+.rc-end-back-btn:active { transform: scale(.96); }
+.rc-end-ad {
+  margin-top: 8px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  min-height: 50px;
+}
+
+/* ── Native banner sticky bottom (same pattern as TP) ── */
+.rc-native-ad {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 130;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 4px 8px 8px;
+  background: rgba(0,0,0,.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  max-height: 130px;
+  overflow: hidden;
+  box-shadow: 0 -1px 0 rgba(255,255,255,.06);
+}
+.rc-native-ad:empty { display: none; }
+
+/* ── Ad slide (setiap 5 video) ── */
+.rc-slide-ad {
+  background: radial-gradient(ellipse at 50% 40%, #150500 0%, #080608 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rc-ad-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 16px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+}
+.rc-ad-label {
+  font-size: .68rem;
+  color: rgba(255,255,255,.35);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin: 0;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  padding: 3px 12px;
+}
+.rc-ad-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+  width: 100%;
+}
+
+/* ── ps-avatar-rc ── */
+.ps-avatar-rc {
+  background: linear-gradient(135deg, #ff4500, #ff7733);
+}
+
