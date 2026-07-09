@@ -7,11 +7,18 @@ description: ruangbokep.ws proxy via HLS — video resolution, PackerJS, caching
 
 ## Video Resolution Flow
 1. GET `/api/rb/posts` → scrape HTML listing (`article.loop-video[data-main-thumb]`) untuk thumbnail + slug + title; pagination dari `.pagination ul li a`
-2. GET `/api/rb/video/:slug` → scrape ruangbokep.ws/{slug}/ untuk putarvid iframe embed URL
-3. `resolveRbVideoUrl(embedUrl)` → GET putarvid.com embed page → `unpackPacker()` → extract `.m3u8` URL
-4. `m3u8Cache` stores resolved URL (TTL 5 min, max 500)
-5. Returns `/proxy/rb/hls/{slug}` — browser tidak pernah touch CDN langsung
-6. Fallback: jika m3u8 extraction gagal, return embedUrl HANYA jika hostname = `putarvid.com` (strict allowlist)
+2. GET `/api/rb/video/:slug`:
+   - **Cache check first**: `rbVideoCache` (TTL 30 min, max 300) — hit returns <1ms with fresh token
+   - Scrape ruangbokep.ws/{slug}/ untuk putarvid iframe embed URL
+   - **m3u8Cache fast-path**: jika `m3u8Cache` punya URL valid untuk slug ini, skip putarvid fetch
+   - `resolveRbVideoUrl(embedUrl)` → GET putarvid.com embed page → `unpackPacker()` → extract `.m3u8` URL
+   - Cache successful response di `rbVideoCache` (tanpa token — token selalu fresh dari registerSlug)
+   - Error sentinels cached singkat (404 → 60s, 502 → 20s) mencegah upstream hammering
+3. `m3u8Cache` stores resolved URL (TTL 5 min, max 500)
+4. Returns `/proxy/rb/hls/{slug}` — browser tidak pernah touch CDN langsung
+5. Fallback: jika m3u8 extraction gagal, return embedUrl HANYA jika hostname = `putarvid.com` (strict allowlist)
+
+**WHY rbVideoCache:** P2 butuh 2 network requests (ruangbokep.ws + putarvid.com) vs P4 yang hanya 1. Client timeout 15s bisa terjadi sebelum token di-set. Cache memastikan respons warm (<1ms) → token selalu ada.
 
 ## HLS Proxy Chain
 - `/proxy/rb/hls/:slug` → fetch master.m3u8 → `rewriteM3u8()` rewrite semua URL ke `/proxy/rb/seg?url=&_s={slug}`

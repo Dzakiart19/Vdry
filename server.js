@@ -133,7 +133,7 @@ app.use(bk.router);
 registerMonitorRoutes(app, {
   getCacheStats: () => [
     p1.caches[0],                                   // p1: videoUrlCache
-    rb.caches[0], rb.caches[1], rb.caches[2],        // p2: m3u8Cache, postsCache, freshSessionCache
+    rb.caches[0], rb.caches[1], rb.caches[2], rb.caches[3], // p2: m3u8Cache, postsCache, freshSessionCache, rbVideoCache
     yb.caches[0], yb.caches[1],                      // p3: ybM3u8Cache, ybPostsCache
     bk.caches[0], bk.caches[1], bk.caches[2],        // p4: bkPostsCache, bkVideoUrlCache, bkThumbCache
   ].map(c => c.stats()),
