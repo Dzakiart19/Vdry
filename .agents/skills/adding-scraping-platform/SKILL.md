@@ -73,7 +73,29 @@ state, cache, or logic that leaks between platforms.
   domain allowlist if the new source's embeds/ads need a new external domain
   (CSP does **not** use a `https:` wildcard — every domain must be explicit).
 
-### 2. Resolve the real media URL server-side only
+### 2. WAJIB: Tidak boleh ada iklan dari web sumber yang muncul ke user
+Ini adalah syarat mutlak — **bukan opsional**. Semua platform yang sudah ada
+(P1–P4) bebas iklan dari web aslinya karena video diproxy sepenuhnya server-side.
+Platform baru harus mengikuti standar yang sama:
+
+- **Jangan pernah load halaman embed/iframe dari situs sumber di browser user.**
+  Halaman embed (putarvid, filemoon, dood, dsb.) membawa script iklan milik
+  mereka — kalau diload di browser user, iklan itu ikut muncul.
+- **Jangan kirim URL embed ke frontend.** Resolve embed → raw stream (MP4/m3u8)
+  di server, kirim hanya stream URL yang sudah dibersihkan.
+- **Jika situs sumber menggunakan chain embed bertingkat** (situs → player
+  aggregator → embed host → CDN), seluruh chain harus di-resolve server-side
+  sampai didapat URL MP4/m3u8 langsung yang bisa diproxy. Jika salah satu
+  lapisan chain memblokir server request dan tidak bisa di-resolve tanpa browser
+  (contoh: React SPA tanpa API terbuka, atau CDN yang IP-block server), platform
+  tersebut **tidak feasible** dan tidak boleh diimplementasikan — daripada
+  terpaksa fallback ke iframe embed yang membawa iklan dari sumber.
+- **Cara cek feasibility sebelum mulai build:** curl setiap lapisan chain dari
+  server (bukan dari browser). Jika ada lapisan yang return 403, SPA kosong
+  (< 2 KB HTML tanpa konten), atau butuh JS-rendering untuk dapat stream URL →
+  platform tidak layak diimplementasikan saat ini.
+
+### 3. Resolve the real media URL server-side only
 - Scrape/resolve the actual CDN URL (MP4 or m3u8) inside an Express route
   handler using `cheerio`/`axios` — never send this URL to the browser.
 - Cache the resolved URL with `makeCache(maxSize, ttlMs)`, TTL matched to how

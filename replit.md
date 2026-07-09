@@ -189,3 +189,4 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 - Bahasa Indonesia untuk UI
 - Setiap platform harus terisolasi penuh — tidak boleh ada data/logic yang bocor antar platform
 - Tidak ada nama sumber asli (xpvid.cc, ruangbokep.ws, yobokep.com) yang ditampilkan ke user di frontend
+- **Platform baru wajib bebas iklan dari web sumber** — video harus di-resolve ke MP4/m3u8 langsung dan diproxy server-side; tidak boleh ada iframe/embed dari situs sumber yang di-load di browser user. Jika chain embed tidak bisa di-resolve server-side (provider IP-block server, atau SPA tanpa API terbuka), platform tersebut tidak boleh diimplementasikan.

@@ -10,3 +10,4 @@
 - [Vidorey Nav Drawer](vidorey-nav-drawer.md) — platform switcher adalah sidebar drawer (hamburger ≡), bukan dropdown; ID lama platformSwitcher/psTrigger/psMenu sudah dihapus dari semua HTML.
 - [RB Watch View + Related + Share](rb-watch-view-related.md) — watch URL sekarang 11-char token (bukan slug); encodeSlug/decodeSlug + currentToken flow; deep-link dual-path (token vs legacy base64); openModal() idempotent + popstate 3-branch.
 - [Vidorey Shortlink](vidorey-shortlink.md) — lib/shortlink.js token registry; registerSlug(platform,slug)→11char; /api/s/:platform/:token di server.js; full client encodeSlug/decodeSlug + currentToken flow.
+- [No Source Ads Rule](no-source-ads.md) — platform baru wajib proxy MP4/m3u8 langsung; tidak boleh ada iframe/embed sumber di browser; jika chain tidak bisa di-resolve server-side → not feasible.
