@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Disallow: /monitor
+Disallow: /health
+
+Sitemap: https://vidorey.web.app/sitemap.xml
