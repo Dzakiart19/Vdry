@@ -639,6 +639,48 @@ body {
 }
 .btn-retry:hover { background: var(--surface3); color: var(--text); border-color: var(--rose); }
 
+/* Error state — extended */
+.error-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+.error-body {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 320px;
+  line-height: 1.6;
+  margin: 0;
+}
+.error-hint {
+  font-size: 12px;
+  color: var(--muted);
+  opacity: 0.7;
+  max-width: 300px;
+  margin: 0;
+}
+.error-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 4px;
+}
+.btn-switch-platform {
+  padding: 8px 20px;
+  background: var(--rose);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: 13px;
+  font-family: var(--font);
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.btn-switch-platform:hover { opacity: 0.85; }
+
 /* ════════════════════════════════════
    PAGINATION
 ════════════════════════════════════ */

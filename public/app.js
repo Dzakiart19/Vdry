@@ -163,7 +163,7 @@ const App = (() => {
       scheduleRefresh();
     } catch (err) {
       retryFn = () => loadFolder(id, page);
-      el.errorMsg.textContent = 'Gagal memuat folder. Periksa koneksi internet.';
+      el.errorMsg.textContent = 'Server sedang mengalami gangguan. Tim kami sedang menangani masalah ini secepat mungkin.';
       showState('error');
     }
   }

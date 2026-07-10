@@ -153,12 +153,17 @@
     <div id="errorState" class="state-view hidden">
       <div class="state-icon error-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4M12 16h.01"/>
         </svg>
       </div>
-      <p id="errorMsg">Terjadi kesalahan.</p>
-      <button class="btn-retry" onclick="App.retry()">Coba lagi</button>
+      <h3 class="error-title">Layanan Sementara Tidak Tersedia</h3>
+      <p id="errorMsg" class="error-body">Server sedang mengalami gangguan. Tim kami sedang menangani masalah ini secepat mungkin.</p>
+      <p class="error-hint">Sementara itu, Anda dapat beralih ke platform lain yang tersedia.</p>
+      <div class="error-actions">
+        <button class="btn-retry" onclick="App.retry()">Coba Lagi</button>
+        <button class="btn-switch-platform" onclick="document.getElementById('navBurger').click()">Platform Lain →</button>
+      </div>
     </div>
 
     <div id="emptyState" class="state-view hidden">
