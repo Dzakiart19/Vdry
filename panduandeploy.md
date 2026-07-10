@@ -64,6 +64,8 @@ public/
   config.js      ← BACKEND_URL config
   style.css
   smartlinks.js
+  robots.txt     ← SEO: allow/disallow rules + sitemap reference
+  sitemap.xml    ← SEO: 6 platform URLs, changefreq daily
   ...
 ```
 

@@ -151,6 +151,42 @@ TikTok-style vertical scroll-snap (`rc-feed` position:fixed, `body.rc-page { ove
 - Video: `api.reddclips.com`
 - Thumbnail: `external-preview.redd.it`, `preview.redd.it`, `i.redd.it`
 
+## SEO
+
+### Strategi
+Semua halaman menggunakan **keyword bahasa Inggris** (bukan Indonesia) agar Google mengirim traffic dari Tier 1 (US/UK/EU — CPM $2–5) bukan hanya Indonesia (CPM $0.05–0.3).
+
+### Meta tags — template wajib tiap halaman
+```html
+<html lang="en">
+<title>Vidorey N - [English keyword title]</title>
+<meta name="description" content="[English description with adult keywords]" />
+<meta name="keywords" content="free porn, xxx videos, sex videos, ..." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://vidorey.web.app/pN" />
+<meta name="theme-color" content="#121212" />
+<meta property="og:locale" content="en_US" />       ← bukan id_ID
+<meta name="twitter:card" content="summary_large_image" />
+```
+
+### File SEO statis (public/)
+| File | Fungsi |
+|---|---|
+| `robots.txt` | Allow semua kecuali `/monitor` dan `/health` |
+| `sitemap.xml` | 6 URL platform, `changefreq: daily` |
+
+Setiap platform baru wajib ditambahkan ke `sitemap.xml`.
+
+### Meta tags per platform (saat ini)
+| Platform | Title keyword |
+|---|---|
+| index.html | "Free XXX Videos & Porn Movies \| Watch HD Sex Online" |
+| rb.html | "Free Porn Videos \| New XXX Movies Updated Daily" |
+| yb.html | "XXX Videos \| Free Premium Adult Streaming Online" |
+| bk.html | "Free HD Sex Videos \| Adult Porn Streaming" |
+| tp.html | "Free Short Porn Clips \| Scroll XXX Videos" |
+| rc.html | "Free XXX Short Clips \| Adult Video Feed" |
+
 ## Deployment
 - **Replit (backend + dev frontend)**: server jalan di port 5000
 - **Firebase (production frontend)**: `vidorey.web.app` — host file statis dari `public/`

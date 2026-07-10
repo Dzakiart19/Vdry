@@ -159,6 +159,7 @@ Pilih warna yang berbeda dari platform lain (lihat existing untuk referensi).
 Copy dari platform terdekat (bk.html untuk listing biasa, rc.html untuk TikTok-style).
 
 #### 4a. Wajib ada di setiap HTML platform baru:
+- `<html lang="en">` — wajib English agar Google index untuk Tier 1 traffic
 - `<body class="pN-page">` — class scoping CSS
 - Topbar dengan `<img src="/logo.png">` + title "Vidorey N" (TIDAK menyebut nama web sumber)
 - Nav drawer lengkap — **semua platform existing + platform baru** (lihat 4b)
@@ -166,6 +167,28 @@ Copy dari platform terdekat (bk.html untuk listing biasa, rc.html untuk TikTok-s
 - `<script src="/config.js">` — wajib ada sebelum JS platform
 - `<script src="/smartlinks.js">` — wajib ada, di dalam `</body>`
 - `<script src="/pN.js">` — JS platform sendiri
+
+#### 4a-SEO. Meta tags SEO wajib (copy template ini):
+```html
+<title>Vidorey N - [English adult keyword title]</title>
+<meta name="description" content="[English description, adult keywords, no registration angle]" />
+<meta name="keywords" content="free porn, xxx videos, [platform-specific keywords]" />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://vidorey.web.app/pN" />
+<meta name="theme-color" content="#121212" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Vidorey" />
+<meta property="og:title" content="[shorter version of title]" />
+<meta property="og:description" content="[same as description]" />
+<meta property="og:url" content="https://vidorey.web.app/pN" />
+<meta property="og:image" content="https://vidorey.web.app/logo.png" />
+<meta property="og:locale" content="en_US" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="[same as og:title]" />
+<meta name="twitter:description" content="[same as og:description]" />
+<meta name="twitter:image" content="https://vidorey.web.app/logo.png" />
+```
+**Jangan gunakan `lang="id"` atau `og:locale="id_ID"`** — itu membatasi traffic ke Indonesia (CPM rendah).
 
 #### 4b. Nav drawer — update SEMUA HTML files
 Nav drawer di `pN.html` harus list semua platform existing + platform baru.
@@ -290,6 +313,16 @@ Script popunder + social bar sudah ada di semua platform — copy langsung dari 
 ### STEP 10 — Update dokumentasi
 
 Setelah platform selesai, update semua file dokumentasi ini:
+
+#### sitemap.xml
+Tambah `<url>` baru ke `public/sitemap.xml`:
+```xml
+<url>
+  <loc>https://vidorey.web.app/pN</loc>
+  <changefreq>daily</changefreq>
+  <priority>0.8</priority>
+</url>
+```
 
 #### replit.md
 - Tabel platform: tambah baris Platform N
