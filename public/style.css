@@ -2719,3 +2719,16 @@ body.rc-page .rc-loader { bottom: 140px; }
   background: linear-gradient(135deg, #ff4500, #ff7733);
 }
 
+/* ── SEO: visually hidden H1 ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
