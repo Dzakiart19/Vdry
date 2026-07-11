@@ -43,10 +43,35 @@ Semua halaman pakai keyword bahasa **Inggris** agar Google indexing mengirim tra
 | `public/robots.txt` | `Allow: /`, `Disallow: /monitor`, `Disallow: /health`, `Sitemap:` link |
 | `public/sitemap.xml` | 6 URL platform, `changefreq: daily`, priority 1.0 (index) / 0.9–0.8 (platform) |
 
+## Favicon
+`<link rel="icon" type="image/png" href="/logo.png" />` — wajib di semua HTML. tp.html & rc.html sempat ketinggalan, sudah ditambah.
+
+## Schema.org (Structured Data)
+- `index.html` → `WebSite` schema + `SearchAction` potentialAction
+- Semua platform lain → `WebPage` schema + `isPartOf` ke WebSite utama
+- Format: `<script type="application/ld+json">` tepat sebelum `</head>`
+- Platform baru wajib tambah WebPage schema dengan url, name, description, isPartOf
+
+## Google Analytics / GTM
+- GTM container: `GTM-NWZSVQT9` — dipasang di semua 6 HTML (head + noscript body)
+- GA4 Measurement ID: `G-6MB6SQTZWK` — dikonfigurasi via GTM tag "Google Tag", trigger "Initialization - All Pages"
+- CSP server.js sudah include `https://www.googletagmanager.com` di scriptSrc
+
+## Google Search Console
+- Properti: `https://vidorey.web.app` — terverifikasi via file HTML `public/googlef064cc99be6a7884.html`
+- Meta verification tag: `Vl8CnSoQmgdUxFfXGw4k7nzAPRZBgImHr2OrBPnmaAI` — di semua 6 HTML
+- Sitemap terdaftar, homepage sudah terindex. Jangan hapus file verifikasi.
+
+## Bing Webmaster Tools
+- Belum didaftarkan. Perlu buka `bing.com/webmasters` → tambah site → pilih verifikasi via meta tag atau file XML
+- File verifikasi Bing: `public/BingSiteAuth.xml` — isi dari dashboard Bing Webmaster
+
 ## How to apply — platform baru
 1. Tambah meta tags sesuai template di atas ke `pN.html` (lang="en", keywords Inggris, og:locale=en_US)
-2. Tambah `<url>` baru ke `sitemap.xml`
-3. Tidak perlu ubah `robots.txt` (sudah allow semua path kecuali /monitor dan /health)
+2. Tambah favicon `<link rel="icon" type="image/png" href="/logo.png" />`
+3. Tambah WebPage schema (application/ld+json) dengan url + isPartOf
+4. Tambah `<url>` baru ke `sitemap.xml`
+5. Tidak perlu ubah `robots.txt` (sudah allow semua path kecuali /monitor dan /health)
 
 ## Keyword tiers untuk adult site (prioritas)
 - **High-value (Tier 1 intent):** "free porn", "xxx videos", "porn movies", "HD sex", "adult streaming"
@@ -57,3 +82,4 @@ Semua halaman pakai keyword bahasa **Inggris** agar Google indexing mengirim tra
 - Google indexing butuh 2–4 minggu setelah perubahan meta tags untuk kelihatan hasilnya
 - Perubahan dari `id_ID` → `en_US` kemungkinan besar paling berdampak pada distribusi traffic negara
 - `summary_large_image` untuk Twitter card memberikan preview lebih besar → CTR share link lebih tinggi
+- Sitemap "Tidak dapat mengambil" di GSC = cache GSC, bukan error nyata — resolve sendiri dalam 24 jam
