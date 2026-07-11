@@ -56,6 +56,8 @@ app.use(helmet({
         // Adsterra / profitableratecpm (Platform 5 tp.html)
         'https://pl26548697.profitableratecpm.com',
         'https://pl26548687.profitableratecpm.com',
+        // ExoClick
+        'https://a.pemsrv.com',
       ],
       styleSrc:  ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       imgSrc:    ["'self'", 'data:', 'https:'],
