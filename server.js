@@ -44,6 +44,8 @@ app.use(helmet({
       defaultSrc:     ["'self'"],
       scriptSrc: [
         "'self'", "'unsafe-inline'",
+        // Google Tag Manager
+        'https://www.googletagmanager.com',
         // hls.js (rb.html + yb.html)
         'https://cdn.jsdelivr.net',
         // Adsterra ad network
