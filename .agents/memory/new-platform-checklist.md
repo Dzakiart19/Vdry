@@ -85,17 +85,32 @@ Ikuti urutan ini dari atas ke bawah. Tandai selesai sebelum lanjut ke item berik
   <link rel="stylesheet" href="/style.css" />
   <link rel="icon" type="image/png" href="/logo.png" />
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "Vidorey [N] - [title]",
-    "url": "https://vidorey.web.app/pN",
-    "description": "[same as meta description]",
-    "isPartOf": { "@type": "WebSite", "url": "https://vidorey.web.app/" }
-  }
+  [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Vidorey",
+      "url": "https://vidorey.web.app/",
+      "description": "Watch free XXX videos and porn movies online. Thousands of HD sex videos updated daily. No registration needed.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://vidorey.web.app/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Vidorey [N] - [title]",
+      "url": "https://vidorey.web.app/pN",
+      "description": "[same as meta description]",
+      "isPartOf": { "@type": "WebSite", "url": "https://vidorey.web.app/" }
+    }
+  ]
   </script>
 </head>
 ```
+**WAJIB array `[WebSite, WebPage]`** — bukan hanya WebPage saja. Semua 6 halaman existing sudah pakai format ini.
 
 ### 3f. Body — GTM noscript (TEPAT SETELAH `<body ...>`)
 ```html

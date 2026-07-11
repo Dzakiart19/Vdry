@@ -47,10 +47,11 @@ Semua halaman pakai keyword bahasa **Inggris** agar Google indexing mengirim tra
 `<link rel="icon" type="image/png" href="/logo.png" />` — wajib di semua HTML. tp.html & rc.html sempat ketinggalan, sudah ditambah.
 
 ## Schema.org (Structured Data)
-- `index.html` → `WebSite` schema + `SearchAction` potentialAction
-- Semua platform lain → `WebPage` schema + `isPartOf` ke WebSite utama
-- Format: `<script type="application/ld+json">` tepat sebelum `</head>`
-- Platform baru wajib tambah WebPage schema dengan url, name, description, isPartOf
+- **Semua 6 halaman** → JSON-LD array `[WebSite, WebPage]` — keduanya selalu ada bersamaan
+- `WebSite` schema: name, url, description, potentialAction (SearchAction ke `/?q={search_term_string}`)
+- `WebPage` schema: name, url, description, isPartOf → WebSite utama
+- Format: `<script type="application/ld+json">[ {...WebSite}, {...WebPage} ]</script>` tepat sebelum `</head>`
+- Platform baru wajib pakai format array ini — jangan hanya WebPage saja
 
 ## Google Analytics / GTM
 - GTM container: `GTM-NWZSVQT9` — dipasang di semua 6 HTML (head + noscript body)
