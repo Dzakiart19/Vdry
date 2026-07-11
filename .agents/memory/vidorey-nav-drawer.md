@@ -75,3 +75,7 @@ Semua `.ps-avatar` pakai **`<img src="/logo.png" alt="Vidorey">`** — logo Vido
 
 ## How to Apply
 Saat menambah platform baru: update SEMUA 6 HTML files (index, rb, yb, bk, tp, rc). Gunakan burger ID yang sesuai dengan topbar masing-masing (custom topbar → ID custom). Nama platform di UI tidak boleh menyebut nama web sumber.
+
+Tambah juga avatar CSS class `.ps-avatar-pN` di `style.css` dengan gradient background unik.
+
+**Full checklist:** lihat `new-platform-checklist.md` Fase 5 untuk format HTML nav entry yang tepat.

@@ -63,15 +63,27 @@ Semua halaman pakai keyword bahasa **Inggris** agar Google indexing mengirim tra
 - Sitemap terdaftar, homepage sudah terindex. Jangan hapus file verifikasi.
 
 ## Bing Webmaster Tools
-- Belum didaftarkan. Perlu buka `bing.com/webmasters` → tambah site → pilih verifikasi via meta tag atau file XML
-- File verifikasi Bing: `public/BingSiteAuth.xml` — isi dari dashboard Bing Webmaster
+- **Sudah terdaftar** — diimpor langsung dari Google Search Console (12 Jul 2026)
+- Properti: `https://vidorey.web.app/` — verified via GSC import, tidak perlu file verifikasi terpisah
+- `public/BingSiteAuth.xml` ada di repo tapi kosong (placeholder) — tidak dipakai karena pakai GSC import
+
+## H1 Tag (SEO — wajib tiap platform)
+Setiap halaman wajib punya tag `<h1>` di dalam `<main>`. Gunakan CSS `.sr-only` agar tidak mengganggu desain.
+```html
+<h1 class="sr-only">[Main English keyword phrase for this platform]</h1>
+```
+`.sr-only` sudah ada di `style.css` — tidak perlu tambah ulang. Tanpa H1, Bing menandai "H1 tag missing" dan menurunkan ranking.
 
 ## How to apply — platform baru
-1. Tambah meta tags sesuai template di atas ke `pN.html` (lang="en", keywords Inggris, og:locale=en_US)
-2. Tambah favicon `<link rel="icon" type="image/png" href="/logo.png" />`
-3. Tambah WebPage schema (application/ld+json) dengan url + isPartOf
-4. Tambah `<url>` baru ke `sitemap.xml`
-5. Tidak perlu ubah `robots.txt` (sudah allow semua path kecuali /monitor dan /health)
+Lihat `new-platform-checklist.md` untuk checklist 7 fase lengkap. Ringkasan:
+1. Meta tags template di atas (lang="en", og:locale=en_US, canonical, keywords)
+2. GTM snippet head + noscript body (GTM-NWZSVQT9)
+3. Google site-verification meta tag (Vl8CnSoQmgdUxFfXGw4k7nzAPRZBgImHr2OrBPnmaAI)
+4. Favicon `<link rel="icon" type="image/png" href="/logo.png" />`
+5. WebPage schema JSON-LD dengan url + isPartOf
+6. H1 `.sr-only` di dalam `<main>`
+7. Tambah `<url>` ke `sitemap.xml`
+8. Tidak perlu ubah `robots.txt`
 
 ## Keyword tiers untuk adult site (prioritas)
 - **High-value (Tier 1 intent):** "free porn", "xxx videos", "porn movies", "HD sex", "adult streaming"
