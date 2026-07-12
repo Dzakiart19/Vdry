@@ -1,5 +1,17 @@
 # Panduan Deploy Vidorey ke Firebase
 
+## Arsitektur
+
+```
+Browser → Firebase Hosting (frontend statis: HTML/JS/CSS)
+              ↓ semua request /api/* dan /proxy/*
+          Backend server (Koyeb ATAU Replit)
+```
+
+Firebase hanya serve file statis. Semua logika scraping & proxy tetap di server Node.js.
+
+---
+
 ## Prasyarat (sekali saja)
 
 ```bash
@@ -12,17 +24,26 @@ firebase login --no-localhost
 
 ## Langkah Deploy Frontend (Firebase Hosting)
 
-### 1. Pastikan Secret `REPLIT_BACKEND_URL` sudah diset
+### 1. Pastikan Secret backend URL sudah diset
 
-Buka **Secrets** di Replit (ikon kunci 🔑) dan pastikan secret ini ada:
+Buka **Secrets** di Replit (ikon kunci 🔑) dan set **salah satu** secret berikut sesuai backend yang dipakai:
+
+**Jika backend di Koyeb (rekomendasi):**
+
+| Key | Value |
+|---|---|
+| `KOYEB_BACKEND_URL` | URL Koyeb app, contoh: `https://vidorey-myorg.koyeb.app` |
+
+**Jika backend di Replit:**
 
 | Key | Value |
 |---|---|
 | `REPLIT_BACKEND_URL` | URL Replit backend aktif, contoh: `https://vidorey--lturner686.replit.app` |
 
-> **Penting:** Jangan edit `public/config.js` manual — file itu menyimpan placeholder `__REPLIT_BACKEND_URL__` di repo. `deploy.sh` akan otomatis inject URL dari secret ini saat deploy, lalu restore placeholder setelah selesai.
+> **Prioritas:** `deploy.sh` cek `KOYEB_BACKEND_URL` dulu, baru `REPLIT_BACKEND_URL`.
+> Cukup set salah satu — tidak perlu set keduanya.
 >
-> Jika URL Replit berubah (setelah rename project), cukup update secret `REPLIT_BACKEND_URL` — tidak perlu edit file apapun.
+> **Penting:** Jangan edit `public/config.js` manual — file itu menyimpan placeholder. `deploy.sh` otomatis inject URL dari secret ini saat deploy, lalu restore placeholder setelah selesai.
 
 ### 2. Deploy ke Firebase Hosting
 
@@ -32,16 +53,21 @@ bash deploy.sh
 ```
 
 Script `deploy.sh` akan:
-1. Baca URL dari secret `REPLIT_BACKEND_URL`
+1. Baca URL dari secret `KOYEB_BACKEND_URL` (atau `REPLIT_BACKEND_URL`)
 2. Inject URL ke `config.js` sementara
 3. Deploy ke Firebase Hosting (`vidorey.web.app`)
 4. Restore `config.js` ke placeholder otomatis
 
-### 3. Deploy Replit Backend (jika ada perubahan server.js)
+### 3. Deploy Backend (jika ada perubahan server.js)
 
-Replit backend di-deploy terpisah lewat Replit UI:
+Backend di-deploy terpisah sesuai platform yang dipakai:
+
+**Jika backend di Koyeb:**
+- Push ke GitHub → Koyeb otomatis redeploy (git-driven)
+- Atau manual: `koyeb services redeploy vidorey/web`
+
+**Jika backend di Replit:**
 - Buka Replit project → klik **Deploy** / **Publish**
-- Backend URL: `https://vidorey--lturner686.replit.app`
 
 ---
 
@@ -71,6 +97,6 @@ public/
 
 ## Catatan Penting
 
-- `/monitor`, `/monitor/events`, `/health/detail` → **hanya ada di Replit backend**, tidak di Firebase
-- Firebase hanya serve file statis — semua `/api/*` dan `/proxy/*` request harus ke Replit backend
-- Saat testing dari `vidorey--lturner686.replit.app`, `config.js` otomatis override `BACKEND_URL` ke `''` (relatif) berdasarkan deteksi hostname `.replit.app` / `.replit.dev` / `localhost`
+- `/monitor`, `/monitor/events`, `/health/detail` → **hanya ada di backend** (Koyeb/Replit), tidak di Firebase
+- Firebase hanya serve file statis — semua `/api/*` dan `/proxy/*` request harus ke backend server
+- Saat testing dari Replit preview atau Koyeb langsung, `config.js` otomatis set `BACKEND_URL = ''` (relatif) berdasarkan deteksi hostname `.replit.app`, `.replit.dev`, `.koyeb.app`, atau `localhost`
