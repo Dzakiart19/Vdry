@@ -21,6 +21,7 @@
   var isMuted           = true;
   var totalSlidesAdded  = 0;
   var deepLinkHash      = null;  // hash dari URL saat halaman dibuka (deep-link)
+  var vastShown         = false; // VAST preroll ditampilkan sekali per sesi
 
   /* ── Toast ──────────────────────────────────────────────────── */
   var toastTimer;
@@ -168,6 +169,12 @@
     }
 
     activeVideo = vid;
+
+    if (!vastShown && typeof vastPreroll === 'function') {
+      vastShown = true;
+      vastPreroll(() => { vid.play().catch(() => {}); });
+      return;
+    }
 
     var playPromise = vid.play();
     if (playPromise && typeof playPromise.catch === 'function') {
