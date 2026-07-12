@@ -59,6 +59,7 @@ app.use(helmet({
         // ExoClick
         'https://a.pemsrv.com',
         'https://a.magsrv.com',
+        'https://s.magsrv.com',
       ],
       styleSrc:  ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       imgSrc:    ["'self'", 'data:', 'https:'],
