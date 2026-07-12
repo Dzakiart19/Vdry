@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Node modules (akan di-install fresh saat build)
+node_modules
+
+# Dev & deploy scripts
+.firebase
+firebase.json
+.firebaserc
+deploy.sh
+deploy-koyeb.sh
+
+# Docs
+README.md
+panduandeploy.md
+panduan-koyeb.md
+
+# Replit-specific
+.replit
+.cache
+.local
+.agents
+attached_assets
+skills-lock.json
+
+# Env files
+.env
+.env.*
+
+# Backup files
+*.bak

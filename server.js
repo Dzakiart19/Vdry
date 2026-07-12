@@ -92,6 +92,7 @@ app.use(cors({
       (hostname === 'localhost')                                        ||
       (hostname.endsWith('.replit.dev')  && proto === 'https:')        ||
       (hostname.endsWith('.replit.app')  && proto === 'https:')        ||
+      (hostname.endsWith('.koyeb.app')   && proto === 'https:')        ||
       origin === 'https://vidorey.web.app'                             ||
       origin === 'https://vidorey.firebaseapp.com'
     );
