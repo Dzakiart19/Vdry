@@ -37,10 +37,16 @@ Ini cara termudah: Koyeb langsung pull dari repo GitHub dan auto-build menggunak
 
 5. **Konfigurasi service:**
    - **Branch:** `main`
-   - **Builder:** `Dockerfile` (otomatis terdeteksi)
+   - **Builder:** ⚠️ **Pilih `Dockerfile`** — jangan biarkan auto-detect (Koyeb kadang salah pilih Buildpack)
    - **Instance type:** `Free` (0.25 vCPU / 1 GB RAM — gratis!)
    - **Region:** Frankfurt (EU), Washington DC (US), atau Singapore (Asia)
    - **Port:** `8000` → HTTP
+
+   > **Penting soal Builder:** Koyeb punya dua opsi builder:
+   > - ✅ **Dockerfile** — pakai `Dockerfile` di root repo (ini yang benar untuk project ini)
+   > - ❌ **Buildpack** — pakai Heroku buildpack, sering gagal dengan error `npm ci` / exit code 51
+   >
+   > Pastikan kamu **klik dan pilih "Dockerfile"** di bagian Builder, jangan biarkan default.
 
 6. **Set Environment Variables** (tab "Environment variables"):
 
