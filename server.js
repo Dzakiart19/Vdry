@@ -10,6 +10,7 @@ const helmet    = require('helmet');
 const cors      = require('cors');
 const path      = require('path');
 const rateLimit = require('express-rate-limit');
+const axios     = require('axios');
 
 const { trackRequest, registerMonitorRoutes } = require('./lib/monitor');
 const { resolveToken } = require('./lib/shortlink');
@@ -64,7 +65,7 @@ app.use(helmet({
       styleSrc:  ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       imgSrc:    ["'self'", 'data:', 'https:'],
       fontSrc:   ["'self'", 'https://fonts.gstatic.com', 'data:'],
-      mediaSrc:       ["'self'", 'blob:'],
+      mediaSrc:       ["'self'", 'blob:', 'https:'],
       connectSrc:     ["'self'"],
       frameSrc:       ['https:'],
       objectSrc:      ["'none'"],
@@ -152,6 +153,24 @@ registerMonitorRoutes(app, {
     tp.caches[0], tp.caches[1],                              // p5: tpPostsCache, tpVideoCache
     rc.caches[0], rc.caches[1], rc.caches[2],               // p6: rcCategoriesCache, rcPostsCache, rcThumbCache
   ].map(c => c.stats()),
+});
+
+/* ── ExoClick VAST proxy — /api/vast?zone=XXXXXXX → XML ── */
+app.get('/api/vast', async (req, res) => {
+  const zone = String(req.query.zone || '5972318').replace(/\D/g, '');
+  if (!['5972318', '5972326'].includes(zone)) return res.status(400).send('');
+  try {
+    const r = await axios.get(`https://s.magsrv.com/v1/vast.php?idz=${zone}`, {
+      timeout: 5000,
+      headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36' },
+      responseType: 'text',
+    });
+    res.set('Content-Type', 'text/xml; charset=utf-8');
+    res.set('Cache-Control', 'no-store');
+    res.send(r.data);
+  } catch (e) {
+    res.status(502).send('');
+  }
 });
 
 /* ── Shortlink resolver — /api/s/:platform/:token → { slug } ── */

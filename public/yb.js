@@ -465,7 +465,11 @@
     const onReady = () => {
       if (session !== playerSession) return;
       els.playerLoading.classList.add('hidden');
-      video.play().catch(() => {});
+      if (typeof vastPreroll === 'function') {
+        vastPreroll(() => { if (session === playerSession) video.play().catch(() => {}); });
+      } else {
+        video.play().catch(() => {});
+      }
     };
 
     const onFatalError = () => {
