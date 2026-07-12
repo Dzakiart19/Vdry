@@ -58,6 +58,7 @@ app.use(helmet({
         'https://pl26548687.profitableratecpm.com',
         // ExoClick
         'https://a.pemsrv.com',
+        'https://a.magsrv.com',
       ],
       styleSrc:  ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       imgSrc:    ["'self'", 'data:', 'https:'],
