@@ -43,4 +43,4 @@ build = ["npm", "install", "--production"]
 
 [userenv.shared]
 SESSION_SECRET = "Namakamusiapa123"
-REPLIT_BACKEND_URL = "https://darkblue-extroverted-amoebas--dzeckns7kkkns.replit.app"
+REPLIT_BACKEND_URL = "https://vdry--dzeckuhasju69.replit.app"
