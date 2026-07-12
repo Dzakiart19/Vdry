@@ -7,10 +7,10 @@ WORKDIR /app
 
 # Copy package files dulu (layer caching — npm install hanya re-run jika
 # package.json / package-lock.json berubah)
-COPY package.json package-lock.json ./
+COPY package.json ./
 
-# Install production dependencies saja (tidak perlu devDependencies)
-RUN npm ci --omit=dev
+# Install production dependencies
+RUN npm install --omit=dev
 
 # Copy seluruh source code
 COPY . .
