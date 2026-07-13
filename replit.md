@@ -39,11 +39,11 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 | Platform 4 | `/bk` | bokepking.cam | `bk.html` | `bk.js` | Vidorey 4 |
 | Platform 5 | `/tp` | tik.porn | `tp.html` | `tp.js` | Vidorey TikTok 1 |
 | Platform 6 | `/rc` | api.reddclips.com | `rc.html` | `rc.js` | Vidorey TikTok 2 |
-| Platform 7 | `/sb` | situsbokep.cc | `sb.html` | `sb.js` | Vidorey 7 |
+| Platform 7 | `/sb` | situsbokep.cc | `sb.html` | `sb.js` | Vidorey 5 |
 
 **Nama UI tidak menyebut nama web sumber** — user hanya melihat "Vidorey 1", "Vidorey 2", dst.
 
-Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan dua seksi terpisah: **seksi atas** (listing biasa: Vidorey 1–4 + Vidorey 7) dan **seksi bawah "Fitur Lain"** (khusus TikTok-style: Vidorey TikTok 1–2). Highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
+Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan dua seksi terpisah: **seksi atas** (listing biasa: Vidorey 1–5) dan **seksi bawah "Fitur Lain"** (khusus TikTok-style: Vidorey TikTok 1–2). Highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
 
 ## Iklan (Adsterra)
 Tiga jenis slot iklan dipakai, semuanya identik di `index.html`/`rb.html`/`yb.html`/`bk.html`/`sb.html`/`tp.html`/`rc.html`:

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════
-   Vidorey 7 — Platform 7 (situsbokep.cc)
+   Vidorey 5 — Platform 7 (situsbokep.cc)
    WP HTML listing · HLS stream via xvideos CDN
    (bukan MP4 langsung — pakai hls.js seperti rb.js/yb.js)
 ═══════════════════════════════════════ */
