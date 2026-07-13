@@ -5,57 +5,66 @@ description: Add a new scraping platform (Platform N) to Vidorey following the P
 
 # Adding a New Scraping Platform to Vidorey
 
-Vidorey currently has **six** platforms, all completely isolated from each other:
+Vidorey currently has **seven** platforms, all completely isolated from each other:
 
-| Platform | URL | Source | Delivery | Backend module | HTML | JS | Nama UI |
-|---|---|---|---|---|---|---|---|
-| Platform 1 | `/` | xpvid.cc | direct MP4 | `lib/scrapers/p1.js` | `index.html` | `app.js` | Vidorey 1 |
-| Platform 2 | `/rb` | ruangbokep.ws | HLS (m3u8) | `lib/scrapers/rb.js` | `rb.html` | `rb.js` | Vidorey 2 |
-| Platform 3 | `/yb` | yobokep.com | HLS (m3u8) | `lib/scrapers/yb.js` | `yb.html` | `yb.js` | Vidorey 3 |
-| Platform 4 | `/bk` | bokepking.cam | direct MP4 | `lib/scrapers/bk.js` | `bk.html` | `bk.js` | Vidorey 4 |
-| Platform 5 | `/tp` | tik.porn | HLS (m3u8) | `lib/scrapers/tp.js` | `tp.html` | `tp.js` | Vidorey TikTok 1 |
-| Platform 6 | `/rc` | api.reddclips.com | direct MP4 | `lib/scrapers/rc.js` | `rc.html` | `rc.js` | Vidorey TikTok 2 |
+| Platform | URL | Source | Delivery | Backend module | HTML | JS | Nama UI | Tipe UI |
+|---|---|---|---|---|---|---|---|---|
+| Platform 1 | `/` | xpvid.cc | direct MP4 | `lib/scrapers/p1.js` | `index.html` | `app.js` | Vidorey 1 | Listing |
+| Platform 2 | `/rb` | ruangbokep.ws | HLS (m3u8) | `lib/scrapers/rb.js` | `rb.html` | `rb.js` | Vidorey 2 | Listing |
+| Platform 3 | `/yb` | yobokep.com | HLS (m3u8) | `lib/scrapers/yb.js` | `yb.html` | `yb.js` | Vidorey 3 | Listing |
+| Platform 4 | `/bk` | bokepking.cam | direct MP4 | `lib/scrapers/bk.js` | `bk.html` | `bk.js` | Vidorey 4 | Listing |
+| Platform 5 | `/tp` | tik.porn | HLS (m3u8) | `lib/scrapers/tp.js` | `tp.html` | `tp.js` | Vidorey TikTok 1 | TikTok-style |
+| Platform 6 | `/rc` | api.reddclips.com | direct MP4 | `lib/scrapers/rc.js` | `rc.html` | `rc.js` | Vidorey TikTok 2 | TikTok-style |
+| Platform 7 | `/sb` | situsbokep.cc | HLS (m3u8) | `lib/scrapers/sb.js` | `sb.html` | `sb.js` | Vidorey 7 | Listing |
 
 **Nama UI tidak menyebut nama web sumber** — ini aturan eksplisit dari user.
 
-Both delivery styles are proven reference implementations — copy whichever matches
-the new source site instead of inventing a new pattern:
-- **Direct MP4 sites** → copy Platform 4 (`lib/scrapers/bk.js` + `public/bk.html`/`bk.js`): simplest,
-  no manifest rewriting needed.
-- **HLS/m3u8 sites** → copy Platform 2 or 3 (`rb.js`/`yb.js`): manifest + segment
-  proxy with self-healing CDN tokens.
-- **TikTok-style feed (direct MP4)** → copy Platform 6 (`lib/scrapers/rc.js` + `public/rc.html`/`rc.js`).
-- **TikTok-style feed (HLS)** → copy Platform 5 (`lib/scrapers/tp.js` + `public/tp.html`/`tp.js`).
+## Tipe UI dan referensi implementasi
 
-`server.js` is a thin composition root — it only wires Helmet/CSP, CORS, rate
-limiting, mounts each platform's router, the shortlink resolver route, and serves
-the SPA fallback. Shared, stateless helpers live in:
+- **Listing biasa** (grid/card + pagination + search bar) → copy Platform 4 (`bk.js` + `bk.html`/`bk.js`) untuk MP4, atau Platform 2/7 (`rb.js`/`sb.js`) untuk HLS.
+- **TikTok-style feed (direct MP4)** → copy Platform 6 (`rc.js` + `rc.html`/`rc.js`).
+- **TikTok-style feed (HLS)** → copy Platform 5 (`tp.js` + `tp.html`/`tp.js`).
+
+`server.js` is a thin composition root — it only wires Helmet/CSP, CORS, rate limiting, mounts each platform's router, the shortlink resolver route, and serves the SPA fallback. Shared, stateless helpers live in:
 - `lib/cache.js` — `makeCache()` factory
 - `lib/proxy.js` — UA string, `apiError()`, axios instances, `resolveUrl()`, `basenameNoQuery()`
 - `lib/shortlink.js` — `registerSlug(platform, slug)` → 11-char token; `resolveToken(platform, token)` → slug
 
-These are the **only** files a new platform module may import from. Never import
-one scraper module from another.
+These are the **only** files a new platform module may import from. Never import one scraper module from another.
+
+---
+
+## NAV DRAWER — ATURAN PENEMPATAN (KRITIS)
+
+Nav drawer dibagi dua seksi yang tidak boleh dicampur:
+
+### Seksi Atas (tidak ada label)
+Platform **listing biasa** (grid/card + pagination + search bar). Ditempatkan **SEBELUM** `<hr class="nav-section-divider">`.
+
+Urutan saat ini: P1 → P2 → P3 → P4 → P7 → *platform listing baru di sini*
+
+### Pemisah
+```html
+<hr class="nav-section-divider">
+<div class="nav-drawer-label">Fitur Lain</div>
+```
+
+### Seksi Bawah — "Fitur Lain"
+Platform **TikTok-style** (vertical scroll-snap, tidak ada grid/card). Ditempatkan **SETELAH** label "Fitur Lain".
+
+Urutan saat ini: P5 (TikTok 1) → P6 (TikTok 2) → *platform TikTok baru di sini*
+
+**⚠️ Bug yang sudah terjadi:** Platform 7 (SB, listing biasa) awalnya ditempatkan di seksi "Fitur Lain" → user complaint. Pelajaran: **listing platform TIDAK BOLEH masuk "Fitur Lain"**. "Fitur Lain" hanya untuk TikTok-style.
 
 ---
 
 ## Why isolation + the retry/proxy pattern is the standard
 
-The root cause of "stream expired" bugs is **exposing a CDN's raw, time-limited
-signed URL/token directly to the browser** and/or **giving up immediately on the
-first transient error** instead of retrying. The reference platforms avoid both:
+The root cause of "stream expired" bugs is **exposing a CDN's raw, time-limited signed URL/token directly to the browser** and/or **giving up immediately on the first transient error** instead of retrying. The reference platforms avoid both:
 
-1. The browser NEVER sees the real CDN URL — it always requests
-   `/proxy/pN/stream/:slug` (direct file) or `/proxy/pN/hls|seg` (HLS) from our
-   own backend. The backend resolves the real URL server-side and streams the
-   bytes through itself.
-2. If the CDN rejects the cached URL (403/404 — token expired), the backend
-   evicts the cache entry, re-resolves a fresh URL from the source site, and
-   retries **once** automatically before failing. The user never sees an error
-   for a routine token refresh.
-3. Any proxy that talks to a flaky third-party CDN wraps the request in a retry
-   helper (2–3 attempts, exponential backoff) that only retries on network
-   errors (ECONNRESET/timeout), never on real HTTP 4xx from the CDN.
+1. The browser NEVER sees the real CDN URL — it always requests `/proxy/pN/stream/:slug` (direct file) or `/proxy/pN/hls|seg` (HLS) from our own backend. The backend resolves the real URL server-side and streams the bytes through itself.
+2. If the CDN rejects the cached URL (403/404 — token expired), the backend evicts the cache entry, re-resolves a fresh URL from the source site, and retries **once** automatically before failing. The user never sees an error for a routine token refresh.
+3. Any proxy that talks to a flaky third-party CDN wraps the request in a retry helper (2–3 attempts, exponential backoff) that only retries on network errors (ECONNRESET/timeout), never on real HTTP 4xx from the CDN.
 
 ---
 
@@ -78,17 +87,26 @@ Buat `lib/scrapers/pN.js` yang export `{ router, caches }`.
 ```js
 // Template dasar:
 const express = require('express');
+const path    = require('path');
 const { makeCache } = require('../cache');
 const { apiError } = require('../proxy');
 
 const router = express.Router();
+const PUBLIC_DIR = path.join(__dirname, '..', '..', 'public');
+
 const pNPostsCache = makeCache(200, 10 * 60 * 1000, 'pNPostsCache');
 const pNVideoCache = makeCache(500, 4 * 60 * 60 * 1000, 'pNVideoCache');
 
-// ... routes ...
+// ... API routes ...
+
+/* ── SPA routes — WAJIB, tanpa ini klik nav drawer → Platform 1 ── */
+router.get('/pN',   (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'pN.html')));
+router.get('/pN/*', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'pN.html')));
 
 module.exports = { router, caches: [pNPostsCache, pNVideoCache] };
 ```
+
+⚠️ **SPA routes WAJIB ada di scraper ini** — bukan di server.js. Tanpa `router.get('/pN', ...)` dan `router.get('/pN/*', ...)`, semua URL `/pN` dan `/pN/watch/<token>` jatuh ke SPA fallback di server.js yang serve `index.html` (Platform 1). Bug ini sudah terjadi pada Platform 7 (SB) pertama kali.
 
 ---
 
@@ -105,7 +123,7 @@ app.use(pN.router);
 ```js
 const allCaches = [
   ...p1.caches, ...rb.caches, ...yb.caches,
-  ...bk.caches, ...tp.caches, ...rc.caches,
+  ...bk.caches, ...tp.caches, ...rc.caches, ...sb.caches,
   ...pN.caches,   // ← TAMBAH INI
 ];
 ```
@@ -124,7 +142,7 @@ CSP **tidak pakai wildcard `https:`** — setiap domain harus eksplisit.
 #### 2d. Shortlink platform list — tambah 'pN'
 ```js
 // Di route /api/s/:platform/:token:
-if (!['rb', 'yb', 'bk', 'tp', 'rc', 'pN'].includes(platform))
+if (!['rb', 'yb', 'bk', 'tp', 'rc', 'sb', 'pN'].includes(platform))
   return res.status(404).json({ error: 'not found' });
 ```
 
@@ -145,7 +163,7 @@ else if (p.startsWith('/api/pN/posts'))     pushMonitorEvent('pN_posts', { ip, u
 ```
 
 #### 3b. Monitor badge CSS — tambah warna badge di monitorDashboardHtml
-Cari blok CSS badge (`.b-rb_video`, `.b-bk_video`, dsb) di `monitorDashboardHtml`. Tambah:
+Cari blok CSS badge (`.b-rb_video`, `.b-bk_video`, `.b-sb_video`, dsb) di `monitorDashboardHtml`. Tambah:
 ```css
 .b-pN_video{background:#WARNA_BG;color:#WARNA_TEXT}
 .b-pN_posts{background:#WARNA_BG;color:#WARNA_TEXT}
@@ -156,7 +174,7 @@ Pilih warna yang berbeda dari platform lain (lihat existing untuk referensi).
 
 ### STEP 4 — public/pN.html
 
-Copy dari platform terdekat (bk.html untuk listing biasa, rc.html untuk TikTok-style).
+Copy dari platform terdekat (bk.html/sb.html untuk listing biasa, rc.html untuk TikTok-style).
 
 #### 4a. Wajib ada di setiap HTML platform baru:
 - `<html lang="en">` — wajib English agar Google index untuk Tier 1 traffic
@@ -190,9 +208,9 @@ Copy dari platform terdekat (bk.html untuk listing biasa, rc.html untuk TikTok-s
 ```
 **Jangan gunakan `lang="id"` atau `og:locale="id_ID"`** — itu membatasi traffic ke Indonesia (CPM rendah).
 
-#### 4b. Nav drawer — update SEMUA HTML files
-Nav drawer di `pN.html` harus list semua platform existing + platform baru.
-Selain itu, **SEMUA HTML files lain** (index, rb, yb, bk, tp, rc, dll) harus di-update untuk menambah entry platform baru.
+#### 4b. Nav drawer — ATURAN PENEMPATAN WAJIB
+
+Update **SEMUA 7 HTML files** (index, rb, yb, bk, sb, tp, rc) + pN.html baru.
 
 Format satu nav item:
 ```html
@@ -210,11 +228,15 @@ Item aktif (hanya di `pN.html` sendiri):
 <a class="nav-plat-item active" href="/pN" aria-current="page">
 ```
 
+**Penempatan berdasarkan tipe UI:**
+- **Listing biasa** → sisipkan SEBELUM `<hr class="nav-section-divider">` (seksi atas, bersama P1–P4, P7)
+- **TikTok-style** → sisipkan SETELAH `<div class="nav-drawer-label">Fitur Lain</div>` (seksi bawah, bersama P5–P6)
+
 **Nama UI tidak boleh menyebut nama web sumber.** Gunakan format "Vidorey N" atau "Vidorey TikTok N".
 
 #### 4c. Burger ID untuk TikTok-style platform
 Platform dengan topbar custom (tp, rc) punya burger ID sendiri (`tpNavBurger`, `rcNavBurger`).
-Platform listing biasa (rb, yb, bk) pakai `id="navBurger"` standar.
+Platform listing biasa (rb, yb, bk, sb, platform baru listing) pakai `id="navBurger"` standar.
 
 ---
 
@@ -262,7 +284,7 @@ Jika mengubah tinggi satu layer, **update SEMUA nilai top/height di bawahnya sek
 
 ---
 
-### STEP 7 — firebase.json (⚠️ WAJIB — penyebab "Platform N tampil Platform 1")
+### STEP 7 — firebase.json (⚠️ WAJIB — penyebab "Platform N tampil Platform 1" di production)
 
 Tambah dua baris rewrite untuk platform baru **sebelum** catch-all `"**"`:
 
@@ -271,25 +293,24 @@ Tambah dua baris rewrite untuk platform baru **sebelum** catch-all `"**"`:
 { "source": "/pN/**", "destination": "/pN.html" },
 ```
 
-Tanpa ini, semua URL `/pN/*` di Firebase Hosting akan di-serve sebagai `index.html`
-(Platform 1), bukan `pN.html`. Bug ini sudah terjadi pada Platform 6 (RC).
+Tanpa ini, semua URL `/pN/*` di Firebase Hosting akan di-serve sebagai `index.html` (Platform 1), bukan `pN.html`.
 
 Setelah edit `firebase.json`, jalankan `bash deploy.sh` untuk deploy ke Firebase.
 
 ---
 
-### STEP 8 — public/smartlinks.js (hanya untuk TikTok-style)
+### STEP 8 — public/smartlinks.js
 
-Jika platform baru menggunakan slide card (TikTok-style), tambah selector ke `CARD_SEL`:
+Tambah selector card/slide platform baru ke `CARD_SEL`:
 
 ```js
-var CARD_SEL = '.video-card, .rb-card, .folder-card, .tp-slide, .rc-slide, .pN-slide';
+// Listing platform (grid card):
+var CARD_SEL = '.video-card, .rb-card, .folder-card, .tp-slide, .rc-slide, .sb-card, .pN-card';
+// TikTok-style:
+var CARD_SEL = '.video-card, .rb-card, .folder-card, .tp-slide, .rc-slide, .sb-card, .pN-slide';
 ```
 
-Untuk platform listing biasa (grid card), tambah class card-nya:
-```js
-var CARD_SEL = '.video-card, .rb-card, .folder-card, .tp-slide, .rc-slide, .pN-card';
-```
+**Catatan:** Platform yang copy dari rb.html template akan punya class `.rb-card` otomatis — trigger card click sudah aktif. Tambah class spesifik (`.pN-card`) untuk explicitness.
 
 ---
 
@@ -327,35 +348,21 @@ Tambah `<url>` baru ke `public/sitemap.xml`:
 #### replit.md
 - Tabel platform: tambah baris Platform N
 - Bagian scraper list di backend section: tambah `pN.js`
-- "Enam Platform" → "Tujuh Platform" (jumlah baru)
+- "Tujuh Platform" → "Delapan Platform" (jumlah baru)
 - Monitor events table: tambah `pN_video` / `pN_posts`
 - Cara kerja Platform N: tambah section baru
 - Nav drawer active items: tambah `pN.html → Vidorey N`
 - Iklan section: tambah `pN.html` ke daftar file
+- Sitemap: update jumlah URL
 
-#### panduandeploy.md
-- Tambah `pN.html` + `pN.js` ke daftar file yang di-deploy
-
-#### .agents/memory/vidorey-modular-refactor.md
-- Tambah `pN.js` ke scraper list
-- Update jumlah platform
-
-#### .agents/memory/vidorey-nav-drawer.md
-- Tambah Platform N ke tabel nama UI
-- Tambah `pN.html → Vidorey N` ke active items per halaman
-- Update "all N HTML files" ke jumlah baru
-
-#### .agents/memory/vidorey-caching-strategy.md
-- Tambah cache baru Platform N ke tabel
-- Update `getCacheStats Order` di bawahnya
-
-#### .agents/memory/vidorey-smartlinks.md
-- Update CARD_SEL jika ditambah selector baru
-- Tambah `pN.html` ke daftar halaman yang load smartlinks.js
-
-#### .agents/memory/vidorey-nav-drawer.md + MEMORY.md index
-- Update jumlah HTML files
-- Update "all N HTML files" count
+#### .agents/memory files yang wajib diupdate
+- `MEMORY.md` — tambah entri baru `[Platform N Architecture](pN-architecture.md)`
+- `vidorey-modular-refactor.md` — tambah `pN.js` ke scraper list, update jumlah platform
+- `vidorey-nav-drawer.md` — tambah baris di tabel nama platform, update jumlah HTML files
+- `vidorey-caching-strategy.md` — tambah cache baru Platform N ke tabel, update getCacheStats Order
+- `vidorey-smartlinks.md` — update CARD_SEL, tambah HTML ke daftar halaman
+- `vidorey-seo.md` — update jumlah halaman, tambah baris meta tags table
+- `vidorey-csp-allowlist.md` — tambah domain ad baru jika ada
 
 #### adding-scraping-platform/SKILL.md (file ini sendiri)
 - Tambah Platform N ke tabel di atas
@@ -369,24 +376,24 @@ Tambah `<url>` baru ke `public/sitemap.xml`:
 
 ```bash
 # 1. Test backend endpoint
-curl -s "$BACKEND/api/pN/posts" | jq '.posts | length'
-curl -s "$BACKEND/api/pN/video/SAMPLE_SLUG" | jq '{title, token}'
+curl -s "http://localhost:5000/api/pN/posts" | jq '.posts | length'
+curl -s "http://localhost:5000/api/pN/video/SAMPLE_SLUG" | jq '{title, token}'
 
 # 2. Test proxy
-curl -I "$BACKEND/proxy/pN/stream/SAMPLE_SLUG"
+curl -I "http://localhost:5000/proxy/pN/stream/SAMPLE_SLUG"
 
 # 3. Test shortlink
-TOKEN=$(curl -s "$BACKEND/api/pN/video/SAMPLE_SLUG" | jq -r '.token')
-curl -s "$BACKEND/api/s/pN/$TOKEN" | jq '.slug'
+TOKEN=$(curl -s "http://localhost:5000/api/pN/video/SAMPLE_SLUG" | jq -r '.token')
+curl -s "http://localhost:5000/api/s/pN/$TOKEN" | jq '.slug'
 
-# 4. Test SPA route (Replit dev)
+# 4. Test SPA route — WAJIB 200 bukan fallback index.html
 curl -I "http://localhost:5000/pN"
 curl -I "http://localhost:5000/pN/watch/SAMPLE_TOKEN"
+# Kedua harus return 200. Jika serve index.html → SPA route di scraper belum ditambah.
 
 # 5. Test Firebase routing — paling penting!
 curl -I "https://vidorey.web.app/pN"
-# → Harus return rc.html (pN.html), BUKAN index.html
-# Cek header: X-Firebase-Source atau body untuk konfirmasi
+# → Harus return pN.html, BUKAN index.html
 ```
 
 Checklist manual:
@@ -395,7 +402,8 @@ Checklist manual:
 - [ ] Share button copy URL pendek (token)
 - [ ] Deep-link dari URL token (`/pN/watch/<token>`) buka video langsung
 - [ ] Nav drawer buka/tutup dengan benar di mobile
-- [ ] Platform ini muncul di nav drawer semua platform lain
+- [ ] Platform ini muncul di nav drawer semua platform lain **di posisi yang benar** (listing → atas divider, TikTok → bawah "Fitur Lain")
+- [ ] Klik platform baru dari nav drawer di platform lain → navigasi ke platform baru (bukan ke Platform 1)
 - [ ] Monitor dashboard (`/monitor`) menampilkan event `pN_video` dan `pN_posts`
 - [ ] Iklan muncul: display banner, native sticky, in-feed (scroll 5+ video), popunder
 - [ ] Firebase: `/pN` serve `pN.html` (bukan `index.html`)
@@ -407,9 +415,7 @@ Checklist manual:
 
 Copy `rb.js`/`rb.html` line-for-line (adapting the player element):
 
-- Markup: `.modal-panel-watch` > `.modal-body` > `.watch-info` (title +
-  `#pNShareBtn` + description) + `.watch-related` (`#pNRelatedGrid` +
-  `#pNRelatedPagination`), followed by `.watch-ad-slot`
+- Markup: `.modal-panel-watch` > `.modal-body` > `.watch-info` (title + `#pNShareBtn` + description) + `.watch-related` (`#pNRelatedGrid` + `#pNRelatedPagination`), followed by `.watch-ad-slot`
 - JS state: `let currentSlug = null; let currentToken = null;`
 - `renderWatchDesc()`, `renderRelated()`/`renderRelatedPagination()` (8 items/page)
 - `openPlayer(slug, opts)` accepting `opts.fromHistory`
@@ -507,5 +513,4 @@ curl -sI "https://embed-host.com/e/HASH"
 # Jika ada layer yang return 403 atau SPA < 2KB → TIDAK FEASIBLE
 ```
 
-Jika chain tidak bisa di-resolve server-side → platform tidak boleh diimplementasikan
-(daripada terpaksa fallback ke iframe yang membawa iklan sumber).
+Jika chain tidak bisa di-resolve server-side → platform tidak boleh diimplementasikan (daripada terpaksa fallback ke iframe yang membawa iklan sumber).

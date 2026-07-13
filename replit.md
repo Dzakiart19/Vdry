@@ -43,22 +43,29 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 
 **Nama UI tidak menyebut nama web sumber** — user hanya melihat "Vidorey 1", "Vidorey 2", dst.
 
-Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan Vidorey 1–4 + TikTok 1–2 dengan highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
+Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan dua seksi terpisah: **seksi atas** (listing biasa: Vidorey 1–4 + Vidorey 7) dan **seksi bawah "Fitur Lain"** (khusus TikTok-style: Vidorey TikTok 1–2). Highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
 
 ## Iklan (Adsterra)
-Tiga jenis slot iklan dipakai, semuanya identik di `index.html`/`rb.html`/`yb.html`/`bk.html`/`tp.html`/`rc.html`:
+Tiga jenis slot iklan dipakai, semuanya identik di `index.html`/`rb.html`/`yb.html`/`bk.html`/`sb.html`/`tp.html`/`rc.html`:
 1. **Native banner** (`.ad-native-slot`, di bawah grid listing) — key `761a1a8645cd2263043bfeb6f2e87eea`, invoke.js dari `pl28423230.effectivecpmnetwork.com`. Punya container `id` tetap (`container-<key>`) yang di-hardcode oleh jaringan iklan — **jangan diduplikasi di halaman yang sama** (duplicate `id` bikin script hanya render ke elemen pertama).
 2. **Display banner 300×250** (`.ad-display-slot` di listing, `.watch-ad-slot` di watch view) — pola `atOptions` + invoke.js dari `highperformanceformat.com`, **aman diduplikasi** berkali-kali di halaman yang sama karena scriptnya `document.write` langsung di lokasi tag, tidak butuh id unik (deklarasi `atOptions` di-reset tepat sebelum tiap invoke.js dipanggil).
 3. **Popunder + Social Bar** (di akhir `<body>`, sekali per halaman) — dua script dari `effectivecpmnetwork.com` (`pl28418540`, `pl28427857`), sengaja tidak dipakai di watch view karena bersifat mengganggu (buka tab baru / overlay mengambang).
 
 Semua domain iklan sudah masuk allowlist `script-src` di CSP (`server.js`) — kalau nambah jaringan iklan baru, domain barunya wajib ditambah eksplisit (CSP tidak pakai wildcard `https:`).
 
-### Struktur Nav Drawer (sama di keenam HTML)
-- `.nav-burger` (id `navBurger`) — tombol hamburger di dalam `.brand` di topbar
+### Struktur Nav Drawer (sama di ketujuh HTML)
+- `.nav-burger` (id `navBurger`) — tombol hamburger di dalam `.brand` di topbar (listing platform P1–P4, P7); `tpNavBurger`/`rcNavBurger` untuk P5/P6 yang punya topbar custom
 - `div.nav-overlay` (id `navOverlay`) — backdrop gelap, z-index 149
 - `nav.nav-drawer` (id `navDrawer`) — panel slide-in, z-index 150
 - `.nav-drawer-head` + `.nav-drawer-close` (id `navClose`) — header drawer
 - `.nav-plat-item` + `.nav-plat-item.active` — item platform; avatar selalu `<img src="/logo.png">` (logo Vidorey sama untuk semua platform, konsisten dengan topbar)
+
+**Dua seksi nav drawer:**
+- **Seksi atas** (tanpa label) — listing platform biasa: P1 `/`, P2 `/rb`, P3 `/yb`, P4 `/bk`, P7 `/sb`
+- `<hr class="nav-section-divider">` — pemisah visual
+- **"Fitur Lain"** — KHUSUS TikTok-style (vertical scroll-snap): P5 `/tp`, P6 `/rc`
+
+⚠️ Platform listing baru WAJIB masuk seksi atas (sebelum `<hr>`). Platform TikTok-style WAJIB masuk di bawah label "Fitur Lain". Jangan campur.
 
 **ID lama yang sudah dihapus:** `platformSwitcher`, `psTrigger`, `psMenu` — tidak ada lagi di HTML manapun. CSS `.ps-trigger`, `.ps-menu`, `.ps-chevron` di style.css adalah dead code (tidak membahayakan, tapi tidak dipakai).
 
@@ -175,7 +182,7 @@ Semua halaman menggunakan **keyword bahasa Inggris** (bukan Indonesia) agar Goog
 | File | Fungsi |
 |---|---|
 | `robots.txt` | Allow semua kecuali `/monitor` dan `/health` |
-| `sitemap.xml` | 6 URL platform, `changefreq: daily` |
+| `sitemap.xml` | 7 URL platform, `changefreq: daily` |
 
 Setiap platform baru wajib ditambahkan ke `sitemap.xml`.
 
@@ -188,6 +195,7 @@ Setiap platform baru wajib ditambahkan ke `sitemap.xml`.
 | bk.html | "Free HD Sex Videos \| Adult Porn Streaming" |
 | tp.html | "Free Short Porn Clips \| Scroll XXX Videos" |
 | rc.html | "Free XXX Short Clips \| Adult Video Feed" |
+| sb.html | "Free HD Sex Videos \| Adult Porn Streaming" |
 
 ## Deployment
 - **Replit (backend + dev frontend)**: server jalan di port 5000
@@ -240,6 +248,8 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 | `tp_posts` | `/api/tp/posts` dipanggil (P5) |
 | `rc_video` | `/proxy/rc/stream/:hash` dipanggil (P6) |
 | `rc_posts` | `/api/rc/posts` dipanggil (P6) |
+| `sb_video` | `/api/sb/video/:slug` dipanggil (P7) |
+| `sb_posts` | `/api/sb/posts` dipanggil (P7) |
 
 ### Implementasi Monitor
 - **Ring buffer server**: `MON_BUF=50.000` event, `CDN_ALERT_MAX=500` alert

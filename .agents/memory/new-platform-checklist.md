@@ -23,7 +23,16 @@ Ikuti urutan ini dari atas ke bawah. Tandai selesai sebelum lanjut ke item berik
 - [ ] Buat file `lib/scrapers/pN.js` — export `{ router, caches }`
 - [ ] Tidak ada import dari sibling scraper files (isolasi penuh)
 - [ ] Path `public/` dari scraper: `path.join(__dirname, '..', '..', 'public', ...)`
+- [ ] **WAJIB: tambah SPA routes di scraper ini sendiri:**
+  ```js
+  const path = require('path');
+  const PUBLIC_DIR = path.join(__dirname, '..', '..', 'public');
+  router.get('/pN',   (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'pN.html')));
+  router.get('/pN/*', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'pN.html')));
+  ```
+  ⚠️ Tanpa ini, klik di nav drawer dan deep-link `/pN/watch/<token>` akan serve `index.html` (Platform 1). Bug ini sudah terjadi pada P7 (SB).
 - [ ] Register router di `server.js`: `app.use(pN.router)` + tambah `pN.caches` ke health/detail
+- [ ] Tambah shortlink platform list di `server.js`: tambah `'pN'` ke array whitelist di `/api/s/:platform/:token`
 - [ ] Tambah trackRequest branches di `lib/monitor.js`:
   - `pN_video` (untuk request stream/video)
   - `pN_posts` (untuk request listing/feed)
@@ -110,7 +119,7 @@ Ikuti urutan ini dari atas ke bawah. Tandai selesai sebelum lanjut ke item berik
   </script>
 </head>
 ```
-**WAJIB array `[WebSite, WebPage]`** — bukan hanya WebPage saja. Semua 6 halaman existing sudah pakai format ini.
+**WAJIB array `[WebSite, WebPage]`** — bukan hanya WebPage saja. Semua 7 halaman existing sudah pakai format ini.
 
 ### 3f. Body — GTM noscript (TEPAT SETELAH `<body ...>`)
 ```html
@@ -121,12 +130,36 @@ Ikuti urutan ini dari atas ke bawah. Tandai selesai sebelum lanjut ke item berik
   <!-- End Google Tag Manager (noscript) -->
 ```
 
-### 3g. Body — Nav Drawer (copy dari HTML lain, ganti active item)
+### 3g. Body — Nav Drawer
+
+#### ATURAN PENEMPATAN NAV ITEM (KRITIS)
+
+Nav drawer dibagi dua seksi:
+
+**Seksi Atas** — Platform listing biasa (grid/card + pagination + search). Ditempatkan SEBELUM `<hr class="nav-section-divider">`:
+- P1 `/` Vidorey 1
+- P2 `/rb` Vidorey 2
+- P3 `/yb` Vidorey 3
+- P4 `/bk` Vidorey 4
+- P7 `/sb` Vidorey 7
+- ← **Platform listing baru masuk di sini**
+
+`<hr class="nav-section-divider">`
+`<div class="nav-drawer-label">Fitur Lain</div>`
+
+**Seksi Bawah "Fitur Lain"** — KHUSUS platform TikTok-style (vertical scroll-snap, tidak ada grid/card):
+- P5 `/tp` Vidorey TikTok 1
+- P6 `/rc` Vidorey TikTok 2
+- ← **Platform TikTok-style baru masuk di sini**
+
+**⚠️ Bug yang sudah terjadi:** P7 (SB) awalnya ditaruh di seksi "Fitur Lain" → user complaint. Listing platform wajib di atas divider, TikTok wajib di bawah.
+
+Langkah untuk update nav drawer:
 - Copy blok `<!-- NAV DRAWER -->` dari platform terdekat
 - Ubah `class="nav-plat-item active" aria-current="page"` → hanya ke item platform baru
 - Hapus `.active` dari item lain
-- Hamburger ID: gunakan `pNNavBurger` jika topbar custom, `navBurger` jika topbar standar
-- Nama UI di drawer: **TIDAK BOLEH sebut nama web sumber** (ruangbokep, tik.porn, dst.)
+- Hamburger ID: gunakan `pNNavBurger` jika topbar custom (TikTok), `navBurger` jika topbar standar (listing)
+- Nama UI di drawer: **TIDAK BOLEH sebut nama web sumber** (ruangbokep, tik.porn, situsbokep, dst.)
 
 ### 3h. Body — H1 SEO (di dalam `<main>`)
 ```html
@@ -138,7 +171,7 @@ Ikuti urutan ini dari atas ke bawah. Tandai selesai sebelum lanjut ke item berik
 `.sr-only` sudah ada di `style.css` — tidak perlu tambah ulang.
 
 ### 3i. Body — Iklan Adsterra
-- Copy slot iklan dari platform yang paling mirip (listing → dari rb/yb/bk, feed → dari tp/rc)
+- Copy slot iklan dari platform yang paling mirip (listing → dari rb/yb/bk/sb, feed → dari tp/rc)
 - Jika pakai ad script domain baru → **wajib tambah ke CSP dulu** (lihat Fase 4)
 
 ### 3j. Body — Script sebelum `</body>`
@@ -159,9 +192,9 @@ Ikuti urutan ini dari atas ke bawah. Tandai selesai sebelum lanjut ke item berik
 
 ---
 
-## FASE 5 — Update Semua 6 HTML yang Ada
+## FASE 5 — Update Semua 7 HTML yang Ada
 
-- [ ] **Tambah platform baru ke nav drawer di SEMUA 6 HTML**: `index, rb, yb, bk, tp, rc`
+- [ ] **Tambah platform baru ke nav drawer di SEMUA 7 HTML**: `index, rb, yb, bk, sb, tp, rc`
 - [ ] Format entry nav drawer baru:
 ```html
 <a class="nav-plat-item" href="/pN">
@@ -172,12 +205,22 @@ Ikuti urutan ini dari atas ke bawah. Tandai selesai sebelum lanjut ke item berik
   </div>
 </a>
 ```
+- [ ] **Listing platform → sisipkan SEBELUM `<hr class="nav-section-divider">`** (seksi atas)
+- [ ] **TikTok-style → sisipkan SETELAH `<div class="nav-drawer-label">Fitur Lain</div>`** (seksi bawah)
 - [ ] Tambah avatar CSS class `.ps-avatar-pN` di `style.css` (gradient background)
 - [ ] Update `vidorey-nav-drawer.md` — tambah baris di tabel nama platform
+- [ ] Update `vidorey-smartlinks.md` — tambah card class ke CARD_SEL
 
 ---
 
-## FASE 6 — SEO Static Files
+## FASE 6 — firebase.json + SEO Static Files
+
+- [ ] **`firebase.json` — WAJIB** tambah dua rewrite SEBELUM catch-all `"**"`:
+  ```json
+  { "source": "/pN",    "destination": "/pN.html" },
+  { "source": "/pN/**", "destination": "/pN.html" },
+  ```
+  Tanpa ini, `/pN/*` di Firebase production serve `index.html` (Platform 1).
 
 - [ ] Tambah `<url>` baru ke `public/sitemap.xml`:
 ```xml
@@ -195,7 +238,11 @@ Ikuti urutan ini dari atas ke bawah. Tandai selesai sebelum lanjut ke item berik
 
 - [ ] Restart workflow → cek log tidak ada error
 - [ ] Curl endpoint video dari shell → stream berjalan
-- [ ] Buka `https://vidorey.web.app/pN` di browser → halaman muncul, nav drawer ada platform baru
+- [ ] `curl -I http://localhost:5000/pN` → **wajib HTTP 200** (bukan 200 serve index.html)
+- [ ] `curl -I http://localhost:5000/pN/watch/abc123` → HTTP 200 (SPA route)
+- [ ] Buka `/pN` di browser → halaman muncul, nav drawer ada platform baru di posisi benar
+- [ ] Verifikasi nav drawer seksi: listing platform di atas divider, TikTok di bawah "Fitur Lain"
+- [ ] Klik platform baru di nav drawer dari semua platform lain → pindah ke platform baru (bukan Platform 1)
 - [ ] Cek browser console → tidak ada CSP error
 - [ ] Cek GTM Preview mode → tag GA4 terfiring di pN page
 - [ ] Google Search Console → "URL Inspection" → test live URL → harus lulus
@@ -207,19 +254,22 @@ Ikuti urutan ini dari atas ke bawah. Tandai selesai sebelum lanjut ke item berik
 
 | File | Aksi |
 |------|------|
-| `lib/scrapers/pN.js` | BARU |
-| `server.js` | register router, health caches, CSP domain |
+| `lib/scrapers/pN.js` | BARU — **include SPA routes `/pN` + `/pN/*`** |
+| `server.js` | require router, health caches, shortlink whitelist, CSP domain |
 | `lib/monitor.js` | trackRequest branches + badge CSS |
-| `public/pN.html` | BARU (GTM, meta, OG, schema, H1, nav drawer, ads, smartlinks) |
+| `public/pN.html` | BARU (GTM, meta, OG, schema, H1, nav drawer di posisi benar, ads, smartlinks) |
 | `public/pN.js` | BARU (app logic) |
 | `public/style.css` | tambah `.ps-avatar-pN`, `.pN-page` rules |
-| `public/index.html` | tambah platform baru ke nav drawer |
+| `public/index.html` | tambah platform baru ke nav drawer (posisi sesuai tipe) |
 | `public/rb.html` | tambah platform baru ke nav drawer |
 | `public/yb.html` | tambah platform baru ke nav drawer |
 | `public/bk.html` | tambah platform baru ke nav drawer |
+| `public/sb.html` | tambah platform baru ke nav drawer |
 | `public/tp.html` | tambah platform baru ke nav drawer |
 | `public/rc.html` | tambah platform baru ke nav drawer |
+| `public/smartlinks.js` | tambah card selector ke `CARD_SEL` |
 | `public/sitemap.xml` | tambah `<url>` baru |
+| `firebase.json` | tambah dua rewrite `/pN` + `/pN/**` |
 
 ---
 
@@ -227,5 +277,10 @@ Ikuti urutan ini dari atas ke bawah. Tandai selesai sebelum lanjut ke item berik
 
 - `MEMORY.md` — tambah entri baru `[Platform N Architecture](pN-architecture.md)`
 - `vidorey-nav-drawer.md` — tambah baris di tabel nama platform + avatar CSS class
-- `vidorey-csp-allowlist.md` — tambah domain ad baru
-- `vidorey-seo.md` — tidak perlu update (template sudah general)
+- `vidorey-caching-strategy.md` — tambah cache baru Platform N ke tabel + update getCacheStats Order
+- `vidorey-csp-allowlist.md` — tambah domain ad baru jika ada
+- `vidorey-smartlinks.md` — update CARD_SEL + daftar halaman
+- `vidorey-modular-refactor.md` — update platform count + scraper list
+- `vidorey-seo.md` — update jumlah halaman + tambah baris di tabel meta tags
+- `replit.md` — update platform table, scraper list, monitor events, iklan section
+- `adding-scraping-platform/SKILL.md` — update platform table + count + nav drawer rule
