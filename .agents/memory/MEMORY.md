@@ -4,7 +4,7 @@
 - [P1 Cross-Origin Video](p1-crossorigin-video.md) — never use crossorigin attr on <video>; set video.src immediately; *.overfetch.video allowlist.
 - [Vidorey Monitor](vidorey-monitor.md) — ring buffer 50k + virtual list client; REST /monitor/log pagination; checkMonitorKey protects all monitor routes.
 - [P3 yobokep Architecture](yb-pagination-thumbnail.md) — HTML pagination broken (pakai WP REST API); thumbnail via parallel og:image fetch; self-healing handleYbSeg+reresolveYbUrl; CDN allowlist owphbf24.com.
-- [Vidorey Modular Refactor](vidorey-modular-refactor.md) — server.js split into lib/{cache,proxy,monitor,scrapers/p1,rb,yb,bk,tp,rc}.js; 6 platforms; new platform needs trackRequest branches + badge CSS in monitor + update all 6 HTML nav drawers.
+- [Vidorey Modular Refactor](vidorey-modular-refactor.md) — server.js split into lib/{cache,proxy,monitor,scrapers/p1,rb,yb,bk,tp,rc,sb}.js; 7 platforms; new platform needs trackRequest branches + badge CSS in monitor + update all 7 HTML nav drawers.
 - [Vidorey Deploy Config](vidorey-deploy-config.md) — config.js pakai placeholder __REPLIT_BACKEND_URL__; deploy.sh pakai trap EXIT restore + sed delimiter |; jangan hardcode URL di file.
 - [Vidorey CSP Allowlist](vidorey-csp-allowlist.md) — script-src tidak pakai https: wildcard; domain eksplisit wajib ditambah jika ada script/ad network baru.
 - [Vidorey Nav Drawer](vidorey-nav-drawer.md) — platform switcher adalah sidebar drawer (hamburger ≡), bukan dropdown; ID lama platformSwitcher/psTrigger/psMenu sudah dihapus dari semua HTML.
@@ -14,5 +14,6 @@
 - [Platform 5 TP Architecture](tp-platform5-architecture.md) — tik.porn __NEXT_DATA__ scrape; HLS via video-cdn.tik.porn; base64url for seg/thumb proxy; redirect-safe axTpGetSafe; token TTL ~1y no self-heal. Ad slot TP harus fixed-position (bukan static HTML di luar feed).
 - [Vidorey Smartlinks](vidorey-smartlinks.md) — 5 trigger: first-click, card-click, nav-drawer (.nav-plat-item), timer 5s, exit-intent; rotasi 4 link (3 Smartlink + 1 Direct Link); dedup 200ms.
 - [Platform 6 RC Architecture](rc-platform6-architecture.md) — api.reddclips.com MP4 langsung; no shortlink registry (hash sudah URL-safe); deep-link via pathname parse + tryScrollToDeepLink(); kategori tabs horizontal.
+- [Platform 7 SB Architecture](sb-platform7-architecture.md) — situsbokep.cc WP HTML scrape; link `/view/` bukan `/watch/`; absolute URL pagination; xvideos embedframe → HLS *.xvideos-cdn.com; token TTL ~1 tahun.
 - [Vidorey SEO Strategy](vidorey-seo.md) — lang="en" + og:locale=en_US + English keywords; GTM GTM-NWZSVQT9; GA4 G-6MB6SQTZWK; GSC terverifikasi; Bing terdaftar; H1 sr-only wajib.
 - [New Platform Checklist](new-platform-checklist.md) — checklist 7 fase lengkap saat tambah platform baru; semua file yang harus diubah tercantum.

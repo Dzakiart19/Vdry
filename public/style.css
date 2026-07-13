@@ -2719,6 +2719,11 @@ body.rc-page .rc-loader { bottom: 140px; }
   background: linear-gradient(135deg, #ff4500, #ff7733);
 }
 
+/* ── ps-avatar-sb ── */
+.ps-avatar-sb {
+  background: linear-gradient(135deg, #065f2e, #34d399);
+}
+
 /* ── SEO: visually hidden H1 ── */
 .sr-only {
   position: absolute;

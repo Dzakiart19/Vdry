@@ -1,14 +1,14 @@
 # Vidorey — Multi-Platform Video Browser
 
-Web app untuk browse dan nonton video dari enam platform terpisah.
+Web app untuk browse dan nonton video dari tujuh platform terpisah.
 
 ## Stack
 - **Backend**: Node.js + Express (proxy + HTML scraper), modular — lihat struktur di bawah
-- **Frontend**: Vanilla JS SPA (no framework), enam halaman terpisah
+- **Frontend**: Vanilla JS SPA (no framework), tujuh halaman terpisah
 - **Port**: 5000
 
 ## Struktur Backend
-`server.js` (composition root, ~170 baris) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 6 router platform → monitor/health routes → SPA fallback.
+`server.js` (composition root) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 7 router platform → monitor/health routes → SPA fallback.
 
 ```
 server.js                 ← composition root (helmet/CSP, CORS, rate limit, mount routers, /api/s/:platform/:token shortlink resolver, listen)
@@ -24,11 +24,12 @@ lib/
     bk.js                 ← bokepking.cam: WP REST API listing, direct MP4 proxy, /bk SPA route
     tp.js                 ← tik.porn: __NEXT_DATA__ scrape, HLS via hls.js, TikTok-style feed, /tp SPA route
     rc.js                 ← api.reddclips.com: JSON API, direct MP4 proxy, kategori tabs feed, /rc SPA route
+    sb.js                 ← situsbokep.cc: WP HTML scrape (cheerio), xvideos embedframe → HLS, /sb SPA route
 ```
 
 Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai `server.js` untuk agregasi `getCacheStats()` di `/health/detail`. **Tidak ada cross-import antar scraper files** — hanya `lib/cache.js` dan `lib/proxy.js` yang generik/stateless di-share.
 
-## Enam Platform (Completely Isolated)
+## Tujuh Platform (Completely Isolated)
 
 | Platform | URL | Source | HTML | JS | Nama UI |
 |---|---|---|---|---|---|
@@ -38,6 +39,7 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 | Platform 4 | `/bk` | bokepking.cam | `bk.html` | `bk.js` | Vidorey 4 |
 | Platform 5 | `/tp` | tik.porn | `tp.html` | `tp.js` | Vidorey TikTok 1 |
 | Platform 6 | `/rc` | api.reddclips.com | `rc.html` | `rc.js` | Vidorey TikTok 2 |
+| Platform 7 | `/sb` | situsbokep.cc | `sb.html` | `sb.js` | Vidorey 7 |
 
 **Nama UI tidak menyebut nama web sumber** — user hanya melihat "Vidorey 1", "Vidorey 2", dst.
 
