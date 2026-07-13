@@ -821,32 +821,119 @@ body {
   outline: none;
 }
 
-/* ── Watch view (player + info + related), gaya YouTube/XNXX ──
-   Dipakai P2/P3/P4: panel modal jadi lebih tinggi & scrollable,
-   video-stage tetap di atas, info + related mengalir di bawahnya. */
+/* ── Watch view (player + info + related) — XNXX full-page style ──
+   P2/P3/P4/P7: modal jadi full-page dengan topbar ← Kembali,
+   kolom kiri (player + info) + sidebar kanan (related).
+   Di mobile: stack vertikal, full scroll. */
 .modal-panel-watch {
   max-width: 960px;
   max-height: 92vh;
   display: flex;
   flex-direction: column;
 }
+
+/* ── Full-page override untuk watch modal (tambah class modal-fullpage di HTML) ── */
+.modal.modal-fullpage {
+  padding: 0;
+  align-items: stretch;
+  background: var(--bg);
+  animation: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.modal.modal-fullpage .modal-backdrop { display: none; }
+.modal.modal-fullpage .modal-panel-watch {
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  animation: watchFadeIn .18s ease both;
+  background: var(--bg);
+}
+@keyframes watchFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Watch topbar: ← Kembali + platform label ── */
+.watch-topbar {
+  display: flex;
+  align-items: center;
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--surface);
+}
+.watch-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 100%;
+  padding: 0 18px 0 12px;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--font);
+  font-weight: 500;
+  flex-shrink: 0;
+  transition: color .15s, background .15s;
+}
+.watch-back-btn:hover  { color: var(--text); background: var(--surface2); }
+.watch-back-btn svg    { width: 16px; height: 16px; pointer-events: none; }
+.watch-platform-label  {
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -.01em;
+}
+
+/* ── Full-page modal-body: scroll container utama ── */
+.modal-fullpage .modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Watch layout: main (kiri) + sidebar sticky (kanan) ── */
+.watch-layout {
+  display: flex;
+  min-height: 100%;
+}
+
+/* Kolom utama: player + judul + deskripsi */
+.watch-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* modal-body standar (non-fullpage) */
 .modal-body {
   overflow-y: auto;
   flex: 1;
   min-height: 0;
 }
+
 .watch-info {
-  padding: 16px 20px 4px;
+  padding: 16px 24px 14px;
+  border-bottom: 1px solid var(--border);
 }
 .watch-title-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .watch-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--text);
   line-height: 1.45;
@@ -859,7 +946,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 12px;
+  padding: 7px 14px;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 99px;
@@ -882,7 +969,7 @@ body {
   .watch-share-btn { padding: 8px; border-radius: 50%; }
 }
 .watch-desc {
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--text2);
   line-height: 1.65;
   padding-bottom: 4px;
@@ -890,31 +977,44 @@ body {
 }
 .watch-desc.hidden { display: none; }
 
+/* ── Sidebar: related videos (sticky, independent scroll) ── */
 .watch-related {
-  padding: 8px 20px 20px;
-  margin-top: 8px;
-  border-top: 1px solid var(--border);
+  width: 356px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  background: var(--bg2);
+  padding: 0 12px 24px;
+  position: sticky;
+  top: 0;
+  height: calc(100dvh - 52px);
+  overflow-y: auto;
+  align-self: flex-start;
 }
 .watch-related.hidden { display: none; }
+
 .watch-related-heading {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: .05em;
-  margin: 16px 0 12px;
+  letter-spacing: .1em;
+  padding: 14px 4px 10px;
+  margin: 0;
 }
+
+/* Related grid di sidebar: 1 kolom */
 .rb-grid-related {
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 8px;
   padding: 0;
 }
+
 .rb-card-duration {
   position: absolute;
   bottom: 6px;
   right: 6px;
   z-index: 1;
-  background: rgba(0,0,0,.75);
+  background: rgba(0,0,0,.78);
   color: #fff;
   font-size: 10px;
   font-weight: 600;
@@ -922,9 +1022,8 @@ body {
   border-radius: 4px;
   letter-spacing: .02em;
 }
-/* Ad kecil di bawah "Video Lainnya" — sengaja dipisah dari grid supaya
-   jelas terlihat sebagai iklan, bukan bagian dari related videos, dan
-   tidak menutupi/menganggu player atau tombol Bagikan. */
+
+/* Ad di bawah related — non-intrusive, hanya block statis paling bawah */
 .watch-ad-slot {
   display: flex;
   justify-content: center;
@@ -936,11 +1035,26 @@ body {
 }
 .watch-ad-slot:empty { display: none; }
 
-@media (max-width: 600px) {
-  .modal-panel-watch { max-height: 96vh; }
-  .watch-info { padding: 12px 14px 4px; }
-  .watch-related { padding: 8px 14px 16px; }
-  .watch-title { font-size: 14.5px; }
+/* ── Mobile: stack vertikal (sidebar jadi normal flow) ── */
+@media (max-width: 860px) {
+  .watch-layout { flex-direction: column; }
+  .watch-related {
+    width: 100%;
+    flex-shrink: 1;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    position: static;
+    height: auto;
+    overflow-y: visible;
+    align-self: auto;
+  }
+  .rb-grid-related { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .watch-info { padding: 12px 14px 12px; }
+  .watch-title { font-size: 15px; }
+}
+@media (max-width: 480px) {
+  .rb-grid-related { grid-template-columns: 1fr; }
+  .watch-back-btn { font-size: 12px; padding: 0 12px; }
 }
 
 /* ════════════════════════════════════
@@ -1454,6 +1568,8 @@ body {
   border-radius: 0 0 var(--radius) var(--radius);
   overflow: hidden;
 }
+/* Full-page watch: no rounded corners on player */
+.modal-fullpage .rb-video-stage { border-radius: 0; }
 
 /* Native video — Platform 2 player tanpa iklan */
 .rb-player-video {

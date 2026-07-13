@@ -324,69 +324,67 @@
   </main>
 </div>
 
-<!-- ─── PLAYER MODAL ─── -->
-<div id="sbPlayerModal" class="modal hidden" role="dialog" aria-modal="true">
+<!-- ─── PLAYER MODAL (watch view fullpage XNXX-style) ─── -->
+<div id="sbPlayerModal" class="modal modal-fullpage hidden" role="dialog" aria-modal="true">
   <div class="modal-backdrop" id="sbModalBackdrop"></div>
   <div class="modal-panel modal-panel-watch">
-    <div class="modal-top">
-      <div class="modal-meta">
-        <span id="sbVideoSub" class="modal-sub">Vidorey 7</span>
-      </div>
-      <button class="modal-close" id="sbModalClose" title="Tutup">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    <div class="watch-topbar">
+      <button class="watch-back-btn" id="sbModalClose" title="Kembali">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
         </svg>
+        Kembali
       </button>
+      <span id="sbVideoSub" class="watch-platform-label">Vidorey 7</span>
     </div>
     <div class="modal-body" id="sbModalBody">
-      <div class="video-stage rb-video-stage">
-        <div id="sbPlayerLoading" class="rb-player-loader">
-          <div class="loader-ring"></div>
-          <p>Memuat video…</p>
+      <div class="watch-layout">
+        <div class="watch-main">
+          <div class="video-stage rb-video-stage">
+            <div id="sbPlayerLoading" class="rb-player-loader">
+              <div class="loader-ring"></div>
+              <p>Memuat video…</p>
+            </div>
+            <video
+              id="sbVideoEl"
+              class="rb-player-video hidden"
+              controls
+              playsinline
+              preload="none"
+            ></video>
+          </div>
+          <div class="watch-info">
+            <div class="watch-title-row">
+              <h1 id="sbVideoTitle" class="watch-title">—</h1>
+              <button type="button" id="sbShareBtn" class="watch-share-btn" title="Bagikan video">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                  <line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/>
+                </svg>
+                <span>Bagikan</span>
+              </button>
+            </div>
+            <div id="sbWatchDesc" class="watch-desc hidden">
+              <p id="sbWatchDescText"></p>
+            </div>
+          </div>
         </div>
-        <video
-          id="sbVideoEl"
-          class="rb-player-video hidden"
-          controls
-          playsinline
-          preload="none"
-        ></video>
-      </div>
-
-      <!-- ─── Info video ─── -->
-      <div class="watch-info">
-        <div class="watch-title-row">
-          <h1 id="sbVideoTitle" class="watch-title">—</h1>
-          <button type="button" id="sbShareBtn" class="watch-share-btn" title="Bagikan video">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-              <line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/>
-            </svg>
-            <span>Bagikan</span>
-          </button>
-        </div>
-        <div id="sbWatchDesc" class="watch-desc hidden">
-          <p id="sbWatchDescText"></p>
-        </div>
-      </div>
-
-      <!-- ─── Video lainnya / related ─── -->
-      <div class="watch-related hidden" id="sbRelatedSection">
-        <h3 class="watch-related-heading">Video Lainnya</h3>
-        <div id="sbRelatedGrid" class="rb-grid rb-grid-related"></div>
-        <div id="sbRelatedPagination" class="pagination hidden"></div>
-
-        <div class="watch-ad-slot">
-          <script>
-            atOptions = {
-              'key' : 'd50b941ac6d9bd5749dcdb0b417bf348',
-              'format' : 'iframe',
-              'height' : 250,
-              'width' : 300,
-              'params' : {}
-            };
-          </script>
-          <script src="https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js"></script>
+        <div class="watch-related hidden" id="sbRelatedSection">
+          <h3 class="watch-related-heading">Video Lainnya</h3>
+          <div id="sbRelatedGrid" class="rb-grid rb-grid-related"></div>
+          <div id="sbRelatedPagination" class="pagination hidden"></div>
+          <div class="watch-ad-slot">
+            <script>
+              atOptions = {
+                'key' : 'd50b941ac6d9bd5749dcdb0b417bf348',
+                'format' : 'iframe',
+                'height' : 250,
+                'width' : 300,
+                'params' : {}
+              };
+            </script>
+            <script src="https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js"></script>
+          </div>
         </div>
       </div>
     </div>
