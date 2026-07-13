@@ -17,5 +17,5 @@
     h.endsWith('.replit.dev') ||
     h.endsWith('.replit.app') ||
     h.endsWith('.koyeb.app');
-  window.BACKEND_URL = isSelfHosted ? '' : '__REPLIT_BACKEND_URL__';
+  window.BACKEND_URL = isSelfHosted ? '' : 'https://hungry-dyann-dzeckyete-cca268ec.koyeb.app';
 })();

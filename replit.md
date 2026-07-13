@@ -54,14 +54,14 @@ Tiga jenis slot iklan dipakai, semuanya identik di `index.html`/`rb.html`/`yb.ht
 Semua domain iklan sudah masuk allowlist `script-src` di CSP (`server.js`) — kalau nambah jaringan iklan baru, domain barunya wajib ditambah eksplisit (CSP tidak pakai wildcard `https:`).
 
 ### Struktur Nav Drawer (sama di ketujuh HTML)
-- `.nav-burger` (id `navBurger`) — tombol hamburger di dalam `.brand` di topbar (listing platform P1–P4, P7); `tpNavBurger`/`rcNavBurger` untuk P5/P6 yang punya topbar custom
+- `.nav-burger` (id `navBurger`) — tombol hamburger di dalam `.brand` di topbar (listing platform P1–P4, P7/Vidorey 5); `tpNavBurger`/`rcNavBurger` untuk P5/P6 yang punya topbar custom
 - `div.nav-overlay` (id `navOverlay`) — backdrop gelap, z-index 149
 - `nav.nav-drawer` (id `navDrawer`) — panel slide-in, z-index 150
 - `.nav-drawer-head` + `.nav-drawer-close` (id `navClose`) — header drawer
 - `.nav-plat-item` + `.nav-plat-item.active` — item platform; avatar selalu `<img src="/logo.png">` (logo Vidorey sama untuk semua platform, konsisten dengan topbar)
 
 **Dua seksi nav drawer:**
-- **Seksi atas** (tanpa label) — listing platform biasa: P1 `/`, P2 `/rb`, P3 `/yb`, P4 `/bk`, P7 `/sb`
+- **Seksi atas** (tanpa label) — listing platform biasa: P1 `/` (Vidorey 1), P2 `/rb` (Vidorey 2), P3 `/yb` (Vidorey 3), P4 `/bk` (Vidorey 4), P7 `/sb` (Vidorey 5)
 - `<hr class="nav-section-divider">` — pemisah visual
 - **"Fitur Lain"** — KHUSUS TikTok-style (vertical scroll-snap): P5 `/tp`, P6 `/rc`
 
@@ -95,12 +95,14 @@ Semua domain iklan sudah masuk allowlist `script-src` di CSP (`server.js`) — k
 6. `/proxy/rb/thumb?url=` → proxy thumbnail (validasi `content-type: image/*`)
 7. `/rb/watch/:slug` → SPA route (sama seperti `/rb`, serve `rb.html`) — dipakai sebagai deep-link/share URL, langsung membuka watch view video tsb saat diakses
 
-### Watch View P2 (gaya YouTube/XNXX)
-Klik video membuka modal watch view (scrollable, **bukan** full-screen — desain sengaja): player di atas, lalu judul + deskripsi (gaya YouTube), lalu grid "Video Lainnya" + pagination client-side 8/halaman (gaya XNXX, dari `related` yang di-scrape). Tombol **Bagikan** di sebelah judul memakai `navigator.share()` (fallback copy-to-clipboard).
+### Watch View P2 (full-page, gaya XNXX)
+Klik video membuka **full-page watch view** (cover seluruh layar, bukan modal mengambang). Layout desktop: kolom kiri (`watch-main`) berisi player + judul + deskripsi + tombol Bagikan; kolom kanan (`watch-related`, 356px, sticky) berisi grid "Video Lainnya" 1-kolom dengan scroll independen. Mobile ≤860px: stack vertikal, sidebar jadi static flow, related grid 2-kolom.
 
-**URL scheme — shortlink 11 karakter (bukan slug):** Address bar dan share link memakai token 11-char acak (`/rb/watch/m4k9zqr2xab`) yang tidak mengandung judul video. Flow: (1) `openModal(slug)` push URL ke `/rb/watch/<base64url(slug)>` sementara; (2) setelah API `/api/rb/video/:slug` return, server menyertakan field `token` (dihasilkan `registerSlug('rb', slug)` dari `lib/shortlink.js`); (3) client langsung `history.replaceState` ke `/rb/watch/<token>` dan simpan ke `currentToken`; (4) tombol Share pakai `currentToken || encodeSlug(currentSlug)`. Deep-link saat load: jika segment URL 11-char `[a-z0-9]` → resolve via `/api/s/rb/<token>`; jika base64url panjang → `decodeSlug()` (backward compat link lama). Token berlaku 48 jam (in-memory, hilang saat server restart). Mekanisme back/forward via popstate: state selalu menyimpan slug asli (bukan token), jadi Forward tidak perlu resolve ulang. Lihat `openModal()`/`openPlayer()`/popstate handler di `rb.js`. Pola ini identik di P3/P4.
+Topbar watch (`watch-topbar`, 52px): tombol **← Kembali** (`rbModalClose`) di kiri + label platform di sebelahnya. Menutup ke listing dan restore URL ke `/rb`.
 
-Di bawah grid "Video Lainnya" (paling bawah watch view, dipisah garis) ada satu slot iklan kecil (`.watch-ad-slot`, banner iframe 300×250 dari `highperformanceformat.com` — domain sama dengan display ad yang sudah dipakai di listing, jadi tidak perlu tambahan allowlist CSP). Sengaja dipilih ad ini (bukan popunder/social bar) karena tidak membuka tab baru atau menutupi konten — hanya satu blok statis di posisi paling akhir, jadi tidak mengganggu nonton video atau baca related videos. Identik di P2/P3/P4.
+**URL scheme — shortlink 11 karakter (bukan slug):** Address bar dan share link memakai token 11-char acak (`/rb/watch/m4k9zqr2xab`) yang tidak mengandung judul video. Flow: (1) `openModal(slug)` push URL ke `/rb/watch/<base64url(slug)>` sementara; (2) setelah API `/api/rb/video/:slug` return, server menyertakan field `token` (dihasilkan `registerSlug('rb', slug)` dari `lib/shortlink.js`); (3) client langsung `history.replaceState` ke `/rb/watch/<token>` dan simpan ke `currentToken`; (4) tombol Share pakai `currentToken || encodeSlug(currentSlug)`. Deep-link saat load: jika segment URL 11-char `[a-z0-9]` → resolve via `/api/s/rb/<token>`; jika base64url panjang → `decodeSlug()` (backward compat link lama). Token berlaku 48 jam (in-memory, hilang saat server restart). Mekanisme back/forward via popstate: state selalu menyimpan slug asli (bukan token), jadi Forward tidak perlu resolve ulang. Lihat `openModal()`/`openPlayer()`/popstate handler di `rb.js`. Pola ini identik di P3/P4/P7.
+
+Di bawah grid "Video Lainnya" (paling bawah sidebar) ada satu slot iklan kecil (`.watch-ad-slot`, banner iframe 300×250 dari `highperformanceformat.com`). Identik di P2/P3/P4/P7.
 
 ## Cara Kerja — Platform 3 (yobokep.com)
 1. `/api/yb/posts` → WP REST API untuk slug + title + totalPages; parallel-fetch `og:image` dari tiap post untuk thumbnail (cache 24 jam)
@@ -111,7 +113,7 @@ Di bawah grid "Video Lainnya" (paling bawah watch view, dipisah garis) ada satu 
 6. `/yb/watch/:slug` → SPA route (sama seperti `/yb`, serve `yb.html`) — deep-link/share URL, buka watch view video tsb saat diakses
 
 ### Watch View P3 (sama seperti P2)
-Pola watch view (player + judul/deskripsi + grid "Video Lainnya" + tombol Bagikan + slot iklan kecil di bawah, deep-link `/yb/watch/<slug>`) direplikasi identik dari P2 — lihat "Watch View P2" di atas untuk detail UX, mekanisme history/popstate, dan penempatan iklan.
+Full-page layout identik P2 — `watch-topbar` (tombol ← Kembali `ybModalClose`), `watch-main` (player + info), `watch-related` sticky sidebar (grid 1-kolom). Deep-link `/yb/watch/<token>`. Lihat "Watch View P2" untuk detail UX, URL scheme, dan mekanisme history/popstate.
 
 ### Kenapa WP REST API untuk P3 (bukan HTML scrape seperti P2)
 yobokep.com HTML listing page selalu mengembalikan 24 post yang sama di semua `/page/N/` — server-side pagination tidak berjalan (butuh JS/AJAX dari browser). WP REST API paginasinya benar via `x-wp-totalpages` header.
@@ -129,7 +131,7 @@ yobokep.com HTML listing page selalu mengembalikan 24 post yang sama di semua `/
 5. `/bk/watch/:slug` → SPA route (sama seperti `/bk`, serve `bk.html`) — deep-link/share URL, buka watch view video tsb saat diakses
 
 ### Watch View P4 (sama seperti P2, player MP4 langsung tanpa iframe)
-Pola watch view direplikasi dari P2/P3 — player (elemen `<video>` MP4 langsung, tidak ada iframe di modal P4) + judul/deskripsi + grid "Video Lainnya" + tombol Bagikan + slot iklan kecil di bawah, deep-link `/bk/watch/<slug>`. Mekanisme history/popstate identik dengan P2/P3.
+Full-page layout identik P2/P3 — `watch-topbar` (tombol ← Kembali `bkModalClose`), `watch-main` (elemen `<video>` MP4 langsung — bukan iframe), `watch-related` sticky sidebar. Deep-link `/bk/watch/<token>`. Mekanisme history/popstate identik P2/P3.
 
 ### CDN Allowlist P4 (isAllowedBkCdnUrl + isAllowedBkThumbUrl)
 - `vdn.bokepking.cam` — CDN video & thumbnail utama (tanpa signed token, TTL 30 mnt aman)
@@ -248,8 +250,8 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 | `tp_posts` | `/api/tp/posts` dipanggil (P5) |
 | `rc_video` | `/proxy/rc/stream/:hash` dipanggil (P6) |
 | `rc_posts` | `/api/rc/posts` dipanggil (P6) |
-| `sb_video` | `/api/sb/video/:slug` dipanggil (P7) |
-| `sb_posts` | `/api/sb/posts` dipanggil (P7) |
+| `sb_video` | `/api/sb/video/:slug` dipanggil (P7/Vidorey 5) |
+| `sb_posts` | `/api/sb/posts` dipanggil (P7/Vidorey 5) |
 
 ### Implementasi Monitor
 - **Ring buffer server**: `MON_BUF=50.000` event, `CDN_ALERT_MAX=500` alert
