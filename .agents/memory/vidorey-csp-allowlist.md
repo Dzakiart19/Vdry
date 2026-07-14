@@ -14,7 +14,8 @@ Wildcard `https:` pada praktiknya menghilangkan proteksi allowlist — browser a
 - `https://cdn.jsdelivr.net` — hls.js (rb.html + yb.html)
 - `https://www.googletagmanager.com` — GTM (semua halaman)
 - `https://pl28423230.effectivecpmnetwork.com` — Adsterra native banner
-- `https://turbulentrefreshments.com` — Adsterra popunder (Anti-Adblock, ganti dari pl28418540.effectivecpmnetwork.com)
+- `https://pl28418540.effectivecpmnetwork.com` — Adsterra popunder
+- `https://turbulentrefreshments.com` — ⚠️ JANGAN PAKAI sebagai pengganti popunder — domain baru diblokir browser built-in popup blocker, popunder tidak jalan sama sekali
 - `https://pl28427857.effectivecpmnetwork.com` — Adsterra social bar
 - `https://www.highperformanceformat.com` — Adsterra display ad (300×250, 728×90, 468×60, 160×600, 160×300, 320×50)
 - `https://pl26548697.profitableratecpm.com` — Adsterra (Platform 5 tp.html)

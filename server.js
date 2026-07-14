@@ -52,7 +52,7 @@ app.use(helmet({
         'https://cdn.jsdelivr.net',
         // Adsterra ad network
         'https://pl28423230.effectivecpmnetwork.com',
-        'https://turbulentrefreshments.com',
+        'https://pl28418540.effectivecpmnetwork.com',
         'https://pl28427857.effectivecpmnetwork.com',
         'https://www.highperformanceformat.com',
         // Adsterra / profitableratecpm (Platform 5 tp.html)
