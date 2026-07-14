@@ -2,6 +2,12 @@
 
 Web app untuk browse dan nonton video dari enam platform terpisah.
 
+## Cara Menjalankan (Replit)
+- Workflow **Start application** menjalankan `node server.js`, serve di port 5000.
+- Dependencies via `npm install` (sudah termasuk di package.json: express, axios, cheerio, helmet, cors, compression, express-rate-limit).
+- Secret `SESSION_SECRET` dipakai sebagai `MONITOR_KEY` (lib/monitor.js) untuk proteksi route `/monitor`, `/monitor/events`, dll — sudah dikonfigurasi.
+- Tidak ada database eksternal; semua cache in-memory (lib/cache.js).
+
 ## Stack
 - **Backend**: Node.js + Express (proxy + HTML scraper), modular — lihat struktur di bawah
 - **Frontend**: Vanilla JS SPA (no framework), enam halaman terpisah
