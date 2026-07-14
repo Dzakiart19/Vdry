@@ -19,11 +19,6 @@ Wildcard `https:` pada praktiknya menghilangkan proteksi allowlist — browser a
 - `https://www.highperformanceformat.com` — Adsterra display ad (300×250, 728×90, 468×60, 160×600, 160×300, 320×50)
 - `https://pl26548697.profitableratecpm.com` — Adsterra (Platform 5 tp.html)
 - `https://pl26548687.profitableratecpm.com` — Adsterra (Platform 5 tp.html)
-- `https://a.pemsrv.com` — ExoClick Desktop Fullpage Interstitial (semua halaman)
-
-## Domain terkait (bukan scriptSrc, tapi perlu diketahui)
-- `https://s.pemsrv.com` — ExoClick Delegate-CH (meta http-equiv, bukan script — tidak perlu di CSP)
-
 ## How to Apply
 Setiap kali menambahkan tag `<script src="https://...">` baru ke salah satu HTML (index/rb/yb/bk/tp), tambahkan domainnya ke array `scriptSrc` di `server.js` **sebelum** deploy. Tanpa ini, script diblokir browser secara diam-diam (tidak ada error di server, hanya di browser console).
 

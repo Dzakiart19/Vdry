@@ -474,16 +474,17 @@ const App = (() => {
     // /proxy/stream/:id resolve URL-nya sendiri di server.
     el.video.src = `${API}/proxy/stream/${id}`;
     el.video.load();
-    if (typeof vastPreroll === 'function') {
-      vastPreroll(() => { el.video.play().catch(() => {}); });
-    } else {
-      el.video.play().catch(() => {});
-    }
+    el.video.play().catch(() => {});
 
     // Fetch title di background — update begitu dapat, tidak blokir playback.
     fetchWithTimeout(`${API}/api/video/${id}`)
       .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => { if (data?.title) el.title.textContent = data.title; })
+      .then(data => {
+        if (data?.title) {
+          el.title.textContent = data.title;
+          if (typeof setVideoJsonLd === 'function') setVideoJsonLd(data.title, window.location.href, null, '');
+        }
+      })
       .catch(() => {});
   }
 

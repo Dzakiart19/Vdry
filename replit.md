@@ -1,14 +1,14 @@
 # Vidorey — Multi-Platform Video Browser
 
-Web app untuk browse dan nonton video dari tujuh platform terpisah.
+Web app untuk browse dan nonton video dari enam platform terpisah.
 
 ## Stack
 - **Backend**: Node.js + Express (proxy + HTML scraper), modular — lihat struktur di bawah
-- **Frontend**: Vanilla JS SPA (no framework), tujuh halaman terpisah
+- **Frontend**: Vanilla JS SPA (no framework), enam halaman terpisah
 - **Port**: 5000
 
 ## Struktur Backend
-`server.js` (composition root) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 7 router platform → monitor/health routes → SPA fallback.
+`server.js` (composition root) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 6 router platform → monitor/health routes → SPA fallback.
 
 ```
 server.js                 ← composition root (helmet/CSP, CORS, rate limit, mount routers, /api/s/:platform/:token shortlink resolver, listen)
@@ -46,6 +46,8 @@ Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri 
 ## Iklan (Adsterra)
 Empat jenis slot iklan aktif, posisi strategis per halaman:
 
+Iklan hanya dari **Adsterra**. ExoClick telah dihapus sepenuhnya.
+
 | Slot | Ukuran | Class CSS | Key | Posisi |
 |---|---|---|---|---|
 | Display banner | 300×250 | `.ad-display-slot` | `d50b941ac6d9bd5749dcdb0b417bf348` | Atas grid + bawah native (2× per listing page) |
@@ -59,7 +61,7 @@ Empat jenis slot iklan aktif, posisi strategis per halaman:
 **Aturan penting:**
 - Native banner punya `id` container tetap (`container-761a1a8645cd2263043bfeb6f2e87eea`) — **jangan duplikat** di halaman yang sama.
 - Display banner 300×250 **aman diduplikat** — `atOptions` di-reset sebelum tiap `invoke.js`.
-- **Unit yang sudah dihapus dan tidak boleh dipasang lagi:** 728×90 Leaderboard, 468×60 Banner, 160×300 Half-page, 160×600 Skyscraper, Smartlinks (`smartlinks.js` sudah dihapus dari repo).
+- **Unit yang sudah dihapus dan tidak boleh dipasang lagi:** 728×90 Leaderboard, 468×60 Banner, 160×300 Half-page, 160×600 Skyscraper, Smartlinks (`smartlinks.js` sudah dihapus dari repo). ExoClick (semua unit) dihapus — hanya Adsterra yang aktif.
 - Kalau nambah jaringan iklan baru, domain barunya wajib ditambah ke `scriptSrc` di `server.js` (CSP tidak pakai wildcard `https:`).
 
 ### Struktur Nav Drawer (sama di keenam HTML)
@@ -180,7 +182,7 @@ Semua halaman menggunakan **keyword bahasa Inggris** (bukan Indonesia) agar Goog
 | File | Fungsi |
 |---|---|
 | `robots.txt` | Allow semua kecuali `/monitor` dan `/health` |
-| `sitemap.xml` | 7 URL platform, `changefreq: daily` |
+| `sitemap.xml` | 6 URL platform, `changefreq: daily` |
 
 Setiap platform baru wajib ditambahkan ke `sitemap.xml`.
 
@@ -259,6 +261,8 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 - `/embed/:id` (P1) override `frame-ancestors`-nya sendiri lewat `res.setHeader` supaya bisa di-iframe dari Firebase frontend.
 - **Rate limiting** (`express-rate-limit`): `/api/*` → 60 req/menit/IP (endpoint yang memicu scraping upstream), `/proxy/*` → 300 req/menit/IP (stream/segment/thumbnail, butuh limit lebih longgar). `app.set('trust proxy', 1)` wajib ada — tanpa ini semua pengunjung di belakang proxy Replit akan dianggap satu IP yang sama.
 - **Monitor buffer**: ring buffer 50.000 event di server; client pakai virtual list sehingga puluhan ribu event bisa ditampilkan tanpa lag DOM.
+- **Kompresi**: `compression` middleware aktif sebelum Helmet — gzip semua response teks (HTML/JS/CSS/JSON) secara otomatis. `Content-Encoding: gzip` dikirim ke browser yang mendukung.
+- **Cache-Control static**: `express.static` dikonfigurasi `maxAge: 2h, etag: true` — browser cache CSS/JS/gambar 2 jam untuk performa repeat visit. Firebase CDN berlaku independent di production.
 
 ## User Preferences
 - Dark theme (Obsidian Archive design system)

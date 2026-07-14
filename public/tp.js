@@ -22,7 +22,7 @@
   let isMuted      = true;  // mulai muted agar autoplay bisa jalan
   var cachedTrends     = []; // trending searches dari home mode, untuk end slide
   var totalSlidesAdded = 0;  // counter global untuk sisipkan ad slide setiap 5 video
-  var vastShown        = false; // VAST preroll ditampilkan sekali per sesi
+
 
   /* ── History helper: push/replace state + sinkronisasi URL ────── */
   function tpNav(push, mode, q, tag) {
@@ -202,12 +202,7 @@
     activeVideo = vid;
     activeHls   = hls || null;
     vid.muted   = isMuted;
-    if (!vastShown && typeof vastPreroll === 'function') {
-      vastShown = true;
-      vastPreroll(() => { vid.play().catch(() => {}); });
-    } else {
-      vid.play().catch(() => {});
-    }
+    vid.play().catch(() => {});
   }
 
   /* ── Load & play HLS dalam sebuah slide ─────────────────────────

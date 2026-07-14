@@ -426,6 +426,7 @@
 
     els.videoTitle.textContent = 'Memuat…';
     els.playerLoading.classList.remove('hidden');
+    if (typeof clearVideoJsonLd === 'function') clearVideoJsonLd();
     renderWatchDesc('');
     renderRelated([]);
     destroyPlayer();
@@ -446,6 +447,7 @@
         history.replaceState({ sbModal: true, sbSlug: slug }, '', `/sb/watch/${data.token}`);
       }
       els.videoTitle.textContent = data.title || slug;
+      if (typeof setVideoJsonLd === 'function') setVideoJsonLd(data.title || slug, window.location.href, null, data.description || '');
       renderWatchDesc(data.description || '');
       renderRelated(data.related || []);
       playHls(`${API}${data.m3u8Url}`, session);
@@ -468,11 +470,7 @@
     const onReady = () => {
       if (session !== playerSession) return;
       els.playerLoading.classList.add('hidden');
-      if (typeof vastPreroll === 'function') {
-        vastPreroll(() => { if (session === playerSession) video.play().catch(() => {}); });
-      } else {
-        video.play().catch(() => {});
-      }
+      if (session === playerSession) video.play().catch(() => {});
     };
 
     const onError = () => {

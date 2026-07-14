@@ -10,7 +10,7 @@ const helmet    = require('helmet');
 const cors      = require('cors');
 const path      = require('path');
 const rateLimit = require('express-rate-limit');
-const axios     = require('axios');
+const compression = require('compression');
 
 const { trackRequest, registerMonitorRoutes } = require('./lib/monitor');
 const { resolveToken } = require('./lib/shortlink');
@@ -30,6 +30,7 @@ const PORT = process.env.PORT || 5000;
    pengunjung sebagai satu IP yang sama dan saling membatasi satu sama
    lain. `1` = percayai persis satu hop proxy di depan app. */
 app.set('trust proxy', 1);
+app.use(compression());
 
 /* ── Security headers ──────────────────────────────────────────────────
    CSP: 'unsafe-inline' terpaksa dipakai di script-src/style-src karena
@@ -57,10 +58,7 @@ app.use(helmet({
         // Adsterra / profitableratecpm (Platform 5 tp.html)
         'https://pl26548697.profitableratecpm.com',
         'https://pl26548687.profitableratecpm.com',
-        // ExoClick
-        'https://a.pemsrv.com',
-        'https://a.magsrv.com',
-        'https://s.magsrv.com',
+
       ],
       styleSrc:  ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       imgSrc:    ["'self'", 'data:', 'https:'],
@@ -104,7 +102,10 @@ app.use(cors({
   credentials: false,
 }));
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '2h',
+  etag:   true,
+}));
 
 /* ── Monitor middleware: catat setiap request API ── */
 app.use(trackRequest);
@@ -156,23 +157,6 @@ registerMonitorRoutes(app, {
   ].map(c => c.stats()),
 });
 
-/* ── ExoClick VAST proxy — /api/vast?zone=XXXXXXX → XML ── */
-app.get('/api/vast', async (req, res) => {
-  const zone = String(req.query.zone || '5972318').replace(/\D/g, '');
-  if (!['5972318', '5972326'].includes(zone)) return res.status(400).send('');
-  try {
-    const r = await axios.get(`https://s.magsrv.com/v1/vast.php?idz=${zone}`, {
-      timeout: 5000,
-      headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36' },
-      responseType: 'text',
-    });
-    res.set('Content-Type', 'text/xml; charset=utf-8');
-    res.set('Cache-Control', 'no-store');
-    res.send(r.data);
-  } catch (e) {
-    res.status(502).send('');
-  }
-});
 
 /* ── Shortlink resolver — /api/s/:platform/:token → { slug } ── */
 app.get('/api/s/:platform/:token', (req, res) => {
