@@ -75,6 +75,32 @@ OVER = 12          — overscan (baris extra di atas/bawah viewport)
 
 ---
 
+## SSE — Koyeb Proxy Fix (wajib dipertahankan)
+
+Koyeb (dan proxy non-Nginx seperti Caddy) buffer SSE response sehingga `onopen`
+di browser tidak pernah fired — monitor stuck di "Connecting..." selamanya.
+
+**Fix yang sudah diterapkan di `/monitor/events`:**
+
+```js
+res.setHeader('X-Accel-Buffering', 'no');   // nginx
+res.setHeader('X-Pad', 'avoid browser bug'); // legacy flush trigger
+res.flushHeaders();
+res.write(': ok\n\n');  // ← WAJIB: paksa proxy flush headers segera ke browser
+```
+
+**Keepalive interval: 15 detik** (bukan 25) — Koyeb timeout proxy biasanya 30s,
+25s terlalu dekat batasnya dan berisiko drop.
+
+**Why:** `X-Accel-Buffering: no` hanya dikenal Nginx. Koyeb pakai proxy sendiri
+yang mengabaikan header itu. Satu-satunya cara paksa flush adalah kirim data
+nyata (`: ok\n\n`) sebelum server punya event untuk dikirim.
+
+**Jangan hapus** `: ok\n\n` atau ubah interval >20s — monitor akan kembali
+stuck "Connecting..." di Koyeb deployment.
+
+---
+
 ## Endpoints
 
 | Route | Fungsi |
