@@ -1848,6 +1848,16 @@ body.rb-page .content {
 .vdry-cat-chip:hover { color: var(--text); border-color: var(--rose); }
 .vdry-cat-chip.active { background: var(--rose); border-color: var(--rose); color: #fff; }
 
+/* ── Mobile: panel kategori rata kanan — tombol ada di sisi kanan topbar ── */
+@media (max-width: 767px) {
+  .vdry-cat-panel {
+    left: auto;
+    right: 0;
+    max-width: calc(100vw - 20px);
+    max-height: 42vh;
+  }
+}
+
 /* ── Search result heading ── */
 .rb-search-heading {
   color: var(--text2);
