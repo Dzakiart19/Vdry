@@ -58,8 +58,6 @@ app.use(helmet({
         // Adsterra / profitableratecpm (Platform 5 tp.html)
         'https://pl26548697.profitableratecpm.com',
         'https://pl26548687.profitableratecpm.com',
-        // Adsterra direct tag (semua platform)
-        'https://turbulentrefreshments.com',
 
       ],
       styleSrc:  ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
