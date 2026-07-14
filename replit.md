@@ -62,7 +62,7 @@ Iklan hanya dari **Adsterra**. ExoClick telah dihapus sepenuhnya.
 | Mobile banner | 320×50 | `.ad-mobile-banner-slot` | `d37e31d713d11b2ddde7d3efca199c9d` | **Sticky fixed bottom** di mobile (≤767px); static di desktop |
 | Popunder + Social Bar | — | *(inline script)* | `pl28418540` + `pl28427857` | Akhir `<body>`, sekali per halaman |
 
-**Watch view (P2/P3/P4/P7):** dua slot 300×250 — satu di bawah player (`watch-ad-below-player`, tepat setelah video-stage), satu lagi di bawah grid related di sidebar kanan (`watch-ad-slot`). Tidak ada popunder/social bar di watch view karena mengganggu nonton.
+**Watch view (P2/P3/P4/P6):** dua slot 300×250 — satu di bawah player (`watch-ad-below-player`, tepat setelah video-stage), satu lagi di bawah grid related di sidebar kanan (`watch-ad-slot`). Tidak ada popunder/social bar di watch view karena mengganggu nonton.
 
 **Aturan penting:**
 - Native banner punya `id` container tetap (`container-761a1a8645cd2263043bfeb6f2e87eea`) — **jangan duplikat** di halaman yang sama.
@@ -78,7 +78,7 @@ Iklan hanya dari **Adsterra**. ExoClick telah dihapus sepenuhnya.
 - `.nav-plat-item` + `.nav-plat-item.active` — item platform; avatar selalu `<img src="/logo.png">` (logo Vidorey sama untuk semua platform, konsisten dengan topbar)
 
 **Dua seksi nav drawer:**
-- **Seksi atas** (tanpa label) — listing platform biasa: P1 `/` (Vidorey 1), P2 `/rb` (Vidorey 2), P3 `/yb` (Vidorey 3), P4 `/bk` (Vidorey 4), P7 `/sb` (Vidorey 5)
+- **Seksi atas** (tanpa label) — listing platform biasa: P1 `/` (Vidorey 1), P2 `/rb` (Vidorey 2), P3 `/yb` (Vidorey 3), P4 `/bk` (Vidorey 4), P6 `/sb` (Vidorey 5)
 - `<hr class="nav-section-divider">` — pemisah visual
 - **"Fitur Lain"** — KHUSUS TikTok-style (vertical scroll-snap): P5 `/tp`
 
@@ -117,9 +117,9 @@ Klik video membuka **full-page watch view** (cover seluruh layar, bukan modal me
 
 Topbar watch (`watch-topbar`, 52px): tombol **← Kembali** (`rbModalClose`) di kiri + label platform di sebelahnya. Menutup ke listing dan restore URL ke `/rb`.
 
-**URL scheme — shortlink 11 karakter (bukan slug):** Address bar dan share link memakai token 11-char acak (`/rb/watch/m4k9zqr2xab`) yang tidak mengandung judul video. Flow: (1) `openModal(slug)` push URL ke `/rb/watch/<base64url(slug)>` sementara; (2) setelah API `/api/rb/video/:slug` return, server menyertakan field `token` (dihasilkan `registerSlug('rb', slug)` dari `lib/shortlink.js`); (3) client langsung `history.replaceState` ke `/rb/watch/<token>` dan simpan ke `currentToken`; (4) tombol Share pakai `currentToken || encodeSlug(currentSlug)`. Deep-link saat load: jika segment URL 11-char `[a-z0-9]` → resolve via `/api/s/rb/<token>`; jika base64url panjang → `decodeSlug()` (backward compat link lama). Token berlaku 48 jam (in-memory, hilang saat server restart). Mekanisme back/forward via popstate: state selalu menyimpan slug asli (bukan token), jadi Forward tidak perlu resolve ulang. Lihat `openModal()`/`openPlayer()`/popstate handler di `rb.js`. Pola ini identik di P3/P4/P7.
+**URL scheme — shortlink 11 karakter (bukan slug):** Address bar dan share link memakai token 11-char acak (`/rb/watch/m4k9zqr2xab`) yang tidak mengandung judul video. Flow: (1) `openModal(slug)` push URL ke `/rb/watch/<base64url(slug)>` sementara; (2) setelah API `/api/rb/video/:slug` return, server menyertakan field `token` (dihasilkan `registerSlug('rb', slug)` dari `lib/shortlink.js`); (3) client langsung `history.replaceState` ke `/rb/watch/<token>` dan simpan ke `currentToken`; (4) tombol Share pakai `currentToken || encodeSlug(currentSlug)`. Deep-link saat load: jika segment URL 11-char `[a-z0-9]` → resolve via `/api/s/rb/<token>`; jika base64url panjang → `decodeSlug()` (backward compat link lama). Token berlaku 48 jam (in-memory, hilang saat server restart). Mekanisme back/forward via popstate: state selalu menyimpan slug asli (bukan token), jadi Forward tidak perlu resolve ulang. Lihat `openModal()`/`openPlayer()`/popstate handler di `rb.js`. Pola ini identik di P3/P4/P6.
 
-Di bawah grid "Video Lainnya" (paling bawah sidebar) ada satu slot iklan kecil (`.watch-ad-slot`, banner iframe 300×250 dari `highperformanceformat.com`). Identik di P2/P3/P4/P7.
+Di bawah grid "Video Lainnya" (paling bawah sidebar) ada satu slot iklan kecil (`.watch-ad-slot`, banner iframe 300×250 dari `highperformanceformat.com`). Identik di P2/P3/P4/P6.
 
 ## Cara Kerja — Platform 3 (yobokep.com)
 1. `/api/yb/posts` → WP REST API untuk slug + title + totalPages; parallel-fetch `og:image` dari tiap post untuk thumbnail (cache 24 jam)
@@ -156,15 +156,38 @@ Full-page layout identik P2/P3 — `watch-topbar` (tombol ← Kembali `bkModalCl
 ### Kenapa Direct MP4 (bukan HLS) untuk P4
 bokepking.cam menyimpan video sebagai MP4 langsung di `vdn.bokepking.cam` — tidak ada playlist `.m3u8`. Proksi dilakukan via `/proxy/bk/stream/:slug` dengan Range support supaya seek/scrubbing berfungsi.
 
-## Cara Kerja — Platform 5 (tik.porn)
+## Cara Kerja — Platform 5 / Vidorey TikTok 1 (tik.porn)
+
+> ⚠️ **Bukan Vidorey 5.** P5 adalah platform TikTok-style yang masuk seksi **"Fitur Lain"** di nav drawer — terpisah dari urutan numerik listing (Vidorey 1–5). Vidorey 5 = P6 (situsbokep.cc/sb).
+
 1. `/api/tp/posts` → scrape `__NEXT_DATA__` dari tik.porn; home: `initialRelatedVideos.data[]` (10 item, tidak bisa pagination); search: `initialVideoResults.data[]`
 2. `/api/tp/video/:id` → scrape `__NEXT_DATA__` → ambil `firstVideo.sources[].type === 'application/x-mpegURL'` untuk HLS URL
 3. `/proxy/tp/hls/:id` → proxy master m3u8, rewrite semua URL ke `/proxy/tp/seg`
 4. `/proxy/tp/seg` → proxy segment/sub-manifest; `axTpGetSafe` untuk validasi redirect CDN
 5. `/proxy/tp/thumb?url=` → proxy thumbnail (base64url encode)
 
+### Search dedup (tp.js client)
+tik.porn SSR search tidak mendukung pagination — `/page/N/?s=query` selalu return halaman 1 yang sama. Client-side fix: `seenVideoIds` (Set) mencatat semua ID yang sudah tampil di feed; batch baru difilter, jika semua duplikat `hasMore=false` dan end slide muncul.
+
 ### Feed P5 (TikTok-style)
 TikTok-style vertical scroll-snap feed (`tp-feed` position:fixed, `body.tp-page { overflow:hidden }`). Tidak ada modal. IntersectionObserver threshold 0.75 play/pause. Ad slide setiap 5 video + end slide.
+
+## Cara Kerja — Platform 6 / Vidorey 5 (situsbokep.cc)
+
+> ⚠️ **Nama UI = Vidorey 5** (bukan Vidorey 6) karena P5/TikTok tidak dihitung dalam urutan numerik listing.
+
+1. `/api/sb/posts?p=N&q=query&cat=slug` → dua mode:
+   - **Search** (`q` ada): WP REST API `/wp-json/wp/v2/posts?search=...&page=N&per_page=24&_embed=wp:featuredmedia` — pagination akurat via header `X-WP-TotalPages`. HTML scrape `/page/N/?s=query` tidak bekerja di WordPress ini (selalu return halaman 1).
+   - **Browse/kategori** (tanpa `q`): HTML scrape + cheerio (`article.thumb-block, article.loop-video`); pagination dari link `href.match(/\/page\/(\d+)/)`.
+2. `/api/sb/categories` → WP REST API kategori
+3. `/api/sb/video/:slug` → scrape `situsbokep.cc/view/[slug]` → `itemprop="embedURL"` → `xvideos.com/embedframe/[xv_id]` → `html5player.setVideoHLS(...)` → HLS URL
+4. `/proxy/sb/hls/:slug` → proxy master m3u8, rewrite ke `/proxy/sb/seg`
+5. `/proxy/sb/seg` → proxy segment CDN (xvideos-cdn.com / xnxx-cdn.com)
+6. `/proxy/sb/thumb?url=` → proxy thumbnail (allowlist: situsbokep.cc + CDN thumb domains)
+7. `/sb/watch/:token` → SPA route deep-link (serve `sb.html`)
+
+### Watch View P6 (sama seperti P2/P3/P4)
+Full-page layout: `watch-topbar` (← Kembali) + `watch-main` (hls.js player + judul + deskripsi) + `watch-related` sticky sidebar. Deep-link `/sb/watch/<token>` (11-char shortlink).
 
 ## SEO
 
@@ -251,8 +274,8 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 | `bk_posts` | `/api/bk/posts` dipanggil (P4) |
 | `tp_video` | `/proxy/tp/hls/:id` dipanggil (P5) |
 | `tp_posts` | `/api/tp/posts` dipanggil (P5) |
-| `sb_video` | `/api/sb/video/:slug` dipanggil (P6/Vidorey 5) |
-| `sb_posts` | `/api/sb/posts` dipanggil (P6/Vidorey 5) |
+| `sb_video` | `/proxy/sb/hls/:slug` dipanggil (P6 / Vidorey 5) |
+| `sb_posts` | `/api/sb/posts` dipanggil (P6 / Vidorey 5) |
 
 ### Implementasi Monitor
 - **Ring buffer server**: `MON_BUF=50.000` event, `CDN_ALERT_MAX=500` alert
@@ -272,7 +295,7 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 - **CSP connect-src untuk GA4**: `connectSrc` wajib mengizinkan `www.google-analytics.com`, `*.google-analytics.com`, `analytics.google.com`, `googletagmanager.com`, `www.google.com` — tanpa ini beacon GA4 (dikirim via GTM) diblokir CSP dan analytics tidak pernah dapat data sama sekali walau GTM/GA4 sudah terpasang di HTML.
 
 ### VideoObject JSON-LD — status per platform
-`public/utils.js` expose `window.setVideoJsonLd()` / `window.clearVideoJsonLd()`. Wajib dipanggil saat video mulai diputar (set) dan saat player ditutup/ganti video (clear) — kalau tidak, schema lama nyangkut di halaman. Sudah terpasang lengkap di app.js (P1), rb.js (P2), yb.js (P3), bk.js (P4), tp.js (P5), sb.js (P6/Vidorey 5).
+`public/utils.js` expose `window.setVideoJsonLd()` / `window.clearVideoJsonLd()`. Wajib dipanggil saat video mulai diputar (set) dan saat player ditutup/ganti video (clear) — kalau tidak, schema lama nyangkut di halaman. Sudah terpasang lengkap di app.js (P1), rb.js (P2), yb.js (P3), bk.js (P4), sb.js (P6/Vidorey 5), tp.js (P5/Vidorey TikTok 1).
 
 ### Ad-blocker detection
 `public/adblock.js` (dimuat di semua 6 HTML setelah `utils.js`) mendeteksi ad-blocker via bait element (`class="ads ad-banner adsbox ad-placement pub_300x250 text-ad textAd"`, cek `offsetParent`/`display`/`visibility` setelah 300ms). Kalau terdeteksi, tampilkan banner non-blocking di pojok bawah (`#vdry-adb-banner`, style di `style.css`) minta user whitelist — dismiss disimpan 24 jam di `localStorage` (`vdry_adb_dismiss_until`) supaya tidak nge-spam user yang sama.

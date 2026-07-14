@@ -57,9 +57,24 @@ description: tik.porn (Vidorey TikTok) — scraping, proxy, and client architect
 - tik.porn kadang mengirim caption dengan placeholder seperti `@{{action:26}}`, `@{{pornstar:4775}}`, `@{{studio:189}}`
 - Hanya `#{{tag:\d+}}` yang di-strip (`stripTagPlaceholders`); `@{{...}}` dibiarkan (bisa di-strip ke depan jika diinginkan)
 
+## Client-side search dedup (seenVideoIds)
+tik.porn SSR search (`/?s=query&page=N`) tidak mendukung multi-page — setiap page mengembalikan konten yang sama dengan page 1. Fix di `public/tp.js`:
+- `seenVideoIds` (Set) di-reset saat `resetFeed()`, diisi saat video ditambahkan ke feed
+- Setiap batch baru difilter: `videos.filter(v => !seenVideoIds.has(String(v.id)))`
+- Jika hasil filter kosong dan feed sudah ada konten → `hasMore = false` → end slide tampil
+- Tidak perlu perubahan server-side
+
+**Why:** SSR tik.porn tidak membedakan page=1 vs page=2 untuk search — response `initialVideoResults` identik. Client dedup adalah satu-satunya cara yang reliable tanpa mengakses internal API tik.porn.
+
+## Platform identity — BUKAN Vidorey 5
+- **Nama UI**: Vidorey TikTok 1 (bukan Vidorey 5)
+- **Nav drawer**: masuk seksi **"Fitur Lain"** (di bawah divider), bukan seksi listing atas
+- **Urutan listing**: Vidorey 1 = P1, Vidorey 2 = P2, Vidorey 3 = P3, Vidorey 4 = P4, **Vidorey 5 = P6/sb** — TP tidak dihitung dalam urutan numerik listing
+
 ## Nav drawer pattern untuk platform baru
-- Tambah `<hr class="nav-section-divider">` + `<div class="nav-drawer-label">Fitur Lain</div>` sebelum item baru
-- Update SEMUA 6 HTML (index, rb, yb, bk, tp, rc) — jangan lupa satu pun
+- TikTok-style baru → tambah di seksi "Fitur Lain" (setelah `<div class="nav-drawer-label">Fitur Lain</div>`)
+- "rc" (Vidorey TikTok 2, reddclips) pernah direncanakan tapi **tidak pernah dibangun** — tidak ada `rc.html` atau `lib/scrapers/rc.js`
+- Update SEMUA 6 HTML (index, rb, yb, bk, tp, sb) jika ada platform TikTok baru
 
 ## Ad slot TP — struktur yang benar (PENTING)
 `body.tp-page { overflow: hidden }` + `#tpFeed { position: fixed; inset: 0 }` — static HTML slot di luar feed (leaderboard/skyscraper/mobile) TIDAK TERLIHAT karena tertimpa feed fixed. Sudah dibersihkan.

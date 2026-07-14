@@ -11,7 +11,7 @@
 - [RB Watch View + Related + Share](rb-watch-view-related.md) — watch URL sekarang 11-char token (bukan slug); encodeSlug/decodeSlug + currentToken flow; deep-link dual-path (token vs legacy base64); openModal() idempotent + popstate 3-branch.
 - [Vidorey Shortlink](vidorey-shortlink.md) — lib/shortlink.js token registry; registerSlug(platform,slug)→11char; /api/s/:platform/:token di server.js; full client encodeSlug/decodeSlug + currentToken flow.
 - [No Source Ads Rule](no-source-ads.md) — platform baru wajib proxy MP4/m3u8 langsung; tidak boleh ada iframe/embed sumber di browser; jika chain tidak bisa di-resolve server-side → not feasible.
-- [Platform 5 TP Architecture](tp-platform5-architecture.md) — tik.porn __NEXT_DATA__ scrape; HLS via video-cdn.tik.porn; base64url for seg/thumb proxy; redirect-safe axTpGetSafe; token TTL ~1y no self-heal. Ad slot TP harus fixed-position (bukan static HTML di luar feed).
-- [Platform 6 SB Architecture](sb-platform7-architecture.md) — situsbokep.cc WP HTML scrape; link `/view/` bukan `/watch/`; absolute URL pagination; xvideos embedframe → HLS *.xvideos-cdn.com; token TTL ~1 tahun.
+- [TP Architecture (Vidorey TikTok 1)](tp-platform5-architecture.md) — tik.porn __NEXT_DATA__ scrape; HLS via video-cdn.tik.porn; base64url proxy; axTpGetSafe; search dedup seenVideoIds (SSR pagination tidak bekerja); BUKAN Vidorey 5.
+- [SB Architecture (Vidorey 5)](sb-platform6-architecture.md) — situsbokep.cc P6 code; UI = Vidorey 5 (TikTok tidak dihitung); search via WP REST API (HTML scrape /page/N/?s= selalu return hal.1); xvideos embedframe → HLS.
 - [Vidorey SEO Strategy](vidorey-seo.md) — lang="en" + og:locale=en_US + English keywords; GTM GTM-NWZSVQT9; GA4 G-6MB6SQTZWK; GSC terverifikasi; Bing terdaftar; H1 sr-only wajib.
 - [New Platform Checklist](new-platform-checklist.md) — checklist 7 fase lengkap saat tambah platform baru; semua file yang harus diubah tercantum.

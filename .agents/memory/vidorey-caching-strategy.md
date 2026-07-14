@@ -29,16 +29,16 @@ description: makeCache helper, semua cache per platform + TTL, sentinel values, 
 | `rcCategoriesCache` | P6 | 1 jam | 10 | Daftar kategori (sedikit entry) |
 | `rcPostsCache` | P6 | 10 mnt | 300 | Listing per categoryId+sort+cursor |
 | `rcThumbCache` | P6 | 5 mnt | 100 | Boolean flag = URL pernah sukses |
-| `sbPostsCache` | P7 | 3 mnt | 200 | HTML listing per page:cat:query |
-| `sbM3u8Cache` | P7 | 8 jam | 500 | M3U8 URL per slug (token xvideos TTL ~1 tahun) |
-| `sbVideoCache` | P7 | 4 jam | 300 | Full video payload + `_xvId` untuk self-heal |
-| `sbFreshCache` | P7 | 1 mnt | 100 | Anti-stampede fresh resolve per slug |
+| `sbPostsCache` | P6 | 3 mnt | 200 | HTML listing / REST API search per page:cat:query |
+| `sbM3u8Cache` | P6 | 8 jam | 500 | M3U8 URL per slug (token xvideos TTL ~1 tahun) |
+| `sbVideoCache` | P6 | 4 jam | 300 | Full video payload + `_xvId` untuk self-heal |
+| `sbFreshCache` | P6 | 1 mnt | 100 | Anti-stampede fresh resolve per slug |
 
 **P5 tidak punya tpThumbCache** — URL thumbnail sudah ada di dalam payload `tpVideoCache` (field `thumbnailSm`/`thumbnailMd`).
 
 **P6 rcThumbCache** — tidak menyimpan binary, hanya `true` sebagai flag "URL ini valid". Fetch ulang tiap request tapi skip validasi content-type lebih awal.
 
-**P7 sbM3u8Cache TTL 8 jam** — token xvideos CDN valid ~1 tahun (timestamp embedded `,...,1783946866,...`), jadi TTL bisa panjang. `sbFreshCache` (1 mnt) cegah concurrent self-healing stampede.
+**P6 sbM3u8Cache TTL 8 jam** — token xvideos CDN valid ~1 tahun (timestamp embedded `,...,1783946866,...`), jadi TTL bisa panjang. `sbFreshCache` (1 mnt) cegah concurrent self-healing stampede.
 
 ## Sentinel Values
 Untuk mencegah upstream hammering saat error, semua video-level cache menyimpan sentinel:

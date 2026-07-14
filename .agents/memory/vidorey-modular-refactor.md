@@ -9,7 +9,7 @@ Vidorey's monolithic server.js (all platforms + monitor in one file) was split i
 - `lib/scrapers/{p1,rb,yb,bk,tp,sb}.js` — one file per platform, each exports `{ router, caches }`; no cross-imports between platform files.
 - `server.js` is now a thin composition root (6 platforms).
 
-**Reality check (2026-07-14):** a 7th platform ("rc", reddclips) was planned/documented at some point but never built — no `lib/scrapers/rc.js` or `public/rc.html` exist. Older memory files referred to sb as "Platform 7" and rc as "Platform 6"; that has been corrected — sb is Platform 6. If rc is built later it becomes Platform 7.
+**Reality check (2026-07-14):** There are 6 active platforms — p1, rb (P2), yb (P3), bk (P4), tp (P5), sb (P6). "rc" (reddclips) was planned but never built. **UI naming (nav drawer) differs from internal code order:** Vidorey 1–5 = P1/P2/P3/P4/P6 (listing); TP (P5) is "Vidorey TikTok 1" under "Fitur Lain" — not counted as Vidorey 5. So "Vidorey 5" = P6/sb.
 
 **Why:** user explicitly asked to de-duplicate/simplify server.js structure without merging scraper logic — platform isolation ("setiap platform harus terisolasi penuh") is a hard project rule from replit.md, so shared code was limited to genuinely generic helpers.
 

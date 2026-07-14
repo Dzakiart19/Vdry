@@ -7,7 +7,13 @@ description: Platform switcher adalah hamburger sidebar drawer. Dua seksi berbed
 Platform navigation adalah **sidebar drawer** (hamburger ≡ button), BUKAN dropdown. Nama platform di UI **tidak boleh menyebut nama web sumber** (ruangbokep, yobokep, bokepking, tik.porn, situsbokep, dst).
 
 ## Reality check (2026-07-14)
-Vidorey punya **6 platform aktif**, bukan 7. Sempat ada rencana/leftover kode untuk "Platform 6 rc" (Vidorey TikTok 2, reddclips) tapi **tidak pernah dibangun** — tidak ada `rc.html` atau `lib/scrapers/rc.js` di repo. Dokumen lama (dan beberapa memory file lain) salah menyebut sb sebagai "Platform 7" dan menyisipkan rc sebagai "Platform 6" — itu keliru. Urutan yang benar: p1, rb (P2), yb (P3), bk (P4), tp (P5), sb (P6). Jika suatu saat rc benar-benar dibangun, itu akan jadi Platform 7.
+Vidorey punya **6 platform aktif**, bukan 7. Sempat ada rencana/leftover kode untuk "rc" (Vidorey TikTok 2, reddclips) tapi **tidak pernah dibangun** — tidak ada `rc.html` atau `lib/scrapers/rc.js` di repo. Urutan kode yang benar: p1 (P1), rb (P2), yb (P3), bk (P4), tp (P5), sb (P6).
+
+**Urutan UI (nav drawer) berbeda dari urutan kode:**
+- Vidorey 1–5 = P1/P2/P3/P4/P6 (listing platform, seksi atas)
+- Vidorey TikTok 1 = P5 (TikTok-style, seksi "Fitur Lain")
+- P5 (TP) **tidak** dihitung sebagai "Vidorey 5" — TikTok adalah fitur terpisah, bukan platform listing ke-5.
+- "Vidorey 5" di nav drawer = P6/sb (situsbokep.cc)
 
 ## ATURAN SEKSI NAV DRAWER (WAJIB DIIKUTI)
 
@@ -22,7 +28,7 @@ Platform dengan UI listing/grid (video card + pagination + search bar + kategori
 | P2 | `/rb` | Vidorey 2 |
 | P3 | `/yb` | Vidorey 3 |
 | P4 | `/bk` | Vidorey 4 |
-| P6 | `/sb` | Vidorey 6 |
+| P6 | `/sb` | Vidorey 5 |
 
 ### Seksi Bawah — "Fitur Lain" (KHUSUS TikTok-style)
 Platform dengan UI TikTok-style (vertical scroll-snap, tidak ada grid/card). Ditempatkan **di bawah** `<hr class="nav-section-divider">` + label `<div class="nav-drawer-label">Fitur Lain</div>`.
@@ -62,7 +68,7 @@ Dropdown lama tidak terlihat user. Diganti hamburger ChatGPT-style. Nama sumber 
 | P2 | `/rb` | Vidorey 2 | Video harian · cari & tonton & kategori | Atas |
 | P3 | `/yb` | Vidorey 3 | Video harian · cari & tonton & kategori | Atas |
 | P4 | `/bk` | Vidorey 4 | Video harian · cari & tonton & kategori | Atas |
-| P6 | `/sb` | Vidorey 6 | Video harian · cari & tonton & kategori | Atas |
+| P6 | `/sb` | Vidorey 5 | Video harian · cari & tonton & kategori | Atas |
 | P5 | `/tp` | Vidorey TikTok 1 | TikTok · scroll vertikal · tag browser | Bawah (Fitur Lain) |
 
 ## IDs dan classes — state saat ini
@@ -94,7 +100,7 @@ Semua `.ps-avatar` pakai **`<img src="/logo.png" alt="Vidorey">`** — logo Vido
 | P2 (rb) | `.ps-avatar-rb` | — |
 | P3 (yb) | `.ps-avatar-yb` | — |
 | P4 (bk) | `.ps-avatar-bk` | — |
-| P6 (sb) | `.ps-avatar-sb` | gradient hijau `#065f2e → #34d399` |
+| P6 (sb) — Vidorey 5 | `.ps-avatar-sb` | gradient hijau `#065f2e → #34d399` |
 | P5 (tp) | `.ps-avatar-tp` | — |
 
 ### CSS dead code di style.css (tidak berbahaya, tidak dipakai)
@@ -113,7 +119,7 @@ Semua `.ps-avatar` pakai **`<img src="/logo.png" alt="Vidorey">`** — logo Vido
 - `rb.html` → Vidorey 2 `.active` + `aria-current="page"`
 - `yb.html` → Vidorey 3 `.active` + `aria-current="page"`
 - `bk.html` → Vidorey 4 `.active` + `aria-current="page"`
-- `sb.html` → Vidorey 6 `.active` + `aria-current="page"`
+- `sb.html` → Vidorey 5 `.active` + `aria-current="page"`
 - `tp.html` → Vidorey TikTok 1 `.active` + `aria-current="page"`
 
 ## SPA Route — WAJIB di setiap scraper

@@ -30,7 +30,7 @@ Ikuti urutan ini dari atas ke bawah. Tandai selesai sebelum lanjut ke item berik
   router.get('/pN',   (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'pN.html')));
   router.get('/pN/*', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'pN.html')));
   ```
-  ⚠️ Tanpa ini, klik di nav drawer dan deep-link `/pN/watch/<token>` akan serve `index.html` (Platform 1). Bug ini sudah terjadi pada P7 (SB).
+  ⚠️ Tanpa ini, klik di nav drawer dan deep-link `/pN/watch/<token>` akan serve `index.html` (Platform 1). Bug ini sudah terjadi pada P6 (SB).
 - [ ] Register router di `server.js`: `app.use(pN.router)` + tambah `pN.caches` ke health/detail
 - [ ] Tambah shortlink platform list di `server.js`: tambah `'pN'` ke array whitelist di `/api/s/:platform/:token`
 - [ ] Tambah trackRequest branches di `lib/monitor.js`:
@@ -141,7 +141,7 @@ Nav drawer dibagi dua seksi:
 - P2 `/rb` Vidorey 2
 - P3 `/yb` Vidorey 3
 - P4 `/bk` Vidorey 4
-- P7 `/sb` Vidorey 7
+- P6 `/sb` Vidorey 5
 - ← **Platform listing baru masuk di sini**
 
 `<hr class="nav-section-divider">`
@@ -152,7 +152,7 @@ Nav drawer dibagi dua seksi:
 - P6 `/rc` Vidorey TikTok 2
 - ← **Platform TikTok-style baru masuk di sini**
 
-**⚠️ Bug yang sudah terjadi:** P7 (SB) awalnya ditaruh di seksi "Fitur Lain" → user complaint. Listing platform wajib di atas divider, TikTok wajib di bawah.
+**⚠️ Bug yang sudah terjadi:** P6 (SB/Vidorey 5) awalnya ditaruh di seksi "Fitur Lain" → user complaint. Listing platform wajib di atas divider, TikTok wajib di bawah.
 
 Langkah untuk update nav drawer:
 - Copy blok `<!-- NAV DRAWER -->` dari platform terdekat
