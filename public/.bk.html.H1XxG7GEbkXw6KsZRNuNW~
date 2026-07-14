@@ -10,26 +10,26 @@
   })(window,document,'script','dataLayer','GTM-NWZSVQT9');</script>
   <!-- End Google Tag Manager -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Vidorey - Free XXX Videos & Porn Movies | Watch HD Sex Online</title>
-  <meta name="description" content="Watch free XXX videos and porn movies online. Thousands of HD sex videos updated daily. No registration, no login. Stream instantly on any device." />
-  <meta name="keywords" content="free porn, xxx videos, sex videos, porn movies, HD porn, free sex, adult videos, watch porn online, xxx, porn streaming" />
+  <title>Vidorey 4 - Free HD Sex Videos | Adult Porn Streaming</title>
+  <meta name="description" content="HD sex videos streaming for free. Huge collection of adult porn movies. No account required, watch instantly in your browser." />
+  <meta name="keywords" content="HD sex videos, free adult movies, porn streaming, xxx HD, free adult content, sex movies online, no registration porn" />
   <meta name="google-site-verification" content="Vl8CnSoQmgdUxFfXGw4k7nzAPRZBgImHr2OrBPnmaAI" />
   <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://vidorey.web.app/" />
+  <link rel="canonical" href="https://vidorey.web.app/bk" />
   <meta name="theme-color" content="#121212" />
   <meta http-equiv="Delegate-CH" content="Sec-CH-UA https://s.pemsrv.com; Sec-CH-UA-Mobile https://s.pemsrv.com; Sec-CH-UA-Arch https://s.pemsrv.com; Sec-CH-UA-Model https://s.pemsrv.com; Sec-CH-UA-Platform https://s.pemsrv.com; Sec-CH-UA-Platform-Version https://s.pemsrv.com; Sec-CH-UA-Bitness https://s.pemsrv.com; Sec-CH-UA-Full-Version-List https://s.pemsrv.com; Sec-CH-UA-Full-Version https://s.pemsrv.com;">
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Vidorey" />
-  <meta property="og:title" content="Vidorey - Free XXX Videos & Porn Movies" />
-  <meta property="og:description" content="Watch free XXX videos and porn movies online. Thousands of HD sex videos updated daily. No registration needed." />
-  <meta property="og:url" content="https://vidorey.web.app/" />
+  <meta property="og:title" content="Vidorey 4 - Free HD Sex Videos | Adult Porn Streaming" />
+  <meta property="og:description" content="HD sex videos streaming for free. Huge collection of adult porn movies. No account required, watch instantly in your browser." />
+  <meta property="og:url" content="https://vidorey.web.app/bk" />
   <meta property="og:image" content="https://vidorey.web.app/logo.png" />
   <meta property="og:locale" content="en_US" />
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Vidorey - Free XXX Videos & Porn Movies" />
-  <meta name="twitter:description" content="Watch free XXX videos and porn movies online. Thousands of HD sex videos updated daily. No registration needed." />
+  <meta name="twitter:title" content="Vidorey 4 - Free HD Sex Videos | Adult Porn Streaming" />
+  <meta name="twitter:description" content="HD sex videos streaming for free. Huge collection of adult porn movies. No account required, watch instantly in your browser." />
   <meta name="twitter:image" content="https://vidorey.web.app/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -37,21 +37,31 @@
   <link rel="stylesheet" href="/style.css" />
   <link rel="icon" type="image/png" href="/logo.png" />
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Vidorey",
-    "url": "https://vidorey.web.app/",
-    "description": "Watch free XXX videos and porn movies online. Thousands of HD sex videos updated daily. No registration needed.",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://vidorey.web.app/?q={search_term_string}",
-      "query-input": "required name=search_term_string"
+  [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Vidorey",
+      "url": "https://vidorey.web.app/",
+      "description": "Watch free XXX videos and porn movies online. Thousands of HD sex videos updated daily. No registration needed.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://vidorey.web.app/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Vidorey 4 - Free HD Sex Videos",
+      "url": "https://vidorey.web.app/bk",
+      "description": "HD sex videos streaming for free. Huge collection of adult porn movies. No account required.",
+      "isPartOf": { "@type": "WebSite", "url": "https://vidorey.web.app/" }
     }
-  }
+  ]
   </script>
 </head>
-<body>
+<body class="rb-page">
   <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NWZSVQT9"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -59,7 +69,6 @@
 
 <!-- ─── TOPBAR ─── -->
 <header class="topbar">
-
   <div class="brand">
     <button class="nav-burger" id="navBurger" aria-label="Menu platform" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -73,8 +82,6 @@
       <span class="brand-name">Vidorey</span>
     </div>
   </div>
-
-  <nav class="breadcrumb" id="breadcrumb" aria-label="Navigasi folder"></nav>
 </header>
 
 <!-- ─── NAV DRAWER ─── -->
@@ -94,15 +101,12 @@
 
   <div class="nav-drawer-label">Pilih Platform</div>
 
-  <a class="nav-plat-item active" href="/" aria-current="page">
+  <a class="nav-plat-item" href="/">
     <div class="ps-avatar"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 1</span>
       <span class="ps-desc">Folder video · streaming</span>
     </div>
-    <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <polyline points="20 6 9 17 4 12"/>
-    </svg>
   </a>
   <a class="nav-plat-item" href="/rb">
     <div class="ps-avatar ps-avatar-rb"><img src="/logo.png" alt="Vidorey"></div>
@@ -118,12 +122,15 @@
       <span class="ps-desc">Video harian · cari &amp; tonton</span>
     </div>
   </a>
-  <a class="nav-plat-item" href="/bk">
+  <a class="nav-plat-item active" href="/bk" aria-current="page">
     <div class="ps-avatar ps-avatar-bk"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 4</span>
       <span class="ps-desc">Video harian · cari &amp; tonton</span>
     </div>
+    <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
   </a>
 
   <a class="nav-plat-item" href="/sb">
@@ -147,61 +154,58 @@
 
 </nav>
 
+<!-- ─── SEARCH BAR ─── -->
+<div class="rb-searchbar">
+  <form id="bkSearchForm" autocomplete="off">
+    <input
+      id="bkSearchInput"
+      class="rb-search-input"
+      type="search"
+      placeholder="Cari video…"
+      maxlength="150"
+    />
+    <button type="submit" class="rb-search-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      Cari
+    </button>
+  </form>
+</div>
+
 <!-- ─── SHELL ─── -->
 <div class="shell">
+  <main class="content" id="bkContent">
+    <h1 class="sr-only">Free HD Sex Videos - Adult Porn Streaming</h1>
 
-  <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-inner">
+    <!-- Search heading -->
+    <div id="bkSearchHeading" class="rb-search-heading"></div>
 
-      <div class="add-row">
-        <input id="addFolderInput" class="add-input" type="text"
-          placeholder="Link atau ID folder…" autocomplete="off" spellcheck="false" />
-        <button id="addFolderBtn" class="add-btn" title="Tambah folder">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-        </button>
-      </div>
-
-      <div id="folderList"></div>
-    </div>
-  </aside>
-
-  <!-- Content -->
-  <main class="content" id="content">
-    <h1 class="sr-only">Free XXX Videos &amp; Porn Movies - Watch HD Sex Online</h1>
-
-    <div id="loadingState" class="state-view hidden">
-      <div class="loader">
-        <div class="loader-ring"></div>
-      </div>
+    <div id="bkLoadingState" class="state-view hidden">
+      <div class="loader"><div class="loader-ring"></div></div>
       <p>Memuat…</p>
     </div>
 
-    <div id="errorState" class="state-view hidden">
+    <div id="bkErrorState" class="state-view hidden">
       <div class="state-icon error-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 8v4M12 16h.01"/>
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
       </div>
-      <h3 class="error-title">Layanan Sementara Tidak Tersedia</h3>
-      <p id="errorMsg" class="error-body">Server sedang mengalami gangguan. Tim kami sedang menangani masalah ini secepat mungkin.</p>
-      <p class="error-hint">Sementara itu, Anda dapat beralih ke platform lain yang tersedia.</p>
-      <div class="error-actions">
-        <button class="btn-retry" onclick="App.retry()">Coba Lagi</button>
-        <button class="btn-switch-platform" onclick="document.getElementById('navBurger').click()">Platform Lain →</button>
-      </div>
+      <p id="bkErrorMsg">Terjadi kesalahan.</p>
+      <button class="btn-retry" id="bkRetryBtn">Coba lagi</button>
     </div>
 
-    <div id="emptyState" class="state-view hidden">
+    <div id="bkEmptyState" class="state-view hidden">
       <div class="state-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
         </svg>
       </div>
-      <p>Folder ini kosong.</p>
+      <p>Tidak ada video ditemukan.</p>
     </div>
 
 
@@ -220,7 +224,7 @@
       <script src="https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js"></script>
     </div>
 
-    <div id="mainGrid"></div>
+    <div id="bkGrid" class="rb-grid"></div>
 
     <!-- ─── Native Banner Ad ─── -->
     <div class="ad-native-slot">
@@ -244,7 +248,7 @@
 
 
 
-    <div id="pagination" class="pagination hidden"></div>
+    <div id="bkPagination" class="pagination hidden"></div>
 
     <!-- ─── Mobile banner 320×50 ─── -->
     <div class="ad-mobile-banner-slot">
@@ -263,70 +267,82 @@
   </main>
 </div>
 
-<!-- ─── WELCOME POPUP ─── -->
-<div id="welcomePopup" class="welcome-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
-  <div class="welcome-box">
-    <div class="welcome-header">
-      <div class="welcome-icon">
-        <img src="/logo.png" alt="Vidorey" class="brand-logo-img" />
-      </div>
-      <div>
-        <h2 id="welcomeTitle" class="welcome-title">Selamat Datang di Vidorey</h2>
-        <p class="welcome-sub">Platform video gratis, update setiap hari</p>
-      </div>
-    </div>
-
-    <ul class="welcome-list">
-      <li>
-        <span class="wl-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M12 8v4l3 3"/></svg>
-        </span>
-        <span><strong>Gratis</strong> — tidak perlu daftar atau bayar apapun</span>
-      </li>
-      <li>
-        <span class="wl-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-        </span>
-        <span><strong>Update setiap hari</strong> — konten baru selalu hadir</span>
-      </li>
-      <li>
-        <span class="wl-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        </span>
-        <span><strong>Enjoy nonton</strong> — putar langsung, tanpa ribet</span>
-      </li>
-    </ul>
-
-    <div class="welcome-footer">
-      <label class="welcome-check">
-        <input type="checkbox" id="welcomeDontShow" />
-        <span>Jangan tampilkan lagi</span>
-      </label>
-      <button id="welcomeClose" class="welcome-btn">Mulai Nonton →</button>
-    </div>
-  </div>
-</div>
-
-<!-- ─── PLAYER MODAL ─── -->
-<div id="playerModal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-backdrop" id="modalBackdrop"></div>
-  <div class="modal-panel">
-    <div class="modal-top">
-      <div class="modal-meta">
-        <h2 id="videoTitle" class="modal-title">—</h2>
-        <span id="videoSubtitle" class="modal-sub"></span>
-      </div>
-      <button class="modal-close" id="modalClose" title="Tutup">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+<!-- ─── PLAYER MODAL (watch view fullpage XNXX-style) ─── -->
+<div id="bkPlayerModal" class="modal modal-fullpage hidden" role="dialog" aria-modal="true">
+  <div class="modal-backdrop" id="bkModalBackdrop"></div>
+  <div class="modal-panel modal-panel-watch">
+    <div class="watch-topbar">
+      <button class="watch-back-btn" id="bkModalClose" title="Kembali">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
         </svg>
+        Kembali
       </button>
+      <span id="bkVideoSub" class="watch-platform-label">Vidorey 4</span>
     </div>
-    <div class="video-stage">
-      <!-- TANPA crossorigin attr — browser load video no-cors mode, bebas cross-origin -->
-      <video id="videoPlayer" controls playsinline preload="metadata">
-        <p>Browser tidak mendukung video HTML5.</p>
-      </video>
+    <div class="modal-body" id="bkModalBody">
+      <div class="watch-layout">
+        <div class="watch-main">
+          <div class="video-stage rb-video-stage">
+            <div id="bkPlayerLoading" class="rb-player-loader">
+              <div class="loader-ring"></div>
+              <p>Memuat video…</p>
+            </div>
+            <video
+              id="bkVideoEl"
+              class="rb-player-video hidden"
+              controls
+              playsinline
+              preload="none"
+            ></video>
+          </div>
+          <!-- ─── Display Ad 300×250 — bawah player ─── -->
+          <div class="watch-ad-slot watch-ad-below-player">
+            <script>
+              atOptions = {
+                'key' : 'd50b941ac6d9bd5749dcdb0b417bf348',
+                'format' : 'iframe',
+                'height' : 250,
+                'width' : 300,
+                'params' : {}
+              };
+            </script>
+            <script src="https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js"></script>
+          </div>
+          <div class="watch-info">
+            <div class="watch-title-row">
+              <h1 id="bkVideoTitle" class="watch-title">—</h1>
+              <button type="button" id="bkShareBtn" class="watch-share-btn" title="Bagikan video">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                  <line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/>
+                </svg>
+                <span>Bagikan</span>
+              </button>
+            </div>
+            <div id="bkWatchDesc" class="watch-desc hidden">
+              <p id="bkWatchDescText"></p>
+            </div>
+          </div>
+        </div>
+        <div class="watch-related hidden" id="bkRelatedSection">
+          <h3 class="watch-related-heading">Video Lainnya</h3>
+          <div id="bkRelatedGrid" class="rb-grid rb-grid-related"></div>
+          <div id="bkRelatedPagination" class="pagination hidden"></div>
+          <div class="watch-ad-slot">
+            <script>
+              atOptions = {
+                'key' : 'd50b941ac6d9bd5749dcdb0b417bf348',
+                'format' : 'iframe',
+                'height' : 250,
+                'width' : 300,
+                'params' : {}
+              };
+            </script>
+            <script src="https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js"></script>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -335,47 +351,14 @@
 
 <script src="/config.js"></script>
 <script src="/vast.js"></script>
-<script src="/app.js"></script>
-
-<!-- ─── Welcome Popup Logic ─── -->
-<script>
-(function () {
-  const STORAGE_KEY = 'vidorey_welcome_hidden_until';
-  const popup    = document.getElementById('welcomePopup');
-  const closeBtn = document.getElementById('welcomeClose');
-  const checkbox = document.getElementById('welcomeDontShow');
-
-  function shouldShow() {
-    const until = localStorage.getItem(STORAGE_KEY);
-    if (!until) return true;
-    return Date.now() > parseInt(until, 10);
-  }
-
-  function closePopup() {
-    popup.classList.add('hidden');
-    if (checkbox.checked) {
-      const sevenDays = Date.now() + 7 * 24 * 60 * 60 * 1000;
-      localStorage.setItem(STORAGE_KEY, sevenDays);
-    }
-  }
-
-  if (shouldShow()) {
-    setTimeout(() => popup.classList.remove('hidden'), 600);
-  }
-
-  closeBtn.addEventListener('click', closePopup);
-  popup.addEventListener('click', function (e) {
-    if (e.target === popup) closePopup();
-  });
-})();
-</script>
+<script src="/bk.js"></script>
 
 <!-- ─── Nav Drawer ─── -->
 <script>
 (function () {
-  var burger  = document.getElementById('navBurger');
-  var drawer  = document.getElementById('navDrawer');
-  var overlay = document.getElementById('navOverlay');
+  var burger   = document.getElementById('navBurger');
+  var drawer   = document.getElementById('navDrawer');
+  var overlay  = document.getElementById('navOverlay');
   var btnClose = document.getElementById('navClose');
   function openDrawer()  { drawer.classList.add('open');    overlay.classList.add('open');    burger.setAttribute('aria-expanded','true'); }
   function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('open'); burger.setAttribute('aria-expanded','false'); }
@@ -386,10 +369,9 @@
 })();
 </script>
 
-<!-- ─── Adsterra: Popunder (background tab, tidak ganggu video) ─── -->
+<!-- ─── Adsterra: Popunder ─── -->
 <script src="https://pl28418540.effectivecpmnetwork.com/e2/23/51/e223516a3660ad6a4214cb47e436c599.js"></script>
-
-<!-- ─── Adsterra: Social Bar (floating kecil di pojok) ─── -->
+<!-- ─── Adsterra: Social Bar ─── -->
 <script src="https://pl28427857.effectivecpmnetwork.com/96/e9/ff/96e9ff95727320b49c1ea1aa80add9b6.js"></script>
 
 

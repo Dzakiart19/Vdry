@@ -23,13 +23,12 @@ lib/
     yb.js                 ← yobokep.com: dual embed provider (bysezejataos AES-256-GCM + streamhls.to), HLS proxy, /yb SPA route
     bk.js                 ← bokepking.cam: WP REST API listing, direct MP4 proxy, /bk SPA route
     tp.js                 ← tik.porn: __NEXT_DATA__ scrape, HLS via hls.js, TikTok-style feed, /tp SPA route
-    rc.js                 ← api.reddclips.com: JSON API, direct MP4 proxy, kategori tabs feed, /rc SPA route
     sb.js                 ← situsbokep.cc: WP HTML scrape (cheerio), xvideos embedframe → HLS, /sb SPA route
 ```
 
 Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai `server.js` untuk agregasi `getCacheStats()` di `/health/detail`. **Tidak ada cross-import antar scraper files** — hanya `lib/cache.js` dan `lib/proxy.js` yang generik/stateless di-share.
 
-## Tujuh Platform (Completely Isolated)
+## Enam Platform (Completely Isolated)
 
 | Platform | URL | Source | HTML | JS | Nama UI |
 |---|---|---|---|---|---|
@@ -38,8 +37,7 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 | Platform 3 | `/yb` | yobokep.com | `yb.html` | `yb.js` | Vidorey 3 |
 | Platform 4 | `/bk` | bokepking.cam | `bk.html` | `bk.js` | Vidorey 4 |
 | Platform 5 | `/tp` | tik.porn | `tp.html` | `tp.js` | Vidorey TikTok 1 |
-| Platform 6 | `/rc` | api.reddclips.com | `rc.html` | `rc.js` | Vidorey TikTok 2 |
-| Platform 7 | `/sb` | situsbokep.cc | `sb.html` | `sb.js` | Vidorey 5 |
+| Platform 6 | `/sb` | situsbokep.cc | `sb.html` | `sb.js` | Vidorey 5 |
 
 **Nama UI tidak menyebut nama web sumber** — user hanya melihat "Vidorey 1", "Vidorey 2", dst.
 
@@ -64,8 +62,8 @@ Empat jenis slot iklan aktif, posisi strategis per halaman:
 - **Unit yang sudah dihapus dan tidak boleh dipasang lagi:** 728×90 Leaderboard, 468×60 Banner, 160×300 Half-page, 160×600 Skyscraper, Smartlinks (`smartlinks.js` sudah dihapus dari repo).
 - Kalau nambah jaringan iklan baru, domain barunya wajib ditambah ke `scriptSrc` di `server.js` (CSP tidak pakai wildcard `https:`).
 
-### Struktur Nav Drawer (sama di ketujuh HTML)
-- `.nav-burger` (id `navBurger`) — tombol hamburger di dalam `.brand` di topbar (listing platform P1–P4, P7/Vidorey 5); `tpNavBurger`/`rcNavBurger` untuk P5/P6 yang punya topbar custom
+### Struktur Nav Drawer (sama di keenam HTML)
+- `.nav-burger` (id `navBurger`) — tombol hamburger di dalam `.brand` di topbar (listing platform P1–P4, P6/Vidorey 5); `tpNavBurger` untuk P5 yang punya topbar custom
 - `div.nav-overlay` (id `navOverlay`) — backdrop gelap, z-index 149
 - `nav.nav-drawer` (id `navDrawer`) — panel slide-in, z-index 150
 - `.nav-drawer-head` + `.nav-drawer-close` (id `navClose`) — header drawer
@@ -74,7 +72,7 @@ Empat jenis slot iklan aktif, posisi strategis per halaman:
 **Dua seksi nav drawer:**
 - **Seksi atas** (tanpa label) — listing platform biasa: P1 `/` (Vidorey 1), P2 `/rb` (Vidorey 2), P3 `/yb` (Vidorey 3), P4 `/bk` (Vidorey 4), P7 `/sb` (Vidorey 5)
 - `<hr class="nav-section-divider">` — pemisah visual
-- **"Fitur Lain"** — KHUSUS TikTok-style (vertical scroll-snap): P5 `/tp`, P6 `/rc`
+- **"Fitur Lain"** — KHUSUS TikTok-style (vertical scroll-snap): P5 `/tp`
 
 ⚠️ Platform listing baru WAJIB masuk seksi atas (sebelum `<hr>`). Platform TikTok-style WAJIB masuk di bawah label "Fitur Lain". Jangan campur.
 
@@ -160,19 +158,6 @@ bokepking.cam menyimpan video sebagai MP4 langsung di `vdn.bokepking.cam` — ti
 ### Feed P5 (TikTok-style)
 TikTok-style vertical scroll-snap feed (`tp-feed` position:fixed, `body.tp-page { overflow:hidden }`). Tidak ada modal. IntersectionObserver threshold 0.75 play/pause. Ad slide setiap 5 video + end slide.
 
-## Cara Kerja — Platform 6 (api.reddclips.com)
-1. `/api/rc/categories` → fetch `api.reddclips.com/categories` → `data.categories[]`; cache 1 jam
-2. `/api/rc/posts?categoryId=N&sort=hot&limit=25&after=cursor` → fetch `api.reddclips.com/categories/:id/posts`; filter `mediaType === 'video'`; extract hash dari `mediaUrl /video/{hash}.mp4`; cache 10 mnt
-3. `/proxy/rc/stream/:hash` → proxy MP4 langsung dari `api.reddclips.com/video/:hash.mp4` dengan Range support (seeking)
-4. `/proxy/rc/thumb?url=BASE64URL` → proxy thumbnail dari `external-preview.redd.it`/`preview.redd.it`/`i.redd.it`
-
-### Feed P6 (TikTok-style dengan kategori tabs)
-TikTok-style vertical scroll-snap (`rc-feed` position:fixed, `body.rc-page { overflow:hidden }`). Layout: topbar 52px → display banner 50px → cats bar 48px → feed mulai top:150px. Kategori tabs scroll horizontal. Tidak ada sort button (dihapus — fungsi tidak nyata di API sumber). Ad slide setiap 5 video + end slide. Deep-link: `/rc/video/:hash` — init parse pathname, set target hash sebelum reset URL.
-
-### CDN Allowlist P6
-- Video: `api.reddclips.com`
-- Thumbnail: `external-preview.redd.it`, `preview.redd.it`, `i.redd.it`
-
 ## SEO
 
 ### Strategi
@@ -207,7 +192,6 @@ Setiap platform baru wajib ditambahkan ke `sitemap.xml`.
 | yb.html | "XXX Videos \| Free Premium Adult Streaming Online" |
 | bk.html | "Free HD Sex Videos \| Adult Porn Streaming" |
 | tp.html | "Free Short Porn Clips \| Scroll XXX Videos" |
-| rc.html | "Free XXX Short Clips \| Adult Video Feed" |
 | sb.html | "Free HD Sex Videos \| Adult Porn Streaming" |
 
 ## Deployment
@@ -259,10 +243,8 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 | `bk_posts` | `/api/bk/posts` dipanggil (P4) |
 | `tp_video` | `/proxy/tp/hls/:id` dipanggil (P5) |
 | `tp_posts` | `/api/tp/posts` dipanggil (P5) |
-| `rc_video` | `/proxy/rc/stream/:hash` dipanggil (P6) |
-| `rc_posts` | `/api/rc/posts` dipanggil (P6) |
-| `sb_video` | `/api/sb/video/:slug` dipanggil (P7/Vidorey 5) |
-| `sb_posts` | `/api/sb/posts` dipanggil (P7/Vidorey 5) |
+| `sb_video` | `/api/sb/video/:slug` dipanggil (P6/Vidorey 5) |
+| `sb_posts` | `/api/sb/posts` dipanggil (P6/Vidorey 5) |
 
 ### Implementasi Monitor
 - **Ring buffer server**: `MON_BUF=50.000` event, `CDN_ALERT_MAX=500` alert
