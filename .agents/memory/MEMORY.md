@@ -1,7 +1,7 @@
 - [Platform 2 Architecture](rb-platform2-architecture.md) — HLS via PackerJS; self-healing CDN token; force IPv4 autoscale fix; single+double quote m3u8 regex.
 - [Vidorey Caching Strategy](vidorey-caching-strategy.md) — makeCache helper (get()→null not undefined); P1/P2/P3/P4 caches + TTLs; sentinel values; monitor buffer ring buffer 50k.
 - [RB Layout Scroll Fix](rb-layout-scroll-fix.md) — override via body.rb-page in style.css (NOT inline style in html); #ybSearchHeading CSS rules must mirror #rbSearchHeading.
-- [P1 Cross-Origin Video](p1-crossorigin-video.md) — never use crossorigin attr on <video>; set video.src immediately; *.overfetch.video allowlist.
+- [P1 Watch View + Cross-Origin Video](p1-crossorigin-video.md) — full-page modal (modal-fullpage); MP4 via /proxy/stream; related=currentData.videos; watch URL /watch/:id; no hls.js; no shortlink token.
 - [Vidorey Monitor](vidorey-monitor.md) — ring buffer 50k + virtual list client; REST /monitor/log pagination; checkMonitorKey protects all monitor routes.
 - [P3 yobokep Architecture](yb-pagination-thumbnail.md) — HTML pagination broken (pakai WP REST API); thumbnail via parallel og:image fetch; self-healing handleYbSeg+reresolveYbUrl; CDN allowlist owphbf24.com.
 - [Vidorey Modular Refactor](vidorey-modular-refactor.md) — server.js split into lib/{cache,proxy,monitor,scrapers/p1,rb,yb,bk,tp,sb}.js; 6 platforms; new platform needs trackRequest branches + badge CSS in monitor + update all 6 HTML nav drawers.

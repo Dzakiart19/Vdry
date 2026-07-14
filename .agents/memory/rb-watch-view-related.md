@@ -120,3 +120,22 @@ differed per site as warned:
 **Lesson confirmed:** always curl the real post-page HTML per platform before
 writing the related-selector; never assume the previous platform's exact class
 names/heading text carry over.
+
+## P1 (index.html) — Full-page watch view (berbeda dari P2/P3/P4)
+
+P1 juga pakai `modal-fullpage` watch view yang sama (topbar Kembali, watch-layout,
+watch-main, watch-related sidebar), tapi dengan perbedaan arsitektur yang penting:
+
+- **Video**: MP4 via `/proxy/stream/:id` — native `<video>`, tanpa hls.js.
+  Show loader → `loadedmetadata` event → tampilkan `p1VideoEl`.
+- **Related**: diambil dari `currentData.videos` (data folder yang sudah ada di memori),
+  bukan dari API/scraping. Filter excludes video yang sedang diputar.
+  Tidak ada "per-video related endpoint" di backend P1.
+- **URL**: `/watch/:id` (bukan `/rb/watch/<token>`). ID langsung, tidak ada shortlink token.
+- **Deep-link**: server catch-all `app.get('*')` serve `index.html` → init check
+  `location.pathname.match(/^\/watch\/([a-z0-9]+)$/)` → `openPlayer(vid, '', { fromHistory: true })`.
+- **Idempotency + popstate**: sama — `_openModal(id)` no-op jika modal sudah terbuka
+  (hanya replaceState URL), popstate 3-branch identik dengan P2.
+- **Share**: URL `${origin}/watch/${currentVideoId}` — tidak pakai token.
+
+Lihat `p1-crossorigin-video.md` untuk detail lengkap (HTML IDs, el object, player flow).

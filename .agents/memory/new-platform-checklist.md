@@ -194,7 +194,7 @@ Langkah untuk update nav drawer:
 
 ## FASE 5 — Update Semua 7 HTML yang Ada
 
-- [ ] **Tambah platform baru ke nav drawer di SEMUA 7 HTML**: `index, rb, yb, bk, sb, tp, rc`
+- [ ] **Tambah platform baru ke nav drawer di SEMUA 6 HTML**: `index, rb, yb, bk, sb, tp`
 - [ ] Format entry nav drawer baru:
 ```html
 <a class="nav-plat-item" href="/pN">
@@ -266,7 +266,6 @@ Langkah untuk update nav drawer:
 | `public/bk.html` | tambah platform baru ke nav drawer |
 | `public/sb.html` | tambah platform baru ke nav drawer |
 | `public/tp.html` | tambah platform baru ke nav drawer |
-| `public/rc.html` | tambah platform baru ke nav drawer |
 | `public/smartlinks.js` | tambah card selector ke `CARD_SEL` |
 | `public/sitemap.xml` | tambah `<url>` baru |
 | `firebase.json` | tambah dua rewrite `/pN` + `/pN/**` |
