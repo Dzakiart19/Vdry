@@ -323,26 +323,72 @@
   </div>
 </div>
 
-<!-- ─── PLAYER MODAL ─── -->
-<div id="playerModal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-backdrop" id="modalBackdrop"></div>
-  <div class="modal-panel">
-    <div class="modal-top">
-      <div class="modal-meta">
-        <h2 id="videoTitle" class="modal-title">—</h2>
-        <span id="videoSubtitle" class="modal-sub"></span>
-      </div>
-      <button class="modal-close" id="modalClose" title="Tutup">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+<!-- ─── PLAYER MODAL (watch view fullpage) ─── -->
+<div id="p1PlayerModal" class="modal modal-fullpage hidden" role="dialog" aria-modal="true">
+  <div class="modal-backdrop" id="p1ModalBackdrop"></div>
+  <div class="modal-panel modal-panel-watch">
+    <!-- ─── Watch topbar ─── -->
+    <div class="watch-topbar">
+      <button class="watch-back-btn" id="p1ModalClose" title="Kembali">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
         </svg>
+        Kembali
       </button>
+      <span class="watch-platform-label">Vidorey 1</span>
     </div>
-    <div class="video-stage">
-      <!-- TANPA crossorigin attr — browser load video no-cors mode, bebas cross-origin -->
-      <video id="videoPlayer" controls playsinline preload="metadata">
-        <p>Browser tidak mendukung video HTML5.</p>
-      </video>
+    <!-- ─── Watch body ─── -->
+    <div class="modal-body" id="p1ModalBody">
+      <div class="watch-layout">
+        <!-- Kolom utama: player + info -->
+        <div class="watch-main">
+          <div class="video-stage">
+            <div id="p1PlayerLoading" class="rb-player-loader">
+              <div class="loader-ring"></div>
+              <p>Memuat video…</p>
+            </div>
+            <!-- TANPA crossorigin attr — bebas cross-origin -->
+            <video
+              id="p1VideoEl"
+              class="rb-player-video hidden"
+              controls
+              playsinline
+              preload="metadata"
+            ></video>
+          </div>
+          <!-- Ad slot bawah player -->
+          <div class="watch-ad-slot watch-ad-below-player">
+            <script>
+              atOptions = {
+                'key' : 'd50b941ac6d9bd5749dcdb0b417bf348',
+                'format' : 'iframe',
+                'height' : 250,
+                'width' : 300,
+                'params' : {}
+              };
+            </script>
+            <script src="https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js"></script>
+          </div>
+          <div class="watch-info">
+            <div class="watch-title-row">
+              <h1 id="p1VideoTitle" class="watch-title">—</h1>
+              <button type="button" id="p1ShareBtn" class="watch-share-btn" title="Bagikan video">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                  <line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/>
+                </svg>
+                <span>Bagikan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Sidebar: video lain di folder yang sama -->
+        <div class="watch-related hidden" id="p1RelatedSection">
+          <h3 class="watch-related-heading">Video di Folder Ini</h3>
+          <div id="p1RelatedGrid" class="rb-grid rb-grid-related"></div>
+          <div id="p1RelatedPagination" class="pagination hidden"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

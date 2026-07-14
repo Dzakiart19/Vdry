@@ -17,7 +17,6 @@ const App = (() => {
   let breadcrumbs        = [{ id: DEFAULT_FOLDER, name: 'Home' }];
   let retryFn            = null;
   let refreshTimer       = null;
-  let modalHistoryPushed = false;
 
   /* ──────── DOM ──────── */
   const $  = id => document.getElementById(id);
@@ -30,11 +29,17 @@ const App = (() => {
     pagination: $('pagination'),
     folderList: $('folderList'),
     breadcrumb: $('breadcrumb'),
-    modal:      $('playerModal'),
-    backdrop:   $('modalBackdrop'),
-    video:      $('videoPlayer'),
-    title:      $('videoTitle'),
-    sub:        $('videoSubtitle'),
+    /* ── watch view ── */
+    modal:             $('p1PlayerModal'),
+    backdrop:          $('p1ModalBackdrop'),
+    modalBody:         $('p1ModalBody'),
+    videoEl:           $('p1VideoEl'),
+    videoTitle:        $('p1VideoTitle'),
+    playerLoading:     $('p1PlayerLoading'),
+    relatedGrid:       $('p1RelatedGrid'),
+    relatedSection:    $('p1RelatedSection'),
+    relatedPagination: $('p1RelatedPagination'),
+    shareBtn:          $('p1ShareBtn'),
     addInput:   $('addFolderInput'),
     addBtn:     $('addFolderBtn'),
   };
@@ -79,28 +84,28 @@ const App = (() => {
   }
 
   window.addEventListener('popstate', e => {
-    // Jika modal video sedang terbuka → Back HP harus tutup modal, BUKAN keluar folder
+    const s = e.state;
+
+    // Modal terbuka → Back HP tutup modal saja
     if (!el.modal.classList.contains('hidden')) {
-      modalHistoryPushed = false;
-      el.modal.classList.add('hidden');
-      el.video.pause();
-      el.video.removeAttribute('src');
-      el.video.load();
-      document.body.style.overflow = '';
-      // Bersihkan URL dari #player, restore state folder yang sedang aktif
+      watchHistoryPushed = false;
+      _doClosePlayer();
       replaceNav(currentFolder, currentPage, breadcrumbs);
       return;
     }
 
-    // Modal tertutup: navigasi folder biasa (back/forward antar folder)
-    if (e.state && !e.state.modal) {
-      breadcrumbs = e.state.breadcrumbs || [{ id: DEFAULT_FOLDER, name: 'Home' }];
-      loadFolder(e.state.folderId || DEFAULT_FOLDER, e.state.page || 1, false);
-    } else if (e.state && e.state.modal) {
-      // Forward ke #player saat modal sudah tutup — normalize URL ke folder aktif
-      // supaya tidak ada entry #player menggantung di history stack.
-      replaceNav(currentFolder, currentPage, breadcrumbs);
-    } else if (!e.state) {
+    // Forward ke entry watch (setelah user Back dari modal, lalu Forward lagi)
+    if (s && s.p1Watch && s.p1Vid) {
+      watchHistoryPushed = true;
+      openPlayer(s.p1Vid, '', { fromHistory: true });
+      return;
+    }
+
+    // Navigasi folder biasa
+    if (s && s.folderId) {
+      breadcrumbs = s.breadcrumbs || [{ id: DEFAULT_FOLDER, name: 'Home' }];
+      loadFolder(s.folderId, s.page || 1, false);
+    } else if (!s) {
       breadcrumbs = [{ id: DEFAULT_FOLDER, name: 'Home' }];
       loadFolder(DEFAULT_FOLDER, 1, false);
     }
@@ -455,53 +460,186 @@ const App = (() => {
   }
 
   /* ══════════════════════════════════
-     VIDEO PLAYER
+     WATCH VIEW STATE
   ══════════════════════════════════ */
-  async function openPlayer(id, name) {
-    el.title.textContent = name || id;
-    el.sub.textContent   = '';
-    el.modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+  const RELATED_PAGE_SIZE = 8;
+  let currentVideoId     = null;
+  let watchHistoryPushed = false;
+  let relatedState       = { items: [], page: 1 };
 
-    // Push state #player supaya Back HP menutup modal, bukan keluar folder.
-    const folderUrl = currentFolder === DEFAULT_FOLDER
-      ? '/'
-      : `/?f=${currentFolder}${currentPage > 1 ? '&p=' + currentPage : ''}`;
-    history.pushState({ modal: true }, '', folderUrl + '#player');
-    modalHistoryPushed = true;
+  /* ══════════════════════════════════
+     RELATED VIDEOS (dari folder yang sama)
+  ══════════════════════════════════ */
+  function renderRelated(items) {
+    relatedState = { items: items || [], page: 1 };
+    if (!relatedState.items.length) {
+      el.relatedGrid.innerHTML = '';
+      el.relatedPagination.classList.add('hidden');
+      el.relatedSection.classList.add('hidden');
+      return;
+    }
+    el.relatedSection.classList.remove('hidden');
+    renderRelatedPage();
+  }
 
-    // Mulai load video SEKARANG — jangan tunggu API title selesai dulu.
-    // /proxy/stream/:id resolve URL-nya sendiri di server.
-    el.video.src = `${API}/proxy/stream/${id}`;
-    el.video.load();
-    el.video.play().catch(() => {});
+  function renderRelatedPage() {
+    const { items, page } = relatedState;
+    const totalPages = Math.max(1, Math.ceil(items.length / RELATED_PAGE_SIZE));
+    const start      = (page - 1) * RELATED_PAGE_SIZE;
+    const pageItems  = items.slice(start, start + RELATED_PAGE_SIZE);
 
-    // Fetch title di background — update begitu dapat, tidak blokir playback.
+    el.relatedGrid.innerHTML = pageItems.map(v => {
+      const src   = thumbSrc(v.thumb);
+      const title = esc(v.name || v.id);
+      const vid   = esc(v.id);
+      return `<div class="rb-card" data-vid="${vid}" data-name="${title}" tabindex="0" role="button" aria-label="${title}">
+        <div class="rb-card-thumb">
+          ${src
+            ? `<img src="${esc(src)}" alt="${title}" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('rb-thumb-err')" />`
+            : ''}
+          <div class="rb-card-overlay">
+            <svg class="rb-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="rb-card-info">
+          <p class="rb-card-title" title="${title}">${title}</p>
+        </div>
+      </div>`;
+    }).join('');
+
+    el.relatedGrid.querySelectorAll('.rb-card').forEach(card => {
+      card.addEventListener('click', () => openPlayer(card.dataset.vid, card.dataset.name));
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') openPlayer(card.dataset.vid, card.dataset.name);
+      });
+    });
+
+    renderRelatedPagination(page, totalPages);
+  }
+
+  function renderRelatedPagination(cur, total) {
+    if (total <= 1) { el.relatedPagination.classList.add('hidden'); return; }
+
+    const pages = buildPageRange(cur, total);
+    let html = '';
+    if (cur > 1) html += `<button type="button" class="page-btn page-prev" data-page="${cur - 1}">‹</button>`;
+    pages.forEach(p => {
+      html += p === '…'
+        ? `<span class="page-ellipsis">…</span>`
+        : `<button type="button" class="page-btn ${p === cur ? 'active' : ''}" data-page="${p}">${p}</button>`;
+    });
+    if (cur < total) html += `<button type="button" class="page-btn page-next" data-page="${cur + 1}">›</button>`;
+
+    el.relatedPagination.innerHTML = html;
+    el.relatedPagination.classList.remove('hidden');
+
+    el.relatedPagination.querySelectorAll('[data-page]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = parseInt(btn.dataset.page);
+        if (p !== relatedState.page) {
+          relatedState.page = p;
+          renderRelatedPage();
+          el.relatedSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  }
+
+  /* ══════════════════════════════════
+     VIDEO PLAYER (full-page watch view)
+  ══════════════════════════════════ */
+  async function openPlayer(id, name, opts = {}) {
+    currentVideoId = id;
+
+    // Reset player UI
+    el.videoTitle.textContent = name || id;
+    el.playerLoading.classList.remove('hidden');
+    el.videoEl.classList.add('hidden');
+    el.videoEl.pause();
+    el.videoEl.removeAttribute('src');
+    el.videoEl.load();
+    if (typeof clearVideoJsonLd === 'function') clearVideoJsonLd();
+    if (typeof clearVideoMeta === 'function') clearVideoMeta();
+
+    // Related = video lain di folder yang sedang aktif
+    const related = (currentData?.videos || []).filter(v => v.id !== id);
+    renderRelated(related);
+
+    // Buka modal
+    if (opts.fromHistory) {
+      el.modal.classList.remove('hidden');
+      document.body.classList.add('modal-open');
+    } else {
+      _openModal(id);
+    }
+    if (el.modalBody) el.modalBody.scrollTop = 0;
+
+    // Mulai putar MP4 langsung — server proxy resolve URL-nya sendiri
+    const src = `${API}/proxy/stream/${id}`;
+    el.videoEl.src = src;
+    el.videoEl.load();
+
+    el.videoEl.addEventListener('loadedmetadata', function onMeta() {
+      el.videoEl.removeEventListener('loadedmetadata', onMeta);
+      el.playerLoading.classList.add('hidden');
+      el.videoEl.classList.remove('hidden');
+      el.videoEl.play().catch(() => {});
+    });
+    el.videoEl.addEventListener('error', function onErr() {
+      el.videoEl.removeEventListener('error', onErr);
+      el.playerLoading.classList.add('hidden');
+      showToast('Gagal memuat video. Coba lagi.');
+    });
+
+    // Fetch title + thumb di background — tidak blokir playback
     fetchWithTimeout(`${API}/api/video/${id}`)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => {
+        if (currentVideoId !== id) return; // sesi berganti
         if (data?.title) {
-          el.title.textContent = data.title;
-          if (typeof setVideoJsonLd === 'function') setVideoJsonLd(data.title, window.location.href, null, '');
-          if (typeof setVideoMeta === 'function') setVideoMeta(data.title, window.location.href, null, '');
+          el.videoTitle.textContent = data.title;
+          const href  = window.location.href;
+          const thumb = data.thumb || null;
+          if (typeof setVideoJsonLd === 'function') setVideoJsonLd(data.title, href, thumb, '');
+          if (typeof setVideoMeta   === 'function') setVideoMeta(data.title, href, thumb, '');
         }
       })
       .catch(() => {});
   }
 
-  function closePlayer() {
-    el.modal.classList.add('hidden');
-    el.video.pause();
-    el.video.removeAttribute('src');
-    el.video.load();
-    document.body.style.overflow = '';
-    if (typeof clearVideoJsonLd === 'function') clearVideoJsonLd();
-    if (typeof clearVideoMeta === 'function') clearVideoMeta();
+  function _openModal(id) {
+    const url = `/watch/${id}`;
+    if (!el.modal.classList.contains('hidden')) {
+      // Modal sudah terbuka (klik related) — cukup ganti URL entry ini
+      if (watchHistoryPushed) history.replaceState({ p1Watch: true, p1Vid: id }, '', url);
+      return;
+    }
+    el.modal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+    history.pushState({ p1Watch: true, p1Vid: id }, '', url);
+    watchHistoryPushed = true;
+  }
 
-    // Ganti entry #player dengan URL folder yang bersih — BUKAN history.back()
-    // (back() berisiko melewati folder dan keluar ke halaman sebelumnya)
-    if (modalHistoryPushed) {
-      modalHistoryPushed = false;
+  function _doClosePlayer() {
+    el.videoEl.pause();
+    el.videoEl.removeAttribute('src');
+    el.videoEl.load();
+    el.playerLoading.classList.remove('hidden');
+    el.videoEl.classList.add('hidden');
+    el.modal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+    currentVideoId = null;
+  }
+
+  function closePlayer() {
+    _doClosePlayer();
+    if (typeof clearVideoJsonLd === 'function') clearVideoJsonLd();
+    if (typeof clearVideoMeta   === 'function') clearVideoMeta();
+
+    // Ganti entry /watch/:id dengan URL folder bersih — jangan back() karena
+    // berisiko keluar dari folder ke halaman sebelumnya
+    if (watchHistoryPushed) {
+      watchHistoryPushed = false;
       replaceNav(currentFolder, currentPage, breadcrumbs);
     }
   }
@@ -587,8 +725,34 @@ const App = (() => {
   el.addBtn.addEventListener('click', doAdd);
   el.addInput.addEventListener('keydown', e => { if (e.key === 'Enter') doAdd(); });
   el.backdrop.addEventListener('click', closePlayer);
-  document.getElementById('modalClose').addEventListener('click', closePlayer);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlayer(); });
+  document.getElementById('p1ModalClose').addEventListener('click', closePlayer);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !el.modal.classList.contains('hidden')) closePlayer();
+  });
+
+  /* ── Share button ── */
+  if (el.shareBtn) {
+    el.shareBtn.addEventListener('click', async () => {
+      if (!currentVideoId) return;
+      const shareUrl   = `${location.origin}/watch/${currentVideoId}`;
+      const shareTitle = el.videoTitle.textContent || 'Vidorey';
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: shareTitle, url: shareUrl });
+        } catch (e) {
+          if (e.name !== 'AbortError') showToast('Gagal membagikan link.');
+        }
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        showToast('Link video disalin ke clipboard');
+      } catch {
+        showToast(shareUrl);
+      }
+    });
+  }
 
   /* ══════════════════════════════════
      INIT — resume from URL
@@ -605,8 +769,19 @@ const App = (() => {
       ];
     }
 
+    // Deep-link: /watch/:id — buka player langsung (video dari folder default)
+    const watchMatch = location.pathname.match(/^\/watch\/([a-z0-9]+)$/i);
+
     replaceNav(initId, initPage, breadcrumbs);
     loadFolder(initId, initPage, false);
+
+    if (watchMatch) {
+      const vid = watchMatch[1];
+      // entry history sudah ada (/watch/:id) — jangan push lagi
+      watchHistoryPushed = true;
+      openPlayer(vid, '', { fromHistory: true });
+    }
+
     scheduleRefresh();
   })();
 
