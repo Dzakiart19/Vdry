@@ -477,6 +477,9 @@
     }
   }
 
+  /* ── Set ID video yang sudah ada di feed (untuk dedup) ──────── */
+  var seenVideoIds = new Set();
+
   /* ── Reset feed state (untuk search baru) ────────────────────── */
   function resetFeed() {
     stopActive();
@@ -491,6 +494,7 @@
     hasMore          = true;
     lastSlide        = null;
     totalSlidesAdded = 0;
+    seenVideoIds.clear();
   }
 
   /* ── Muat batch video dari API ──────────────────────────────── */
@@ -513,6 +517,16 @@
 
       var mode = data.mode || (currentQuery ? 'search' : currentTag ? 'tag' : 'home');
 
+      /* ── Deduplikasi: buang video yang sudah ada di feed ──────────
+         tik.porn SSR search tidak mendukung pagination server-side —
+         page=2 dst mengembalikan hasil yang sama persis dengan page=1.
+         Jika semua video di batch ini sudah pernah muncul, hentikan.
+      ── */
+      videos = videos.filter(function (v) { return !seenVideoIds.has(String(v.id)); });
+      if (videos.length === 0 && feed.children.length > 0) {
+        hasMore = false;
+      }
+
       if (videos.length === 0 && feed.children.length === 0) {
         appendEndSlide(mode, currentQuery);
         return;
@@ -530,6 +544,7 @@
             renderTagPanel();
           }
         });
+        seenVideoIds.add(String(video.id));
         var slide = buildSlide(video);
 
         /* Unobserve lastSlide dari ioEnd sebelum diganti */
