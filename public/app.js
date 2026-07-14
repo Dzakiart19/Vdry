@@ -483,6 +483,7 @@ const App = (() => {
         if (data?.title) {
           el.title.textContent = data.title;
           if (typeof setVideoJsonLd === 'function') setVideoJsonLd(data.title, window.location.href, null, '');
+          if (typeof setVideoMeta === 'function') setVideoMeta(data.title, window.location.href, null, '');
         }
       })
       .catch(() => {});
@@ -495,6 +496,7 @@ const App = (() => {
     el.video.load();
     document.body.style.overflow = '';
     if (typeof clearVideoJsonLd === 'function') clearVideoJsonLd();
+    if (typeof clearVideoMeta === 'function') clearVideoMeta();
 
     // Ganti entry #player dengan URL folder yang bersih — BUKAN history.back()
     // (back() berisiko melewati folder dan keluar ke halaman sebelumnya)

@@ -85,6 +85,76 @@ window.setVideoMeta = function (title, url, imageUrl, description) {
   if (imageUrl) _vdrySetMetaContent('meta[name="twitter:image"]', imageUrl);
 };
 
+/* ── Kategori picker (dropdown) — dipakai bersama di rb/yb/bk/sb ─────────
+   Fetch daftar kategori sekali (lazy) dari `apiPath`, render sebagai chip
+   di dalam panel dropdown. Klik chip → callback onSelect(item) dengan
+   { id, slug, name }. "Semua Kategori" mengirim null untuk reset filter.
+─────────────────────────────────────────────────────────────────────── */
+window.initVdryCategoryPicker = function (opts) {
+  var btn      = opts.button;
+  var panel    = opts.panel;
+  var apiPath  = opts.apiPath;
+  var onSelect = opts.onSelect;
+  var getActiveId = opts.getActiveId || function () { return null; };
+  var list = null; // null = belum di-fetch, [] = sudah tapi kosong
+
+  function render() {
+    if (list === null) { panel.innerHTML = '<div class="vdry-cat-panel-empty">Memuat…</div>'; return; }
+    if (!list.length)  { panel.innerHTML = '<div class="vdry-cat-panel-empty">Kategori tidak tersedia.</div>'; return; }
+    var activeId = getActiveId();
+    var chips = ['<button type="button" class="vdry-cat-chip' + (activeId ? '' : ' active') + '" data-id="">Semua Kategori</button>'];
+    list.forEach(function (c) {
+      var isActive = String(activeId) === String(c.id || c.slug);
+      chips.push('<button type="button" class="vdry-cat-chip' + (isActive ? ' active' : '') + '" data-id="' +
+        String(c.id != null ? c.id : c.slug) + '">' + escHtmlLocal(c.name) + ' (' + (c.count || 0) + ')</button>');
+    });
+    panel.innerHTML = chips.join('');
+    panel.querySelectorAll('.vdry-cat-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var id = chip.getAttribute('data-id');
+        close();
+        if (!id) { onSelect(null); return; }
+        var item = list.find(function (c) { return String(c.id != null ? c.id : c.slug) === id; });
+        onSelect(item || null);
+      });
+    });
+  }
+
+  function escHtmlLocal(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function open() {
+    btn.classList.add('open');
+    panel.classList.add('open');
+    if (list === null) {
+      render();
+      fetch(apiPath).then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (data) { list = Array.isArray(data) ? data : []; render(); })
+        .catch(function () { list = []; render(); });
+    } else {
+      render();
+    }
+  }
+
+  function close() {
+    btn.classList.remove('open');
+    panel.classList.remove('open');
+  }
+
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (panel.classList.contains('open')) close(); else open();
+  });
+  document.addEventListener('click', function (e) {
+    if (!panel.contains(e.target) && e.target !== btn) close();
+  });
+
+  return { close: close, refreshLabel: render };
+};
+
 /** Kembalikan canonical + OG/Twitter meta ke nilai asli halaman (panggil saat player ditutup). */
 window.clearVideoMeta = function () {
   if (!_vdryOrigMeta) return;

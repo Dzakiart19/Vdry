@@ -34,6 +34,8 @@
     totalPages:  1,
     loading:     false,
     searchQuery: '',
+    catId:       '',   // '' = semua kategori (slug)
+    catName:     '',
   };
 
   /* ── DOM refs ── */
@@ -129,20 +131,25 @@
     return r.json();
   }
 
-  /* ── Search heading ── */
+  /* ── Search / kategori heading ── */
   function updateSearchHeading() {
     const q = state.searchQuery;
-    if (!q) {
+    const cat = state.catName;
+    if (!q && !cat) {
       els.searchHeading.classList.remove('visible');
       els.searchHeading.innerHTML = '';
       return;
     }
     els.searchHeading.classList.add('visible');
-    els.searchHeading.innerHTML =
-      `Hasil pencarian untuk <strong>"${escHtml(q)}"</strong>` +
-      `<button class="rb-search-clear" id="sbSearchClear">✕ Hapus</button>`;
+    els.searchHeading.innerHTML = q
+      ? `Hasil pencarian untuk <strong>"${escHtml(q)}"</strong>` +
+        `<button class="rb-search-clear" id="sbSearchClear">✕ Hapus</button>`
+      : `Kategori: <strong>${escHtml(cat)}</strong>` +
+        `<button class="rb-search-clear" id="sbSearchClear">✕ Hapus</button>`;
     document.getElementById('sbSearchClear').addEventListener('click', () => {
       state.searchQuery = '';
+      state.catId = '';
+      state.catName = '';
       state.page = 1;
       els.searchInput.value = '';
       updateSearchHeading();
@@ -150,9 +157,27 @@
     });
   }
 
+  /* ── Kategori picker ── */
+  if (window.initVdryCategoryPicker && document.getElementById('sbCatBtn')) {
+    initVdryCategoryPicker({
+      button:      document.getElementById('sbCatBtn'),
+      panel:       document.getElementById('sbCatPanel'),
+      apiPath:     `${API}/api/sb/categories`,
+      getActiveId: () => state.catId,
+      onSelect: (item) => {
+        state.searchQuery = '';
+        els.searchInput.value = '';
+        state.catId   = item ? item.slug : '';
+        state.catName = item ? item.name : '';
+        state.page = 1;
+        loadPosts(true);
+      },
+    });
+  }
+
   /* ── History helpers ── */
   function saveNav(push) {
-    const s = { sbPage: state.page, sbQ: state.searchQuery };
+    const s = { sbPage: state.page, sbQ: state.searchQuery, sbCat: state.catId, sbCatName: state.catName };
     if (push) {
       history.pushState(s, '', '/sb');
     } else {
@@ -172,6 +197,7 @@
     const page = state.page;
     let qs = `p=${page}`;
     if (q) qs += `&q=${encodeURIComponent(q)}`;
+    else if (state.catId) qs += `&cat=${encodeURIComponent(state.catId)}`;
 
     try {
       const data = await apiFetch(`/api/sb/posts?${qs}`);
@@ -427,6 +453,7 @@
     els.videoTitle.textContent = 'Memuat…';
     els.playerLoading.classList.remove('hidden');
     if (typeof clearVideoJsonLd === 'function') clearVideoJsonLd();
+    if (typeof clearVideoMeta === 'function') clearVideoMeta();
     renderWatchDesc('');
     renderRelated([]);
     destroyPlayer();
@@ -448,6 +475,7 @@
       }
       els.videoTitle.textContent = data.title || slug;
       if (typeof setVideoJsonLd === 'function') setVideoJsonLd(data.title || slug, window.location.href, null, data.description || '');
+      if (typeof setVideoMeta === 'function') setVideoMeta(data.title || slug, window.location.href, null, data.description || '');
       renderWatchDesc(data.description || '');
       renderRelated(data.related || []);
       playHls(`${API}${data.m3u8Url}`, session);
@@ -574,6 +602,8 @@
     if (s && typeof s.sbPage !== 'undefined') {
       state.page        = s.sbPage || 1;
       state.searchQuery = s.sbQ    || '';
+      state.catId        = s.sbCat     || '';
+      state.catName      = s.sbCatName || '';
       els.searchInput.value = state.searchQuery;
       loadPosts(false);
     }

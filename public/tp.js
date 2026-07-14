@@ -23,6 +23,40 @@
   var cachedTrends     = []; // trending searches dari home mode, untuk end slide
   var totalSlidesAdded = 0;  // counter global untuk sisipkan ad slide setiap 5 video
 
+  /* ── Kategori (tag) browser — tp tidak punya endpoint daftar tag global,
+     jadi kita akumulasi tag unik dari video yang sudah termuat di feed. ── */
+  var seenTags = new Map(); // slug → name
+  function renderTagPanel() {
+    var panel = document.getElementById('tpCatPanel');
+    if (!panel) return;
+    if (!seenTags.size) {
+      panel.innerHTML = '<div class="vdry-cat-panel-empty">Kategori akan muncul setelah video dimuat.</div>';
+      return;
+    }
+    var chips = ['<button type="button" class="vdry-cat-chip' + (currentTag ? '' : ' active') + '" data-slug="">Semua</button>'];
+    seenTags.forEach(function (name, slug) {
+      chips.push('<button type="button" class="vdry-cat-chip' + (currentTag === slug ? ' active' : '') + '" data-slug="' +
+        escHtml(slug) + '">' + escHtml(name) + '</button>');
+    });
+    panel.innerHTML = chips.join('');
+    panel.querySelectorAll('.vdry-cat-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var slug = chip.getAttribute('data-slug');
+        var btn = document.getElementById('tpCatBtn');
+        if (btn) btn.classList.remove('open');
+        panel.classList.remove('open');
+        var input = document.getElementById('tpSearchInput');
+        if (input) input.value = '';
+        resetFeed();
+        currentQuery = '';
+        currentTag   = slug;
+        if (!slug) tpNav(true, 'home', '', '');
+        else       tpNav(true, 'tag', '', slug);
+        loadPosts();
+      });
+    });
+  }
+
 
   /* ── History helper: push/replace state + sinkronisasi URL ────── */
   function tpNav(push, mode, q, tag) {
@@ -195,6 +229,7 @@
     if (activeVideo) { activeVideo.pause(); activeVideo = null; }
     if (activeHls)   { activeHls.destroy(); activeHls   = null; }
     if (typeof clearVideoJsonLd === 'function') clearVideoJsonLd();
+    if (typeof clearVideoMeta === 'function') clearVideoMeta();
   }
 
   /* ── Mulai play pada video yang sudah siap ─────────────────── */
@@ -249,6 +284,9 @@
         : null;
       if (typeof setVideoJsonLd === 'function') {
         setVideoJsonLd(data.title || ('Video ' + id), window.location.href, thumbForSchema, data.caption || '');
+      }
+      if (typeof setVideoMeta === 'function') {
+        setVideoMeta(data.title || ('Video ' + id), window.location.href, thumbForSchema, data.caption || '');
       }
 
       var hlsProxyUrl = API + data.hlsUrl;
@@ -486,6 +524,12 @@
       }
 
       videos.forEach(function (video) {
+        (video.tags || []).forEach(function (t) {
+          if (t && t.slug && !seenTags.has(t.slug)) {
+            seenTags.set(t.slug, t.name || t.slug);
+            renderTagPanel();
+          }
+        });
         var slide = buildSlide(video);
 
         /* Unobserve lastSlide dari ioEnd sebelum diganti */
@@ -529,6 +573,27 @@
       document.getElementById('tpLoader').classList.add('hidden');
     }
   }
+
+  /* ── Kategori (tag) picker toggle ──────────────────────────────── */
+  (function initTagPicker() {
+    var btn   = document.getElementById('tpCatBtn');
+    var panel = document.getElementById('tpCatPanel');
+    if (!btn || !panel) return;
+    renderTagPanel();
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var willOpen = !panel.classList.contains('open');
+      btn.classList.toggle('open', willOpen);
+      panel.classList.toggle('open', willOpen);
+      if (willOpen) renderTagPanel();
+    });
+    document.addEventListener('click', function (e) {
+      if (!panel.contains(e.target) && e.target !== btn) {
+        btn.classList.remove('open');
+        panel.classList.remove('open');
+      }
+    });
+  })();
 
   /* ── Search form ────────────────────────────────────────────── */
   var searchForm  = document.getElementById('tpSearchForm');
