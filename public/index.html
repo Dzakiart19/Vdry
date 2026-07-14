@@ -154,12 +154,68 @@
   </a>
 </nav>
 
+<!-- ─── SHELL ─── -->
+<div class="shell">
 
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
 
+      <div class="add-row">
+        <input id="addFolderInput" class="add-input" type="text"
+          placeholder="Link atau ID folder…" autocomplete="off" spellcheck="false" />
+        <button id="addFolderBtn" class="add-btn" title="Tambah folder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+      </div>
 
+      <div id="folderList"></div>
+    </div>
+  </aside>
 
-    
-    <!-- ─── Display Ad 300×250 ─── -->
+  <!-- Content -->
+  <main class="content" id="content">
+    <h1 class="sr-only">Free XXX Videos &amp; Porn Movies - Watch HD Sex Online</h1>
+
+    <div id="loadingState" class="state-view hidden">
+      <div class="loader">
+        <div class="loader-ring"></div>
+      </div>
+      <p>Memuat…</p>
+    </div>
+
+    <div id="errorState" class="state-view hidden">
+      <div class="state-icon error-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+      </div>
+      <h3 class="error-title">Layanan Sementara Tidak Tersedia</h3>
+      <p id="errorMsg" class="error-body">Server sedang mengalami gangguan. Tim kami sedang menangani masalah ini secepat mungkin.</p>
+      <p class="error-hint">Sementara itu, Anda dapat beralih ke platform lain yang tersedia.</p>
+      <div class="error-actions">
+        <button class="btn-retry" onclick="App.retry()">Coba Lagi</button>
+        <button class="btn-switch-platform" onclick="document.getElementById('navBurger').click()">Platform Lain →</button>
+      </div>
+    </div>
+
+    <div id="emptyState" class="state-view hidden">
+      <div class="state-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+        </svg>
+      </div>
+      <p>Folder ini kosong.</p>
+    </div>
+
+    <!-- ─── Leaderboard 728×90 ─── -->
+
+    <!-- ─── Banner 468×60 ─── -->
+
+    <!-- ─── Display Ad 300×250 — atas grid ─── -->
     <div class="ad-display-slot">
       <script>
         atOptions = {
@@ -194,6 +250,10 @@
       </script>
       <script src="https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js"></script>
     </div>
+
+    <!-- ─── Half-page 160×300 ─── -->
+
+    <!-- ─── Wide skyscraper 160×600 ─── -->
 
     <div id="pagination" class="pagination hidden"></div>
 
