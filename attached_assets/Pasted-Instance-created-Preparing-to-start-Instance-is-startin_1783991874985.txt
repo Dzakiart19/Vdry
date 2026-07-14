@@ -1,0 +1,211 @@
+Instance created. Preparing to start...
+Instance is starting... Waiting for health checks to pass.
+Server running on http://0.0.0.0:8000
+Instance is healthy. All health checks are passing.
+sb video error: Request failed with status code 404
+yb thumb error: timeout of 10000ms exceeded
+yb thumb error: timeout of 10000ms exceeded
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+sb video error: Request failed with status code 404
+[stream-evict] CDN 404 for flnzh7qm35tw — re-resolving
+[stream-evict] CDN 404 for snpfga5rs8gs — re-resolving
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+[stream-evict] CDN 404 for 4tz7l7vs38yh — re-resolving
+[stream-evict] CDN 404 for lsgox6dafuhz — re-resolving
+[stream-evict] CDN 404 for ifjphm6dqex7 — re-resolving
+[stream-evict] CDN 404 for b2l2e005wu2a — re-resolving
+[stream-evict] CDN 404 for 85nd52vgjcz1 — re-resolving
+[stream-evict] CDN 404 for ue19sg9y69eh — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+[stream-evict] CDN 404 for s8e5lz0tmqv8 — re-resolving
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+[stream-evict] CDN 404 for jwm9td9xjg62 — re-resolving
+upstream stream error: aborted
+pipeline error: aborted
+upstream stream error: aborted
+pipeline error: aborted
+[stream-evict] CDN 404 for jwm9td9xjg62 — re-resolving
+[stream-evict] CDN 404 for jwm9td9xjg62 — re-resolving
+[stream-evict] CDN 404 for jwm9td9xjg62 — re-resolving
+upstream stream error: aborted
+pipeline error: aborted
+upstream stream error: aborted
+pipeline error: aborted
+upstream stream error: aborted
+pipeline error: aborted
+upstream stream error: aborted
+pipeline error: aborted
+[stream-evict] CDN 404 for ndmnfaapagry — re-resolving
+Error: CORS: origin tidak diizinkan
+    at origin (/app/server.js:100:20)
+    at /app/node_modules/cors/lib/index.js:219:13
+    at optionsCallback (/app/node_modules/cors/lib/index.js:199:9)
+    at corsMiddleware (/app/node_modules/cors/lib/index.js:204:7)
+    at Layer.handle [as handle_request] (/app/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/app/node_modules/express/lib/router/index.js:328:13)
+    at /app/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/app/node_modules/express/lib/router/index.js:346:12)
+    at next (/app/node_modules/express/lib/router/index.js:280:10)
+    at internalNext (/app/node_modules/helmet/index.cjs:558:6)
+Error: CORS: origin tidak diizinkan
+    at origin (/app/server.js:100:20)
+    at /app/node_modules/cors/lib/index.js:219:13
+    at optionsCallback (/app/node_modules/cors/lib/index.js:199:9)
+    at corsMiddleware (/app/node_modules/cors/lib/index.js:204:7)
+    at Layer.handle [as handle_request] (/app/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/app/node_modules/express/lib/router/index.js:328:13)
+    at /app/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/app/node_modules/express/lib/router/index.js:346:12)
+    at next (/app/node_modules/express/lib/router/index.js:280:10)
+    at internalNext (/app/node_modules/helmet/index.cjs:558:6)
+Error: CORS: origin tidak diizinkan
+    at origin (/app/server.js:100:20)
+    at /app/node_modules/cors/lib/index.js:219:13
+    at optionsCallback (/app/node_modules/cors/lib/index.js:199:9)
+    at corsMiddleware (/app/node_modules/cors/lib/index.js:204:7)
+    at Layer.handle [as handle_request] (/app/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/app/node_modules/express/lib/router/index.js:328:13)
+    at /app/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/app/node_modules/express/lib/router/index.js:346:12)
+    at next (/app/node_modules/express/lib/router/index.js:280:10)
+    at internalNext (/app/node_modules/helmet/index.cjs:558:6)
+[rc] categories error: Request failed with status code 403
+[rc] posts error: Request failed with status code 403
+[rc] categories error: Request failed with status code 403
+[rc] posts error: Request failed with status code 403
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+upstream stream error: aborted
+pipeline error: aborted
+upstream stream error: aborted
+pipeline error: aborted
+upstream stream error: aborted
+pipeline error: aborted
+upstream stream error: aborted
+pipeline error: aborted
+upstream stream error: aborted
+pipeline error: aborted
+[stream-evict] CDN 404 for 7tn1uavp2f09 — re-resolving
+thumb proxy error: socket hang up
+[stream-evict] CDN 404 for 17rdewq0bsok — re-resolving
+[stream-evict] CDN 404 for 17rdewq0bsok — re-resolving
+upstream stream error: aborted
+pipeline error: aborted
+rb thumb stream error: Premature close
+rb thumb stream error: Premature close
+rb thumb stream error: Premature close
+rb thumb stream error: Premature close
+rb thumb stream error: Premature close
+rb thumb stream error: Premature close
+rb thumb stream error: Premature close
+rb thumb stream error: Premature close
+[rc] categories error: Request failed with status code 403
+[rc] posts error: Request failed with status code 403
+[rc] categories error: Request failed with status code 403
+[rc] posts error: Request failed with status code 403
+[stream-evict] CDN 404 for kxzi892ifwgp — re-resolving
+[stream-evict] CDN 404 for kxzi892ifwgp — re-resolving
+[stream-evict] CDN 404 for rg7w1c02ieaf — re-resolving
+[stream-evict] CDN 404 for rg7w1c02ieaf — re-resolving
+[stream-evict] CDN 404 for 040h9f6e83e2 — re-resolving
+[stream-evict] CDN 404 for lv1ridddtzno — re-resolving
+[stream-evict] CDN 404 for c9haj0qkmxy7 — re-resolving
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+rb thumb proxy error: Request failed with status code 404
+[tp] hls proxy error: CDN HTTP 410
+[tp] hls proxy error: CDN HTTP 410
+[tp] hls proxy error: CDN HTTP 410
+[tp] hls proxy error: CDN HTTP 410
+[tp] hls proxy error: CDN HTTP 410
+[tp] hls proxy error: CDN HTTP 410
+[rc] categories error: Request failed with status code 403
+Instance is stopping.
+Instance stopped.
