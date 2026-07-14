@@ -30,7 +30,15 @@ const PORT = process.env.PORT || 5000;
    pengunjung sebagai satu IP yang sama dan saling membatasi satu sama
    lain. `1` = percayai persis satu hop proxy di depan app. */
 app.set('trust proxy', 1);
-app.use(compression());
+// SSE route (/monitor/events) harus di-exclude dari compression:
+// compression() mem-buffer data untuk dikompresi, sehingga res.write() pada
+// SSE stream tidak pernah di-flush ke client → browser stuck "Connecting…"
+app.use(compression({
+  filter: (req, res) => {
+    if (req.path === '/monitor/events') return false;
+    return compression.filter(req, res);
+  }
+}));
 
 /* ── Security headers ──────────────────────────────────────────────────
    CSP: 'unsafe-inline' terpaksa dipakai di script-src/style-src karena
