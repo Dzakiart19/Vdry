@@ -64,7 +64,16 @@ app.use(helmet({
       imgSrc:    ["'self'", 'data:', 'https:'],
       fontSrc:   ["'self'", 'https://fonts.gstatic.com', 'data:'],
       mediaSrc:       ["'self'", 'blob:', 'https:'],
-      connectSrc:     ["'self'"],
+      connectSrc: [
+        "'self'",
+        // GA4 measurement beacons (dikirim via GTM) — tanpa ini connect-src
+        // 'self' memblokir semua request analytics, GA4 tidak pernah dapat data.
+        'https://www.google-analytics.com',
+        'https://*.google-analytics.com',
+        'https://analytics.google.com',
+        'https://www.googletagmanager.com',
+        'https://www.google.com',
+      ],
       frameSrc:       ['https:'],
       objectSrc:      ["'none'"],
       baseUri:        ["'self'"],

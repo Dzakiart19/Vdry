@@ -494,6 +494,7 @@ const App = (() => {
     el.video.removeAttribute('src');
     el.video.load();
     document.body.style.overflow = '';
+    if (typeof clearVideoJsonLd === 'function') clearVideoJsonLd();
 
     // Ganti entry #player dengan URL folder yang bersih — BUKAN history.back()
     // (back() berisiko melewati folder dan keluar ke halaman sebelumnya)

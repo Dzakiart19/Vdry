@@ -194,6 +194,7 @@
   function stopActive() {
     if (activeVideo) { activeVideo.pause(); activeVideo = null; }
     if (activeHls)   { activeHls.destroy(); activeHls   = null; }
+    if (typeof clearVideoJsonLd === 'function') clearVideoJsonLd();
   }
 
   /* ── Mulai play pada video yang sudah siap ─────────────────── */
@@ -242,6 +243,13 @@
           q: currentQuery || '', tag: currentTag || '' },
         '', '/tp/video/' + (data.token || id)
       );
+
+      var thumbForSchema = data.thumbnailMd
+        ? (API + '/proxy/tp/thumb?url=' + b64urlEncode(data.thumbnailMd))
+        : null;
+      if (typeof setVideoJsonLd === 'function') {
+        setVideoJsonLd(data.title || ('Video ' + id), window.location.href, thumbForSchema, data.caption || '');
+      }
 
       var hlsProxyUrl = API + data.hlsUrl;
 

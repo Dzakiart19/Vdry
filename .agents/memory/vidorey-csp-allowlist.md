@@ -23,3 +23,6 @@ Wildcard `https:` pada praktiknya menghilangkan proteksi allowlist — browser a
 Setiap kali menambahkan tag `<script src="https://...">` baru ke salah satu HTML (index/rb/yb/bk/tp), tambahkan domainnya ke array `scriptSrc` di `server.js` **sebelum** deploy. Tanpa ini, script diblokir browser secara diam-diam (tidak ada error di server, hanya di browser console).
 
 Sama berlaku untuk `style-src` (`fonts.googleapis.com`) dan `font-src` (`fonts.gstatic.com`) — jika font/CSS provider berubah, update kedua array itu.
+
+## connect-src juga wajib di-allowlist (bukan cuma script-src)
+`connectSrc` default cuma `'self'` — ini diam-diam memblokir beacon `fetch`/`sendBeacon` GA4 (dikirim via GTM) meski GTM script-nya sendiri sudah di-allowlist di `scriptSrc`. GA4 mengirim ke `www.google-analytics.com`, `*.google-analytics.com`, `analytics.google.com`, dan kadang `www.google.com` (consent-mode fallback) — keempatnya wajib ada di `connectSrc` atau analytics tidak pernah dapat data sama sekali, tanpa error di server (hanya keliatan di browser console sebagai CSP violation).

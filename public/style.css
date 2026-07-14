@@ -2435,4 +2435,61 @@ body.tp-page .tp-loader { bottom: 140px; }
   border: 0;
 }
 
+/* ── Ad-blocker detection banner ── */
+#vdry-adb-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: min(92vw, 480px);
+  animation: vdry-adb-in .28s var(--ease-out);
+}
+@keyframes vdry-adb-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.vdry-adb-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(0,0,0,.5);
+}
+.vdry-adb-icon {
+  flex: none;
+  font-size: 18px;
+  color: var(--rose);
+  line-height: 1.4;
+}
+.vdry-adb-body { flex: 1; min-width: 0; }
+.vdry-adb-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.vdry-adb-text {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text2);
+}
+.vdry-adb-close {
+  flex: none;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.vdry-adb-close:hover { color: var(--text); }
+@media (max-width: 480px) {
+  #vdry-adb-banner { bottom: 64px; } /* di atas sticky mobile ad banner */
+}
+
 

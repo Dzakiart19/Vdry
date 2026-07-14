@@ -263,6 +263,13 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 - **Monitor buffer**: ring buffer 50.000 event di server; client pakai virtual list sehingga puluhan ribu event bisa ditampilkan tanpa lag DOM.
 - **Kompresi**: `compression` middleware aktif sebelum Helmet — gzip semua response teks (HTML/JS/CSS/JSON) secara otomatis. `Content-Encoding: gzip` dikirim ke browser yang mendukung.
 - **Cache-Control static**: `express.static` dikonfigurasi `maxAge: 2h, etag: true` — browser cache CSS/JS/gambar 2 jam untuk performa repeat visit. Firebase CDN berlaku independent di production.
+- **CSP connect-src untuk GA4**: `connectSrc` wajib mengizinkan `www.google-analytics.com`, `*.google-analytics.com`, `analytics.google.com`, `googletagmanager.com`, `www.google.com` — tanpa ini beacon GA4 (dikirim via GTM) diblokir CSP dan analytics tidak pernah dapat data sama sekali walau GTM/GA4 sudah terpasang di HTML.
+
+### VideoObject JSON-LD — status per platform
+`public/utils.js` expose `window.setVideoJsonLd()` / `window.clearVideoJsonLd()`. Wajib dipanggil saat video mulai diputar (set) dan saat player ditutup/ganti video (clear) — kalau tidak, schema lama nyangkut di halaman. Sudah terpasang lengkap di app.js (P1), rb.js (P2), yb.js (P3), bk.js (P4), tp.js (P5), sb.js (P6/Vidorey 5).
+
+### Ad-blocker detection
+`public/adblock.js` (dimuat di semua 6 HTML setelah `utils.js`) mendeteksi ad-blocker via bait element (`class="ads ad-banner adsbox ad-placement pub_300x250 text-ad textAd"`, cek `offsetParent`/`display`/`visibility` setelah 300ms). Kalau terdeteksi, tampilkan banner non-blocking di pojok bawah (`#vdry-adb-banner`, style di `style.css`) minta user whitelist — dismiss disimpan 24 jam di `localStorage` (`vdry_adb_dismiss_until`) supaya tidak nge-spam user yang sama.
 
 ## User Preferences
 - Dark theme (Obsidian Archive design system)
