@@ -1035,6 +1035,13 @@ body {
 }
 .watch-ad-slot:empty { display: none; }
 
+/* ── Watch ad tepat di bawah player (reset border/padding dari default) ── */
+.watch-ad-below-player {
+  border-top: none;
+  padding-top: 0;
+  margin: 8px 0 0;
+}
+
 /* ── Mobile: stack vertikal (sidebar jadi normal flow) ── */
 @media (max-width: 860px) {
   .watch-layout { flex-direction: column; }
@@ -1344,6 +1351,34 @@ body {
   overflow: hidden;
 }
 .ad-mobile-banner-slot:empty { display: none; }
+
+/* ── Sticky 320×50 di bawah layar (mobile only) ── */
+@media (max-width: 767px) {
+  .ad-mobile-banner-slot {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 199;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    padding: 3px 0 4px;
+    min-height: 58px;
+    margin: 0;
+  }
+  .shell { padding-bottom: 64px; }
+}
+
+/* ── Inline grid ad (300×250 disisipi di antara video cards) ── */
+.ad-inline-grid {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+  min-height: 258px;
+  overflow: hidden;
+}
+.ad-inline-grid:empty { display: none; }
 
 
 /* ══════════════════════════════════════════════

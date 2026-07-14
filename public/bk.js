@@ -191,6 +191,19 @@
     }
   }
 
+  /* ── Helper: inline 300×250 ad di tengah grid ── */
+  function createInlineAd() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ad-inline-grid';
+    const s1 = document.createElement('script');
+    s1.text = "atOptions={'key':'d50b941ac6d9bd5749dcdb0b417bf348','format':'iframe','height':250,'width':300,'params':{}};";
+    const s2 = document.createElement('script');
+    s2.src = 'https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js';
+    wrap.appendChild(s1);
+    wrap.appendChild(s2);
+    return wrap;
+  }
+
   /* ── Render post grid ── */
   function renderPosts(posts) {
     els.grid.innerHTML = posts.map(p => {
@@ -223,6 +236,11 @@
       card.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') openPlayer(card.dataset.slug);
       });
+    });
+
+    const cardEls = [...els.grid.querySelectorAll('.rb-card')];
+    [8, 16].forEach(pos => {
+      if (cardEls[pos - 1]) cardEls[pos - 1].insertAdjacentElement('afterend', createInlineAd());
     });
   }
 

@@ -51,11 +51,12 @@ Empat jenis slot iklan aktif, posisi strategis per halaman:
 | Slot | Ukuran | Class CSS | Key | Posisi |
 |---|---|---|---|---|
 | Display banner | 300×250 | `.ad-display-slot` | `d50b941ac6d9bd5749dcdb0b417bf348` | Atas grid + bawah native (2× per listing page) |
+| Inline grid banner | 300×250 | `.ad-inline-grid` | `d50b941ac6d9bd5749dcdb0b417bf348` | Di antara card video (setelah card ke-8 dan ke-16), diinjeksi JS via `createInlineAd()` di rb/yb/bk/sb.js |
 | Native banner | — | `.ad-native-slot` | `761a1a8645cd2263043bfeb6f2e87eea` | Tengah listing (antara 2 display slot) |
-| Mobile banner | 320×50 | `.ad-mobile-banner-slot` | `d37e31d713d11b2ddde7d3efca199c9d` | Bawah pagination (mobile-friendly) |
+| Mobile banner | 320×50 | `.ad-mobile-banner-slot` | `d37e31d713d11b2ddde7d3efca199c9d` | **Sticky fixed bottom** di mobile (≤767px); static di desktop |
 | Popunder + Social Bar | — | *(inline script)* | `pl28418540` + `pl28427857` | Akhir `<body>`, sekali per halaman |
 
-**Watch view (P2/P3/P4/P7):** satu slot `.ad-display-slot` 300×250 di bawah grid related di sidebar kanan. Tidak ada popunder/social bar di watch view karena mengganggu nonton.
+**Watch view (P2/P3/P4/P7):** dua slot 300×250 — satu di bawah player (`watch-ad-below-player`, tepat setelah video-stage), satu lagi di bawah grid related di sidebar kanan (`watch-ad-slot`). Tidak ada popunder/social bar di watch view karena mengganggu nonton.
 
 **Aturan penting:**
 - Native banner punya `id` container tetap (`container-761a1a8645cd2263043bfeb6f2e87eea`) — **jangan duplikat** di halaman yang sama.
