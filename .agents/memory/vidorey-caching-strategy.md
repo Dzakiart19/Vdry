@@ -33,6 +33,10 @@ description: makeCache helper, semua cache per platform + TTL, sentinel values, 
 | `sbM3u8Cache` | P6 | 8 jam | 500 | M3U8 URL per slug (token xvideos TTL ~1 tahun) |
 | `sbVideoCache` | P6 | 4 jam | 300 | Full video payload + `_xvId` untuk self-heal |
 | `sbFreshCache` | P6 | 1 mnt | 100 | Anti-stampede fresh resolve per slug |
+| `xnPostsCache` (`p8_posts`) | P8 | 3 mnt | 300 | Listing + search results |
+| `xnM3u8Cache` (`p8_m3u8`) | P8 | 60 mnt | 500 | M3U8 URL per vId (token TTL ~1.5j) |
+| `xnVideoCache` (`p8_video`) | P8 | 2 jam | 500 | Full video payload + related |
+| `xnFreshCache` (`p8_fresh`) | P8 | 90 detik | 200 | Self-healing anti-stampede |
 
 **P5 tidak punya tpThumbCache** — URL thumbnail sudah ada di dalam payload `tpVideoCache` (field `thumbnailSm`/`thumbnailMd`).
 

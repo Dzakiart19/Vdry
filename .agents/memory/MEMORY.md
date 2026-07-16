@@ -16,3 +16,4 @@
 - [SB Architecture (Vidorey 5)](sb-platform6-architecture.md) — situsbokep.cc P6 code; UI = Vidorey 5 (TikTok tidak dihitung); search via WP REST API (HTML scrape /page/N/?s= selalu return hal.1); xvideos embedframe → HLS.
 - [Vidorey SEO Strategy](vidorey-seo.md) — lang="en" + og:locale=en_US + English keywords; GTM GTM-NWZSVQT9; GA4 G-6MB6SQTZWK; GSC terverifikasi; Bing terdaftar; H1 sr-only wajib.
 - [New Platform Checklist](new-platform-checklist.md) — checklist 7 fase lengkap saat tambah platform baru; semua file yang harus diubah tercantum.
+- [XN Platform 8 Architecture](xn-platform8-architecture.md) — xchina.tube POST API + AES-CBC decrypt key "xxx" + HLS token TTL ~1.5h + self-healing + tp.helloye.com thumb.

@@ -125,6 +125,7 @@ Setiap halaman wajib punya tag `<h1>` di dalam `<main>`. Gunakan CSS `.sr-only` 
 | P3 | `yb.html` | "XXX Videos \| Free Premium Adult Streaming Online" |
 | P4 | `bk.html` | "Free HD Sex Videos \| Adult Porn Streaming" |
 | P6 | `sb.html` | "Free HD Sex Videos \| Adult Porn Streaming" |
+| P8 | `xn.html` | "Free Chinese XXX Videos \| HD Asian Porn Streaming" |
 | P5 | `tp.html` | "Free Short Porn Clips \| Scroll XXX Videos" |
 
 ## How to apply — platform baru

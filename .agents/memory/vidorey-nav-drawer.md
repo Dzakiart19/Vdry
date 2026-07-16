@@ -29,6 +29,7 @@ Platform dengan UI listing/grid (video card + pagination + search bar + kategori
 | P3 | `/yb` | Vidorey 3 |
 | P4 | `/bk` | Vidorey 4 |
 | P6 | `/sb` | Vidorey 5 |
+| P8 | `/xn` | Vidorey 6 |
 
 ### Seksi Bawah — "Fitur Lain" (KHUSUS TikTok-style)
 Platform dengan UI TikTok-style (vertical scroll-snap, tidak ada grid/card). Ditempatkan **di bawah** `<hr class="nav-section-divider">` + label `<div class="nav-drawer-label">Fitur Lain</div>`.
@@ -68,7 +69,8 @@ Dropdown lama tidak terlihat user. Diganti hamburger ChatGPT-style. Nama sumber 
 | P2 | `/rb` | Vidorey 2 | Video harian · cari & tonton & kategori | Atas |
 | P3 | `/yb` | Vidorey 3 | Video harian · cari & tonton & kategori | Atas |
 | P4 | `/bk` | Vidorey 4 | Video harian · cari & tonton & kategori | Atas |
-| P6 | `/sb` | Vidorey 5 | Video harian · cari & tonton & kategori | Atas |
+| P6 | `/sb` | Vidorey 5 | Video harian · cari & tonton | Atas |
+| P8 | `/xn` | Vidorey 6 | Video harian · cari & tonton | Atas |
 | P5 | `/tp` | Vidorey TikTok 1 | TikTok · scroll vertikal · tag browser | Bawah (Fitur Lain) |
 
 ## IDs dan classes — state saat ini
@@ -101,6 +103,7 @@ Semua `.ps-avatar` pakai **`<img src="/logo.png" alt="Vidorey">`** — logo Vido
 | P3 (yb) | `.ps-avatar-yb` | — |
 | P4 (bk) | `.ps-avatar-bk` | — |
 | P6 (sb) — Vidorey 5 | `.ps-avatar-sb` | gradient hijau `#065f2e → #34d399` |
+| P8 (xn) — Vidorey 6 | `.ps-avatar-xn` | gradient orange `#7c2d00 → #fb923c` |
 | P5 (tp) | `.ps-avatar-tp` | — |
 
 ### CSS dead code di style.css (tidak berbahaya, tidak dipakai)
@@ -120,6 +123,7 @@ Semua `.ps-avatar` pakai **`<img src="/logo.png" alt="Vidorey">`** — logo Vido
 - `yb.html` → Vidorey 3 `.active` + `aria-current="page"`
 - `bk.html` → Vidorey 4 `.active` + `aria-current="page"`
 - `sb.html` → Vidorey 5 `.active` + `aria-current="page"`
+- `xn.html` → Vidorey 6 `.active` + `aria-current="page"`
 - `tp.html` → Vidorey TikTok 1 `.active` + `aria-current="page"`
 
 ## SPA Route — WAJIB di setiap scraper

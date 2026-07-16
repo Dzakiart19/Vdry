@@ -7,9 +7,9 @@ Vidorey's monolithic server.js (all platforms + monitor in one file) was split i
 - `lib/cache.js`, `lib/proxy.js` — generic stateless helpers only (no shared platform state).
 - `lib/monitor.js` — monitor/health/SSE/CDN-alert logic, exposes `registerMonitorRoutes(app, { getCacheStats })` and `trackRequest` middleware.
 - `lib/scrapers/{p1,rb,yb,bk,tp,sb}.js` — one file per platform, each exports `{ router, caches }`; no cross-imports between platform files.
-- `server.js` is now a thin composition root (6 platforms).
+- `server.js` is now a thin composition root (7 platforms).
 
-**Reality check (2026-07-14):** There are 6 active platforms — p1, rb (P2), yb (P3), bk (P4), tp (P5), sb (P6). "rc" (reddclips) was planned but never built. **UI naming (nav drawer) differs from internal code order:** Vidorey 1–5 = P1/P2/P3/P4/P6 (listing); TP (P5) is "Vidorey TikTok 1" under "Fitur Lain" — not counted as Vidorey 5. So "Vidorey 5" = P6/sb.
+**Reality check (2026-07-16):** There are 7 active platforms — p1, rb (P2), yb (P3), bk (P4), tp (P5), sb (P6), xn (P8). "rc" (reddclips) planned never built. **UI naming:** Vidorey 1–6 = P1/P2/P3/P4/P6/P8 (listing); TP (P5) is "Vidorey TikTok 1" under "Fitur Lain". So "Vidorey 6" = P8/xn.
 
 **Why:** user explicitly asked to de-duplicate/simplify server.js structure without merging scraper logic — platform isolation ("setiap platform harus terisolasi penuh") is a hard project rule from replit.md, so shared code was limited to genuinely generic helpers.
 

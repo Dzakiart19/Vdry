@@ -1,6 +1,6 @@
 # Vidorey — Multi-Platform Video Browser
 
-Web app untuk browse dan nonton video dari enam platform terpisah.
+Web app untuk browse dan nonton video dari tujuh platform terpisah.
 
 ## Cara Menjalankan (Replit)
 - Workflow **Start application** menjalankan `node server.js`, serve di port 5000.
@@ -14,7 +14,7 @@ Web app untuk browse dan nonton video dari enam platform terpisah.
 - **Port**: 5000
 
 ## Struktur Backend
-`server.js` (composition root) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 6 router platform → monitor/health routes → SPA fallback.
+`server.js` (composition root) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 7 router platform → monitor/health routes → SPA fallback.
 
 ```
 server.js                 ← composition root (helmet/CSP, CORS, rate limit, mount routers, /api/s/:platform/:token shortlink resolver, listen)
@@ -30,11 +30,12 @@ lib/
     bk.js                 ← bokepking.cam: WP REST API listing, direct MP4 proxy, /bk SPA route
     tp.js                 ← tik.porn: __NEXT_DATA__ scrape, HLS via hls.js, TikTok-style feed, /tp SPA route
     sb.js                 ← situsbokep.cc: WP HTML scrape (cheerio), xvideos embedframe → HLS, /sb SPA route
+    xn.js                 ← xchina.tube: POST REST API + AES-CBC decrypt key "xxx", HLS token TTL ~1.5h, self-healing, /xn SPA route
 ```
 
 Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai `server.js` untuk agregasi `getCacheStats()` di `/health/detail`. **Tidak ada cross-import antar scraper files** — hanya `lib/cache.js` dan `lib/proxy.js` yang generik/stateless di-share.
 
-## Enam Platform (Completely Isolated)
+## Tujuh Platform (Completely Isolated)
 
 | Platform | URL | Source | HTML | JS | Nama UI |
 |---|---|---|---|---|---|
@@ -44,6 +45,7 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 | Platform 4 | `/bk` | bokepking.cam | `bk.html` | `bk.js` | Vidorey 4 |
 | Platform 5 | `/tp` | tik.porn | `tp.html` | `tp.js` | Vidorey TikTok 1 |
 | Platform 6 | `/sb` | situsbokep.cc | `sb.html` | `sb.js` | Vidorey 5 |
+| Platform 8 | `/xn` | xchina.tube | `xn.html` | `xn.js` | Vidorey 6 |
 
 **Nama UI tidak menyebut nama web sumber** — user hanya melihat "Vidorey 1", "Vidorey 2", dst.
 
@@ -78,7 +80,7 @@ Iklan hanya dari **Adsterra**. ExoClick telah dihapus sepenuhnya.
 - `.nav-plat-item` + `.nav-plat-item.active` — item platform; avatar selalu `<img src="/logo.png">` (logo Vidorey sama untuk semua platform, konsisten dengan topbar)
 
 **Dua seksi nav drawer:**
-- **Seksi atas** (tanpa label) — listing platform biasa: P1 `/` (Vidorey 1), P2 `/rb` (Vidorey 2), P3 `/yb` (Vidorey 3), P4 `/bk` (Vidorey 4), P6 `/sb` (Vidorey 5)
+- **Seksi atas** (tanpa label) — listing platform biasa: P1 `/` (Vidorey 1), P2 `/rb` (Vidorey 2), P3 `/yb` (Vidorey 3), P4 `/bk` (Vidorey 4), P6 `/sb` (Vidorey 5), P8 `/xn` (Vidorey 6)
 - `<hr class="nav-section-divider">` — pemisah visual
 - **"Fitur Lain"** — KHUSUS TikTok-style (vertical scroll-snap): P5 `/tp`
 
@@ -224,6 +226,7 @@ Setiap platform baru wajib ditambahkan ke `sitemap.xml`.
 | bk.html | "Free HD Sex Videos \| Adult Porn Streaming" |
 | tp.html | "Free Short Porn Clips \| Scroll XXX Videos" |
 | sb.html | "Free HD Sex Videos \| Adult Porn Streaming" |
+| xn.html | "Free Chinese XXX Videos \| HD Asian Porn Streaming" |
 
 ## Deployment
 - **Replit (backend + dev frontend)**: server jalan di port 5000
@@ -276,6 +279,8 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 | `tp_posts` | `/api/tp/posts` dipanggil (P5) |
 | `sb_video` | `/proxy/sb/hls/:slug` dipanggil (P6 / Vidorey 5) |
 | `sb_posts` | `/api/sb/posts` dipanggil (P6 / Vidorey 5) |
+| `xn_video` | `/api/xn/video/:vId` dipanggil (P8 / Vidorey 6) |
+| `xn_posts` | `/api/xn/posts` dipanggil (P8 / Vidorey 6) |
 
 ### Implementasi Monitor
 - **Ring buffer server**: `MON_BUF=50.000` event, `CDN_ALERT_MAX=500` alert

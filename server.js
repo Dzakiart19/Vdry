@@ -20,6 +20,7 @@ const yb = require('./lib/scrapers/yb');
 const bk = require('./lib/scrapers/bk');
 const tp = require('./lib/scrapers/tp');
 const sb = require('./lib/scrapers/sb');
+const xn = require('./lib/scrapers/xn');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -161,6 +162,7 @@ app.use(yb.router);
 app.use(bk.router);
 app.use(tp.router);
 app.use(sb.router);
+app.use(xn.router);
 
 /* ── Monitor & health — cache stats digabung read-only dari semua platform.
    Urutan & daftar persis meniru server.js lama (ybFreshSessionCache sengaja
@@ -173,6 +175,7 @@ registerMonitorRoutes(app, {
     bk.caches[0], bk.caches[1], bk.caches[2],               // p4: bkPostsCache, bkVideoUrlCache, bkThumbCache
     tp.caches[0], tp.caches[1],                              // p5: tpPostsCache, tpVideoCache
     sb.caches[0], sb.caches[1], sb.caches[2], sb.caches[3], // p6: sbPostsCache, sbM3u8Cache, sbVideoCache, sbFreshCache
+    xn.caches[0], xn.caches[1], xn.caches[2], xn.caches[3], // p8: xnPostsCache, xnM3u8Cache, xnVideoCache, xnFreshCache
   ].map(c => c.stats()),
 });
 
@@ -180,7 +183,7 @@ registerMonitorRoutes(app, {
 /* ── Shortlink resolver — /api/s/:platform/:token → { slug } ── */
 app.get('/api/s/:platform/:token', (req, res) => {
   const { platform, token } = req.params;
-  if (!['rb', 'yb', 'bk', 'tp', 'sb'].includes(platform)) return res.status(404).json({ error: 'not found' });
+  if (!['rb', 'yb', 'bk', 'tp', 'sb', 'xn'].includes(platform)) return res.status(404).json({ error: 'not found' });
   if (!/^[a-z0-9]{11}$/.test(token)) return res.status(400).json({ error: 'invalid token' });
   const slug = resolveToken(platform, token);
   if (!slug) return res.status(404).json({ error: 'Link kadaluarsa atau tidak ditemukan' });

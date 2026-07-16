@@ -19,6 +19,8 @@
       { "source": "/rc/**", "destination": "/rc.html" },
       { "source": "/sb",    "destination": "/sb.html" },
       { "source": "/sb/**", "destination": "/sb.html" },
+      { "source": "/xn",    "destination": "/xn.html" },
+      { "source": "/xn/**", "destination": "/xn.html" },
       { "source": "**",     "destination": "/index.html" }
     ],
     "headers": [
