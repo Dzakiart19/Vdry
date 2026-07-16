@@ -33,6 +33,8 @@
     totalPages:  1,
     loading:     false,
     searchQuery: '',
+    catId:       '',   // Chinese keyword untuk category filter (e.g. "国产")
+    catName:     '',   // display name
   };
 
   /* ── DOM refs ── */

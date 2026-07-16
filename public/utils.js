@@ -106,7 +106,7 @@ window.initVdryCategoryPicker = function (opts) {
     list.forEach(function (c) {
       var isActive = String(activeId) === String(c.id || c.slug);
       chips.push('<button type="button" class="vdry-cat-chip' + (isActive ? ' active' : '') + '" data-id="' +
-        String(c.id != null ? c.id : c.slug) + '">' + escHtmlLocal(c.name) + ' (' + (c.count || 0) + ')</button>');
+        String(c.id != null ? c.id : c.slug) + '">' + escHtmlLocal(c.name) + (c.count != null ? ' (' + c.count + ')' : '') + '</button>');
     });
     panel.innerHTML = chips.join('');
     panel.querySelectorAll('.vdry-cat-chip').forEach(function (chip) {
