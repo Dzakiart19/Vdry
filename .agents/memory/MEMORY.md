@@ -17,3 +17,4 @@
 - [Vidorey SEO Strategy](vidorey-seo.md) — lang="en" + og:locale=en_US + English keywords; GTM GTM-NWZSVQT9; GA4 G-6MB6SQTZWK; GSC terverifikasi; Bing terdaftar; H1 sr-only wajib.
 - [New Platform Checklist](new-platform-checklist.md) — checklist 7 fase lengkap saat tambah platform baru; semua file yang harus diubah tercantum.
 - [XN Platform 8 Architecture](xn-platform8-architecture.md) — xchina.tube POST API + AES-CBC decrypt key "xxx" + HLS token TTL ~1.5h + self-healing + tp.helloye.com thumb.
+- [VD Platform 7 Architecture](vd-platform7-architecture.md) — videy.design PHP HTML scrape; `.video-card` root (not `a[href=...]`); title OUTSIDE `<a>` in sibling `.video-info`; direct MP4 no tokens; no search/categories.

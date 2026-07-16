@@ -2534,6 +2534,11 @@ body.tp-page .tp-loader { bottom: 140px; }
   background: linear-gradient(135deg, #7c2d00, #fb923c);
 }
 
+/* ── ps-avatar-vd ── */
+.ps-avatar-vd {
+  background: linear-gradient(135deg, #0c3460, #38bdf8);
+}
+
 /* ── SEO: visually hidden H1 ── */
 .sr-only {
   position: absolute;
