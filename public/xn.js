@@ -65,6 +65,8 @@
     relatedGrid:       $('xnRelatedGrid'),
     relatedPagination: $('xnRelatedPagination'),
     shareBtn:      $('xnShareBtn'),
+    catBtn:        $('xnCatBtn'),
+    catPanel:      $('xnCatPanel'),
   };
 
   /* ── HLS instance ── */
@@ -129,18 +131,23 @@
 
   /* ── Search heading ── */
   function updateSearchHeading() {
-    const q = state.searchQuery;
-    if (!q) {
+    const q   = state.searchQuery;
+    const cat = state.catName;
+    if (!q && !cat) {
       els.searchHeading.classList.remove('visible');
       els.searchHeading.innerHTML = '';
       return;
     }
     els.searchHeading.classList.add('visible');
-    els.searchHeading.innerHTML =
-      `Hasil pencarian untuk <strong>"${escHtml(q)}"</strong>` +
-      `<button class="rb-search-clear" id="xnSearchClear">✕ Hapus</button>`;
+    els.searchHeading.innerHTML = q
+      ? `Hasil pencarian untuk <strong>"${escHtml(q)}"</strong>` +
+        `<button class="rb-search-clear" id="xnSearchClear">✕ Hapus</button>`
+      : `Kategori: <strong>${escHtml(cat)}</strong>` +
+        `<button class="rb-search-clear" id="xnSearchClear">✕ Hapus</button>`;
     document.getElementById('xnSearchClear').addEventListener('click', () => {
       state.searchQuery = '';
+      state.catId       = '';
+      state.catName     = '';
       state.page = 1;
       els.searchInput.value = '';
       updateSearchHeading();
@@ -150,7 +157,7 @@
 
   /* ── History helpers ── */
   function saveNav(push) {
-    const s = { xnPage: state.page, xnQ: state.searchQuery };
+    const s = { xnPage: state.page, xnQ: state.searchQuery, xnCat: state.catId, xnCatName: state.catName };
     if (push) history.pushState(s, '', '/xn');
     else      history.replaceState(s, '', '/xn');
   }
@@ -167,6 +174,7 @@
     const page = state.page;
     let qs = `p=${page}`;
     if (q) qs += `&q=${encodeURIComponent(q)}`;
+    else if (state.catId) qs += `&cat=${encodeURIComponent(state.catId)}`;
 
     try {
       const data = await apiFetch(`/api/xn/posts?${qs}`);
@@ -308,8 +316,10 @@
   els.searchForm.addEventListener('submit', e => {
     e.preventDefault();
     const q = els.searchInput.value.trim();
-    if (q === state.searchQuery) return;
+    if (q === state.searchQuery && !state.catId) return;
     state.searchQuery = q;
+    state.catId       = '';
+    state.catName     = '';
     state.page = 1;
     loadPosts(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -560,8 +570,10 @@
     }
 
     if (s && typeof s.xnPage !== 'undefined') {
-      state.page        = s.xnPage || 1;
-      state.searchQuery = s.xnQ    || '';
+      state.page        = s.xnPage    || 1;
+      state.searchQuery = s.xnQ       || '';
+      state.catId       = s.xnCat     || '';
+      state.catName     = s.xnCatName || '';
       els.searchInput.value = state.searchQuery;
       loadPosts(false);
     }
@@ -606,6 +618,25 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  /* ── Category picker ── */
+  if (window.initVdryCategoryPicker && els.catBtn && els.catPanel) {
+    initVdryCategoryPicker({
+      button:   els.catBtn,
+      panel:    els.catPanel,
+      apiPath:  `${API}/api/xn/categories`,
+      getActiveId: () => state.catId,
+      onSelect(item) {
+        state.catId   = item ? item.id   : '';
+        state.catName = item ? item.name : '';
+        state.searchQuery = '';
+        state.page = 1;
+        els.searchInput.value = '';
+        loadPosts(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+    });
   }
 
   /* ── Init ── */

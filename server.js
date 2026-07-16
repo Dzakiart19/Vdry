@@ -175,7 +175,7 @@ registerMonitorRoutes(app, {
     bk.caches[0], bk.caches[1], bk.caches[2],               // p4: bkPostsCache, bkVideoUrlCache, bkThumbCache
     tp.caches[0], tp.caches[1],                              // p5: tpPostsCache, tpVideoCache
     sb.caches[0], sb.caches[1], sb.caches[2], sb.caches[3], // p6: sbPostsCache, sbM3u8Cache, sbVideoCache, sbFreshCache
-    xn.caches[0], xn.caches[1], xn.caches[2], xn.caches[3], // p8: xnPostsCache, xnM3u8Cache, xnVideoCache, xnFreshCache
+    xn.caches[0], xn.caches[1], xn.caches[2], xn.caches[3], xn.caches[4], // p8: xnPostsCache, xnM3u8Cache, xnVideoCache, xnFreshCache, xnCategoriesCache
   ].map(c => c.stats()),
 });
 
