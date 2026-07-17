@@ -176,10 +176,75 @@ Langkah untuk update nav drawer:
 
 ### 3j. Body — Script sebelum `</body>`
 ```html
+<script src="/i18n.js"></script>   <!-- WAJIB: harus PERTAMA, sebelum config.js -->
 <script src="/config.js"></script>
 <script src="/pN.js"></script>   <!-- app logic platform -->
 <script src="/smartlinks.js"></script>  <!-- WAJIB ada -->
 ```
+⚠️ **`i18n.js` HARUS urutan pertama** — `config.js` dan `pN.js` bergantung pada `window._t()` yang di-export `i18n.js`. Jika urutan terbalik, `_t is not defined` error.
+
+---
+
+### 3k. i18n — WAJIB (semua string user-facing harus bilingual)
+
+Vidorey mendukung toggle EN/ID. Setiap platform baru **wajib** mengimplementasikan i18n penuh. Lihat `vidorey-i18n.md` untuk daftar key lengkap.
+
+#### Topbar — lang toggle button
+Tambahkan `<button id="langToggle" class="lang-toggle-btn">EN</button>` di topbar:
+- **Platform listing (topbar standar):** Letakkan setelah div `.brand`, sebelum elemen lain
+- **Platform TikTok-style:** Letakkan di dalam `.tp-topbar` dengan `style="margin-left:auto"`
+
+#### Nav Drawer — data-i18n wajib
+```html
+<!-- Label seksi nav -->
+<div class="nav-drawer-label" data-i18n="nav.select">Platform Lain</div>
+<div class="nav-drawer-label" data-i18n="nav.other">Fitur Lain</div>
+
+<!-- Deskripsi platform baru (ps-desc span) -->
+<span class="ps-desc" data-i18n="nav.pN">[deskripsi ID di sini]</span>
+```
+**WAJIB tambah key `nav.pN`** (ID + EN) ke `public/i18n.js` di dictionary kedua bahasa.
+
+#### HTML state views — data-i18n wajib
+```html
+<p data-i18n="state.loading">Memuat…</p>
+<p data-i18n="state.empty">Tidak ada video ditemukan.</p>
+<button class="btn-retry" data-i18n="state.retry">Coba lagi</button>
+```
+
+#### HTML player modal — data-i18n wajib
+```html
+<span data-i18n="player.back">Kembali</span>       <!-- tombol back -->
+<span data-i18n="player.share">Bagikan</span>      <!-- tombol share -->
+<h3 data-i18n="player.related">Video Lainnya</h3>  <!-- heading related -->
+<p data-i18n="player.loading">Memuat video…</p>    <!-- loading state -->
+```
+
+#### HTML search bar (jika platform punya search)
+```html
+<input ... data-i18n-placeholder="search.ph" placeholder="Cari video…">
+<button ...><span data-i18n="search.btn">Cari</span></button>
+```
+
+#### HTML category button (jika platform punya kategori)
+```html
+<button ...><span data-i18n="cat.btn">Kategori</span></button>
+```
+
+#### JS — pN.js: ganti semua string hardcoded dengan `_t()`
+- Heading dinamis (search/kategori): `_t('heading.search')`, `_t('heading.cat')`, `_t('heading.clear')`, `_t('heading.clearSearch')`
+- Semua pesan error/toast: `_t('err.content')`, `_t('err.video')`, `_t('toast.copied')`, dll.
+- Tambah **langchange listener** sebelum penutup IIFE:
+  ```js
+  window.addEventListener('langchange', function () {
+    updateSearchHeading(); // atau nama fungsi heading builder di platform ini
+  });
+  ```
+  ⚠️ Tanpa listener ini, heading tidak ter-update saat user toggle bahasa tanpa reload.
+
+#### Jika butuh key baru (string platform-specific)
+- Tambah key baru ke `public/i18n.js` di KEDUA objek `id` dan `en`
+- Konvensi penamaan: `pN.namaKey` (prefix platform) untuk string yang unik ke platform ini
 
 ---
 
@@ -194,14 +259,14 @@ Langkah untuk update nav drawer:
 
 ## FASE 5 — Update Semua 7 HTML yang Ada
 
-- [ ] **Tambah platform baru ke nav drawer di SEMUA 6 HTML**: `index, rb, yb, bk, sb, tp`
-- [ ] Format entry nav drawer baru:
+- [ ] **Tambah platform baru ke nav drawer di SEMUA HTML yang ada**: `index, rb, yb, bk, sb, tp` + platform baru `pN.html` itu sendiri
+- [ ] Format entry nav drawer baru — **`data-i18n` pada `ps-desc` WAJIB**:
 ```html
 <a class="nav-plat-item" href="/pN">
   <div class="ps-avatar ps-avatar-pN"><img src="/logo.png" alt="Vidorey"></div>
   <div class="ps-info">
     <span class="ps-name">Vidorey [N]</span>
-    <span class="ps-desc">[deskripsi singkat · tema]</span>
+    <span class="ps-desc" data-i18n="nav.pN">[deskripsi singkat · tema dalam ID]</span>
   </div>
 </a>
 ```
@@ -243,7 +308,10 @@ Langkah untuk update nav drawer:
 - [ ] Buka `/pN` di browser → halaman muncul, nav drawer ada platform baru di posisi benar
 - [ ] Verifikasi nav drawer seksi: listing platform di atas divider, TikTok di bawah "Fitur Lain"
 - [ ] Klik platform baru di nav drawer dari semua platform lain → pindah ke platform baru (bukan Platform 1)
-- [ ] Cek browser console → tidak ada CSP error
+- [ ] **i18n — klik tombol "EN" di topbar** → semua teks UI beralih ke Inggris (placeholder, button, heading, nav drawer)
+- [ ] **i18n — klik "ID"** → kembali ke Indonesia, heading dinamis (search/kategori) juga berubah
+- [ ] **i18n — reload halaman** → bahasa yang dipilih terpertahankan (localStorage)
+- [ ] Cek browser console → tidak ada CSP error, tidak ada `_t is not defined`
 - [ ] Cek GTM Preview mode → tag GA4 terfiring di pN page
 - [ ] Google Search Console → "URL Inspection" → test live URL → harus lulus
 - [ ] Bing Webmaster Tools → "Live URL" → H1 tidak boleh missing
@@ -257,8 +325,9 @@ Langkah untuk update nav drawer:
 | `lib/scrapers/pN.js` | BARU — **include SPA routes `/pN` + `/pN/*`** |
 | `server.js` | require router, health caches, shortlink whitelist, CSP domain |
 | `lib/monitor.js` | trackRequest branches + badge CSS |
-| `public/pN.html` | BARU (GTM, meta, OG, schema, H1, nav drawer di posisi benar, ads, smartlinks) |
-| `public/pN.js` | BARU (app logic) |
+| `public/pN.html` | BARU (GTM, meta, OG, schema, H1, nav drawer di posisi benar, ads, **i18n.js script pertama, langToggle button, data-i18n attrs**, smartlinks) |
+| `public/pN.js` | BARU (app logic — **semua string pakai `_t()`, langchange listener wajib**) |
+| `public/i18n.js` | Tambah key `nav.pN` (ID + EN) + key platform-specific lainnya jika diperlukan |
 | `public/style.css` | tambah `.ps-avatar-pN`, `.pN-page` rules |
 | `public/index.html` | tambah platform baru ke nav drawer (posisi sesuai tipe) |
 | `public/rb.html` | tambah platform baru ke nav drawer |
@@ -281,5 +350,6 @@ Langkah untuk update nav drawer:
 - `vidorey-smartlinks.md` — update CARD_SEL + daftar halaman
 - `vidorey-modular-refactor.md` — update platform count + scraper list
 - `vidorey-seo.md` — update jumlah halaman + tambah baris di tabel meta tags
+- `vidorey-i18n.md` — tambah key baru platform N ke seksi "Key translation categories" + update "File coverage"
 - `replit.md` — update platform table, scraper list, monitor events, iklan section
 - `adding-scraping-platform/SKILL.md` — update platform table + count + nav drawer rule
