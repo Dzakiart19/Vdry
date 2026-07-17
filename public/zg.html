@@ -190,15 +190,30 @@
 </nav>
 
 <!-- ─── CATEGORY BAR ─── -->
-<div class="rb-searchbar rb-searchbar-cat-only">
+<div class="rb-searchbar rb-searchbar-cat-only" id="zgCatBar">
   <div class="vdry-cat-wrap">
     <button type="button" class="vdry-cat-btn" id="zgCatBtn">
       Kategori
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
+    <!-- Panel dipindah ke sini oleh JS (fixed positioning) -->
     <div class="vdry-cat-panel" id="zgCatPanel"></div>
   </div>
 </div>
+<style>
+  /* ZG: paksa category bar di atas semua ad overlay */
+  #zgCatBar {
+    z-index: 9999;
+    transform: translateZ(0);   /* force compositing layer — atas iframe ad */
+    -webkit-transform: translateZ(0);
+  }
+  /* Panel: fixed positioning agar tidak terkurung stacking context ad */
+  #zgCatPanel.open {
+    position: fixed !important;
+    z-index: 10000 !important;
+    /* top/left diset oleh JS saat buka */
+  }
+</style>
 
 <!-- ─── SHELL ─── -->
 <div class="shell">

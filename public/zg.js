@@ -582,6 +582,103 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       },
     });
+
+    /* ── Fix posisi panel: gunakan fixed positioning ──
+       Dipanggil setiap kali panel dibuka agar panel muncul
+       di bawah button, bukan terpotong oleh stacking context. */
+    function repositionPanel() {
+      if (!els.catPanel.classList.contains('open')) return;
+      const rect = els.catBtn.getBoundingClientRect();
+      els.catPanel.style.top  = (rect.bottom + 6) + 'px';
+      els.catPanel.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 280)) + 'px';
+    }
+
+    els.catBtn.addEventListener('click', function () {
+      requestAnimationFrame(repositionPanel);
+    });
+
+    /* Tutup panel saat scroll */
+    window.addEventListener('scroll', function () {
+      if (els.catPanel.classList.contains('open')) {
+        els.catBtn.classList.remove('open');
+        els.catPanel.classList.remove('open');
+      }
+    }, { passive: true });
+
+    /* ── Mobile touch override ──────────────────────────────────
+       Adsterra Popunder menggunakan document.addEventListener('click',…,true)
+       capture-phase yang menangkap tap SEBELUM button handler jalan.
+       Fix: gunakan 'touchend' pada mobile yang tidak diintersept popunder. */
+    if ('ontouchstart' in window) {
+      let _zgCatList = null;   // cache list setelah fetch pertama
+
+      function _zgOpenPanel() {
+        els.catBtn.classList.add('open');
+        els.catPanel.classList.add('open');
+        requestAnimationFrame(repositionPanel);
+
+        if (_zgCatList !== null) { _zgRenderChips(); return; }
+        els.catPanel.innerHTML = '<div class="vdry-cat-panel-empty">Memuat…</div>';
+        fetch(`${API}/api/zg/categories`)
+          .then(r => r.ok ? r.json() : [])
+          .then(list => { _zgCatList = Array.isArray(list) ? list : []; _zgRenderChips(); })
+          .catch(() => { _zgCatList = []; _zgRenderChips(); });
+      }
+
+      function _zgClosePanel() {
+        els.catBtn.classList.remove('open');
+        els.catPanel.classList.remove('open');
+      }
+
+      function _zgRenderChips() {
+        if (!_zgCatList || !_zgCatList.length) {
+          els.catPanel.innerHTML = '<div class="vdry-cat-panel-empty">Kategori tidak tersedia.</div>';
+          return;
+        }
+        const activeSlug = state.catSlug;
+        const html = [
+          `<button type="button" class="vdry-cat-chip${activeSlug ? '' : ' active'}" data-id="">Semua Kategori</button>`,
+          ..._zgCatList.map(c =>
+            `<button type="button" class="vdry-cat-chip${activeSlug === c.slug ? ' active' : ''}" data-id="${c.slug}">${c.name}${c.count ? ` (${c.count})` : ''}</button>`
+          )
+        ].join('');
+        els.catPanel.innerHTML = html;
+
+        els.catPanel.querySelectorAll('.vdry-cat-chip').forEach(chip => {
+          chip.addEventListener('click', () => {
+            const id = chip.getAttribute('data-id');
+            _zgClosePanel();
+            state.catSlug = id;
+            state.catName = id ? (_zgCatList.find(c => c.slug === id)?.name || '') : '';
+            state.page    = 1;
+            state.loading = false;
+            loadPosts(true);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+        });
+      }
+
+      /* Ganti click dengan touchend pada button */
+      els.catBtn.addEventListener('touchend', function (e) {
+        e.preventDefault();          // cegah ghost click
+        e.stopImmediatePropagation(); // blokir popunder capture
+        if (els.catPanel.classList.contains('open')) {
+          _zgClosePanel();
+        } else {
+          _zgOpenPanel();
+        }
+      }, { passive: false });
+
+      /* Tutup saat tap di luar panel */
+      document.addEventListener('touchend', function (e) {
+        if (els.catPanel.classList.contains('open') &&
+            !els.catPanel.contains(e.target) &&
+            e.target !== els.catBtn &&
+            !els.catBtn.contains(e.target)) {
+          _zgClosePanel();
+        }
+      }, { passive: true });
+    }
   }
 
   /* ── Escape helper ── */
