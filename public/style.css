@@ -1794,7 +1794,7 @@ body.rb-page .content {
 
 /* ── Searchbar hanya dengan kategori (tanpa form search) ── */
 .rb-searchbar.rb-searchbar-cat-only {
-  justify-content: flex-start;
+  justify-content: flex-end;
 }
 
 /* ── Kategori picker (dropdown) — shared di semua platform listing ── */

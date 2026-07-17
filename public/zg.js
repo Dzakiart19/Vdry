@@ -645,7 +645,9 @@
         els.catPanel.innerHTML = html;
 
         els.catPanel.querySelectorAll('.vdry-cat-chip').forEach(chip => {
-          chip.addEventListener('click', () => {
+          chip.addEventListener('touchend', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
             const id = chip.getAttribute('data-id');
             _zgClosePanel();
             state.catSlug = id;
@@ -654,7 +656,7 @@
             state.loading = false;
             loadPosts(true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
-          });
+          }, { passive: false });
         });
       }
 
@@ -662,6 +664,11 @@
       els.catBtn.addEventListener('touchend', function (e) {
         e.preventDefault();          // cegah ghost click
         e.stopImmediatePropagation(); // blokir popunder capture
+        /* Blokir ghost click agar utils.js tidak toggle-close panel */
+        els.catBtn.addEventListener('click', function stopGhost(ev) {
+          ev.stopImmediatePropagation();
+          ev.preventDefault();
+        }, { once: true, capture: true });
         if (els.catPanel.classList.contains('open')) {
           _zgClosePanel();
         } else {
