@@ -18,11 +18,14 @@ description: zoig.com (Vidorey 8) — amateur video site, direct MP4 proxy, sign
 - Apache trusts X-Forwarded-For blindly (server-side misconfiguration)
 
 ### Listing
-- URL: `https://www.zoig.com/amateur-videos{N}.html` (N=1,2,3…)
-- Card selector: `a.thumbnailz[href*="/play/"]`
+- URL page 1: `https://www.zoig.com/amateur-videos1.html`
+- URL page 2+: `https://www.zoig.com/amateur-videos/tr-week-{N}` (N=2,3…)
+  - ⚠️ `amateur-videos{N}.html` (N>1) redirect ke halaman yang sama dengan page 1 — JANGAN dipakai
+- Card selector: `a.thumbnailz[href*="/play/"]`; href adalah **full URL** (bukan path relative)
 - Title: `title` attribute on `<a>`, fallback `alt` on `<img>`
 - Thumbnail: `img.src` → `cdn-o9.zoig1.com/thumb/180x135/{hash}/{code}.jpg`
 - No duration available in listing cards
+- Total pages: parse dari `.browse_pagination a[href*="tr-week-"]`, ambil angka terbesar (biasanya ~17)
 
 ### Video page
 - URL: `https://www.zoig.com/play/{id}`
