@@ -645,7 +645,16 @@
         els.catPanel.innerHTML = html;
 
         els.catPanel.querySelectorAll('.vdry-cat-chip').forEach(chip => {
+          let _touchStartY = 0, _touchStartX = 0;
+          chip.addEventListener('touchstart', function (e) {
+            _touchStartY = e.touches[0].clientY;
+            _touchStartX = e.touches[0].clientX;
+          }, { passive: true });
           chip.addEventListener('touchend', function (e) {
+            /* Jika jari bergerak >8px = scroll, abaikan */
+            const dy = Math.abs(e.changedTouches[0].clientY - _touchStartY);
+            const dx = Math.abs(e.changedTouches[0].clientX - _touchStartX);
+            if (dy > 8 || dx > 8) return;
             e.preventDefault();
             e.stopImmediatePropagation();
             const id = chip.getAttribute('data-id');
