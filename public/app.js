@@ -588,7 +588,7 @@ const App = (() => {
     el.videoEl.addEventListener('error', function onErr() {
       el.videoEl.removeEventListener('error', onErr);
       el.playerLoading.classList.add('hidden');
-      showToast('Gagal memuat video. Coba lagi.');
+      showToast(_t('err.video.app'));
     });
 
     // Fetch title + thumb di background — tidak blokir playback
@@ -702,7 +702,7 @@ const App = (() => {
       if (newV + newF > 0) {
         currentData = data;
         renderAll(data);
-        showToast(`${newV + newF} konten baru ditemukan`);
+        showToast(`${newV + newF} ${_t('toast.newContent')}`);
       }
     } catch { /* silent */ }
     finally { scheduleRefresh(); }
@@ -741,13 +741,13 @@ const App = (() => {
         try {
           await navigator.share({ title: shareTitle, url: shareUrl });
         } catch (e) {
-          if (e.name !== 'AbortError') showToast('Gagal membagikan link.');
+          if (e.name !== 'AbortError') showToast(_t('toast.noShare'));
         }
         return;
       }
       try {
         await navigator.clipboard.writeText(shareUrl);
-        showToast('Link video disalin ke clipboard');
+        showToast(_t('toast.copied'));
       } catch {
         showToast(shareUrl);
       }

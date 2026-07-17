@@ -98,6 +98,7 @@
       <span class="brand-name">Vidorey</span>
     </div>
   </div>
+  <button id="langToggle" class="lang-toggle-btn" aria-label="Switch language / Ganti bahasa">EN</button>
 </header>
 
 <!-- ─── NAV DRAWER ─── -->
@@ -115,55 +116,55 @@
     </button>
   </div>
 
-  <div class="nav-drawer-label">Pilih Platform</div>
+  <div class="nav-drawer-label" data-i18n="nav.select">Pilih Platform</div>
 
   <a class="nav-plat-item" href="/">
     <div class="ps-avatar"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 1</span>
-      <span class="ps-desc">Folder video · streaming</span>
+      <span class="ps-desc" data-i18n="nav.p1">Folder video · streaming</span>
     </div>
   </a>
   <a class="nav-plat-item" href="/rb">
     <div class="ps-avatar ps-avatar-rb"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 2</span>
-      <span class="ps-desc">Video harian · cari &amp; tonton</span>
+      <span class="ps-desc" data-i18n="nav.p2">Video harian · cari &amp; tonton</span>
     </div>
   </a>
   <a class="nav-plat-item" href="/yb">
     <div class="ps-avatar ps-avatar-yb"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 3</span>
-      <span class="ps-desc">Video harian · cari &amp; tonton</span>
+      <span class="ps-desc" data-i18n="nav.p2">Video harian · cari &amp; tonton</span>
     </div>
   </a>
   <a class="nav-plat-item" href="/bk">
     <div class="ps-avatar ps-avatar-bk"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 4</span>
-      <span class="ps-desc">Video harian · cari &amp; tonton</span>
+      <span class="ps-desc" data-i18n="nav.p2">Video harian · cari &amp; tonton</span>
     </div>
   </a>
   <a class="nav-plat-item" href="/sb">
     <div class="ps-avatar ps-avatar-sb"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 5</span>
-      <span class="ps-desc">Video harian · cari &amp; tonton</span>
+      <span class="ps-desc" data-i18n="nav.p2">Video harian · cari &amp; tonton</span>
     </div>
   </a>
   <a class="nav-plat-item" href="/xn">
     <div class="ps-avatar ps-avatar-xn"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 6</span>
-      <span class="ps-desc">Video harian · cari &amp; tonton</span>
+      <span class="ps-desc" data-i18n="nav.p2">Video harian · cari &amp; tonton</span>
     </div>
   </a>
   <a class="nav-plat-item active" href="/vd" aria-current="page">
     <div class="ps-avatar ps-avatar-vd"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 7</span>
-      <span class="ps-desc">Video harian · cari &amp; tonton</span>
+      <span class="ps-desc" data-i18n="nav.p2">Video harian · cari &amp; tonton</span>
     </div>
     <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <polyline points="20 6 9 17 4 12"/>
@@ -173,18 +174,18 @@
     <div class="ps-avatar ps-avatar-zg"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 8</span>
-      <span class="ps-desc">Homemade amateur · real people</span>
+      <span class="ps-desc" data-i18n="nav.p8">Homemade amateur · real people</span>
     </div>
   </a>
 
   <hr class="nav-section-divider">
-  <div class="nav-drawer-label">Fitur Lain</div>
+  <div class="nav-drawer-label" data-i18n="nav.other">Fitur Lain</div>
 
   <a class="nav-plat-item" href="/tp">
     <div class="ps-avatar ps-avatar-tp"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey TikTok 1</span>
-      <span class="ps-desc">TikTok 1 · scroll vertikal</span>
+      <span class="ps-desc" data-i18n="nav.tp">TikTok 1 · scroll vertikal</span>
     </div>
   </a>
 </nav>
@@ -198,7 +199,7 @@
 
     <div id="vdLoadingState" class="state-view hidden">
       <div class="loader"><div class="loader-ring"></div></div>
-      <p>Memuat…</p>
+      <p data-i18n="state.loading">Memuat…</p>
     </div>
 
     <div id="vdErrorState" class="state-view hidden">
@@ -209,7 +210,7 @@
         </svg>
       </div>
       <p id="vdErrorMsg">Terjadi kesalahan.</p>
-      <button class="btn-retry" id="vdRetryBtn">Coba lagi</button>
+      <button class="btn-retry" data-i18n="state.retry" id="vdRetryBtn">Coba lagi</button>
     </div>
 
     <div id="vdEmptyState" class="state-view hidden">
@@ -220,7 +221,7 @@
           <line x1="12" y1="17" x2="12" y2="21"/>
         </svg>
       </div>
-      <p>Tidak ada video ditemukan.</p>
+      <p data-i18n="state.empty">Tidak ada video ditemukan.</p>
     </div>
 
     <!-- ─── Display Ad 300×250 — atas grid ─── -->
@@ -315,7 +316,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
-        Kembali
+        <span data-i18n="player.back">Kembali</span>
       </button>
       <span id="vdVideoSub" class="watch-platform-label">Vidorey 7</span>
     </div>
@@ -325,7 +326,7 @@
           <div class="video-stage rb-video-stage">
             <div id="vdPlayerLoading" class="rb-player-loader">
               <div class="loader-ring"></div>
-              <p>Memuat video…</p>
+              <p data-i18n="player.loading">Memuat video…</p>
             </div>
             <video
               id="vdVideoEl"
@@ -356,7 +357,7 @@
                   <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
                   <line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/>
                 </svg>
-                <span>Bagikan</span>
+                <span data-i18n="player.share">Bagikan</span>
               </button>
             </div>
             <div id="vdWatchDesc" class="watch-desc hidden">
@@ -365,7 +366,7 @@
           </div>
         </div>
         <div class="watch-related hidden" id="vdRelatedSection">
-          <h3 class="watch-related-heading">Video Lainnya</h3>
+          <h3 class="watch-related-heading" data-i18n="player.related">Video Lainnya</h3>
           <div id="vdRelatedGrid" class="rb-grid rb-grid-related"></div>
           <div id="vdRelatedPagination" class="pagination hidden"></div>
           <div class="watch-ad-slot">
@@ -388,6 +389,7 @@
 
 <div id="toast" aria-live="polite"></div>
 
+<script src="/i18n.js"></script>
 <script src="/config.js"></script>
 <script src="/utils.js"></script>
 <script src="/adblock.js"></script>

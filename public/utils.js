@@ -100,9 +100,9 @@ window.initVdryCategoryPicker = function (opts) {
 
   function render() {
     if (list === null) { panel.innerHTML = '<div class="vdry-cat-panel-empty">Memuat…</div>'; return; }
-    if (!list.length)  { panel.innerHTML = '<div class="vdry-cat-panel-empty">Kategori tidak tersedia.</div>'; return; }
+    if (!list.length)  { panel.innerHTML = '<div class="vdry-cat-panel-empty">' + _t('cat.empty') + '</div>'; return; }
     var activeId = getActiveId();
-    var chips = ['<button type="button" class="vdry-cat-chip' + (activeId ? '' : ' active') + '" data-id="">Semua Kategori</button>'];
+    var chips = ['<button type="button" class="vdry-cat-chip' + (activeId ? '' : ' active') + '" data-id="">' + _t('cat.all') + '</button>'];
     list.forEach(function (c) {
       var isActive = String(activeId) === String(c.id || c.slug);
       chips.push('<button type="button" class="vdry-cat-chip' + (isActive ? ' active' : '') + '" data-id="' +

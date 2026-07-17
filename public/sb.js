@@ -142,10 +142,10 @@
     }
     els.searchHeading.classList.add('visible');
     els.searchHeading.innerHTML = q
-      ? `Hasil pencarian untuk <strong>"${escHtml(q)}"</strong>` +
-        `<button class="rb-search-clear" id="sbSearchClear">✕ Hapus</button>`
-      : `Kategori: <strong>${escHtml(cat)}</strong>` +
-        `<button class="rb-search-clear" id="sbSearchClear">✕ Hapus</button>`;
+      ? `${_t('heading.search')}: <strong>"${escHtml(q)}"</strong>` +
+        `<button class="rb-search-clear" id="sbSearchClear">${_t('heading.clearSearch')}</button>`
+      : `${_t('heading.cat')}: <strong>${escHtml(cat)}</strong>` +
+        `<button class="rb-search-clear" id="sbSearchClear">${_t('heading.clearSearch')}</button>`;
     document.getElementById('sbSearchClear').addEventListener('click', () => {
       state.searchQuery = '';
       state.catId = '';
@@ -214,7 +214,7 @@
       renderPagination();
     } catch (e) {
       console.error('loadPosts sb:', e.message);
-      els.errorMsg.textContent = 'Gagal memuat konten. Periksa koneksi internet atau coba lagi.';
+      els.errorMsg.textContent = _t('err.content');
       showState('error');
     } finally {
       state.loading = false;
@@ -483,8 +483,8 @@
       if (session !== playerSession) return;
       console.error('openPlayer sb:', e.message);
       els.playerLoading.classList.add('hidden');
-      els.videoTitle.textContent = 'Gagal memuat video';
-      showToast('Gagal memuat video. Periksa koneksi internet atau coba lagi.');
+      els.videoTitle.textContent = _t('err.video.title');
+      showToast(_t('err.video'));
     }
   }
 
@@ -505,7 +505,7 @@
       if (session !== playerSession) return;
       destroyPlayer();
       els.playerLoading.classList.add('hidden');
-      showToast('Gagal memuat video. Periksa koneksi internet atau coba lagi.');
+      showToast(_t('err.video'));
     };
 
     if (typeof Hls !== 'undefined' && Hls.isSupported()) {
@@ -626,14 +626,14 @@
         try {
           await navigator.share({ title: shareTitle, url: shareUrl });
         } catch (e) {
-          if (e.name !== 'AbortError') showToast('Gagal membagikan link.');
+          if (e.name !== 'AbortError') showToast(_t('toast.noShare'));
         }
         return;
       }
 
       try {
         await navigator.clipboard.writeText(shareUrl);
-        showToast('Link video disalin ke clipboard');
+        showToast(_t('toast.copied'));
       } catch {
         showToast(shareUrl);
       }
@@ -669,5 +669,10 @@
       if (slug) { modalHistoryPushed = false; openPlayer(slug); }
     }
   }
+
+  /* ── Language change: re-render dynamic text ── */
+  window.addEventListener('langchange', function () {
+    updateSearchHeading();
+  });
 
 })();

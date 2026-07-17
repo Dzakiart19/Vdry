@@ -142,10 +142,10 @@
     }
     els.searchHeading.classList.add('visible');
     els.searchHeading.innerHTML = q
-      ? `Hasil pencarian untuk <strong>"${escHtml(q)}"</strong>` +
-        `<button class="rb-search-clear" id="rbSearchClear">✕ Hapus</button>`
-      : `Kategori: <strong>${escHtml(cat)}</strong>` +
-        `<button class="rb-search-clear" id="rbSearchClear">✕ Hapus</button>`;
+      ? `${_t('heading.search')}: <strong>"${escHtml(q)}"</strong>` +
+        `<button class="rb-search-clear" id="rbSearchClear">${_t('heading.clearSearch')}</button>`
+      : `${_t('heading.cat')}: <strong>${escHtml(cat)}</strong>` +
+        `<button class="rb-search-clear" id="rbSearchClear">${_t('heading.clearSearch')}</button>`;
     document.getElementById('rbSearchClear').addEventListener('click', () => {
       state.searchQuery = '';
       state.catId = '';
@@ -216,7 +216,7 @@
       renderPagination();
     } catch (e) {
       console.error('loadPosts:', e.message);
-      els.errorMsg.textContent = 'Gagal memuat konten. Periksa koneksi internet atau coba lagi.';
+      els.errorMsg.textContent = _t('err.content');
       showState('error');
     } finally {
       state.loading = false;
@@ -493,8 +493,8 @@
       if (session !== playerSession) return;
       console.error('openPlayer:', e.message);
       els.playerLoading.classList.add('hidden');
-      els.videoTitle.textContent = 'Gagal memuat video';
-      showToast('Gagal memuat video. Periksa koneksi internet atau coba lagi.');
+      els.videoTitle.textContent = _t('err.video.title');
+      showToast(_t('err.video'));
     }
   }
 
@@ -519,7 +519,7 @@
       if (session !== playerSession) return;
       destroyHls(); // destroyHls sudah tambahkan .hidden ke video
       els.playerLoading.classList.add('hidden');
-      showToast('Stream terputus — klik video lagi untuk reload');
+      showToast(_t('err.stream'));
     };
 
     if (typeof Hls !== 'undefined' && Hls.isSupported()) {
@@ -570,7 +570,7 @@
     } else {
       video.classList.add('hidden');
       els.playerLoading.classList.add('hidden');
-      showToast('Browser tidak mendukung HLS playback');
+      showToast(_t('err.hls'));
     }
   }
 
@@ -678,14 +678,14 @@
           await navigator.share({ title: shareTitle, url: shareUrl });
         } catch (e) {
           // AbortError = user membatalkan share sheet — bukan error, diamkan saja
-          if (e.name !== 'AbortError') showToast('Gagal membagikan link.');
+          if (e.name !== 'AbortError') showToast(_t('toast.noShare'));
         }
         return;
       }
 
       try {
         await navigator.clipboard.writeText(shareUrl);
-        showToast('Link video disalin ke clipboard');
+        showToast(_t('toast.copied'));
       } catch {
         showToast(shareUrl);
       }
@@ -729,5 +729,10 @@
       if (slug) { modalHistoryPushed = false; openPlayer(slug); }
     }
   }
+
+  /* ── Language change: re-render dynamic text ── */
+  window.addEventListener('langchange', function () {
+    updateSearchHeading();
+  });
 
 })();

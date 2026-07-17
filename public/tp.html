@@ -97,13 +97,13 @@
     </button>
   </div>
 
-  <div class="nav-drawer-label">Platform Video</div>
+  <div class="nav-drawer-label" data-i18n="nav.tp.label">Platform Video</div>
 
   <a class="nav-plat-item" href="/">
     <div class="ps-avatar ps-avatar-p1"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 1</span>
-      <span class="ps-desc">Platform 1 · pencarian video</span>
+      <span class="ps-desc" data-i18n="nav.tp.p1">Platform 1 · pencarian video</span>
     </div>
   </a>
 
@@ -111,7 +111,7 @@
     <div class="ps-avatar ps-avatar-rb"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 2</span>
-      <span class="ps-desc">Platform 2 · streaming video</span>
+      <span class="ps-desc" data-i18n="nav.tp.p2">Platform 2 · streaming video</span>
     </div>
   </a>
 
@@ -119,7 +119,7 @@
     <div class="ps-avatar ps-avatar-yb"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 3</span>
-      <span class="ps-desc">Platform 3 · video premium</span>
+      <span class="ps-desc" data-i18n="nav.tp.p3">Platform 3 · video premium</span>
     </div>
   </a>
 
@@ -127,7 +127,7 @@
     <div class="ps-avatar ps-avatar-bk"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 4</span>
-      <span class="ps-desc">Platform 4 · video dewasa</span>
+      <span class="ps-desc" data-i18n="nav.tp.p4">Platform 4 · video dewasa</span>
     </div>
   </a>
 
@@ -135,39 +135,39 @@
     <div class="ps-avatar ps-avatar-sb"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 5</span>
-      <span class="ps-desc">Video harian · cari &amp; tonton</span>
+      <span class="ps-desc" data-i18n="nav.p2">Video harian · cari &amp; tonton</span>
     </div>
   </a>
   <a class="nav-plat-item" href="/xn">
     <div class="ps-avatar ps-avatar-xn"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 6</span>
-      <span class="ps-desc">Video harian · cari &amp; tonton</span>
+      <span class="ps-desc" data-i18n="nav.p2">Video harian · cari &amp; tonton</span>
     </div>
   </a>
   <a class="nav-plat-item" href="/vd">
     <div class="ps-avatar ps-avatar-vd"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 7</span>
-      <span class="ps-desc">Video harian · cari &amp; tonton</span>
+      <span class="ps-desc" data-i18n="nav.p2">Video harian · cari &amp; tonton</span>
     </div>
   </a>
   <a class="nav-plat-item" href="/zg">
     <div class="ps-avatar ps-avatar-zg"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey 8</span>
-      <span class="ps-desc">Homemade amateur · real people</span>
+      <span class="ps-desc" data-i18n="nav.p8">Homemade amateur · real people</span>
     </div>
   </a>
 
   <hr class="nav-section-divider">
-  <div class="nav-drawer-label">Fitur Lain</div>
+  <div class="nav-drawer-label" data-i18n="nav.other">Fitur Lain</div>
 
   <a class="nav-plat-item active" href="/tp" aria-current="page">
     <div class="ps-avatar ps-avatar-tp"><img src="/logo.png" alt="Vidorey"></div>
     <div class="ps-info">
       <span class="ps-name">Vidorey TikTok 1</span>
-      <span class="ps-desc">TikTok 1 · scroll vertikal</span>
+      <span class="ps-desc" data-i18n="nav.tp">TikTok 1 · scroll vertikal</span>
     </div>
     <svg class="ps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <polyline points="20 6 9 17 4 12"/>
@@ -185,6 +185,7 @@
     </svg>
   </button>
   <span class="tp-topbar-title">Vidorey TikTok 1</span>
+  <button id="langToggle" class="lang-toggle-btn" style="margin-left:auto" aria-label="Switch language / Ganti bahasa">EN</button>
   <button id="tpMuteBtn" class="tp-mute-btn" aria-label="Aktifkan suara" title="Aktifkan suara">
     <svg id="tpIconMute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
@@ -201,6 +202,7 @@
       class="tp-search-input"
       type="search"
       placeholder="Cari video…"
+      data-i18n-placeholder="search.ph"
       autocomplete="off"
       maxlength="200"
     >
@@ -241,7 +243,7 @@
 <!-- ── Loader indicator ── -->
 <div id="tpLoader" class="tp-loader hidden">
   <div class="tp-spinner"></div>
-  <span>Memuat video…</span>
+  <span data-i18n="player.loading">Memuat video…</span>
 </div>
 
 <!-- ── Toast notification ── -->
@@ -249,6 +251,7 @@
 
 <!-- ── Scripts ── -->
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+<script src="/i18n.js"></script>
 <script src="/config.js"></script>
 <script src="/utils.js"></script>
 <script src="/adblock.js"></script>

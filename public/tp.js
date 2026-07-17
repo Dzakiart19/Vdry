@@ -215,8 +215,8 @@
     document.getElementById('tpIconMute').style.display   = isMuted ? '' : 'none';
     document.getElementById('tpIconUnmute').style.display = isMuted ? 'none' : '';
     var btn = document.getElementById('tpMuteBtn');
-    btn.setAttribute('aria-label', isMuted ? 'Aktifkan suara' : 'Matikan suara');
-    btn.setAttribute('title',      isMuted ? 'Aktifkan suara' : 'Matikan suara');
+    btn.setAttribute('aria-label', isMuted ? _t('tp.mute') : _t('tp.unmute'));
+    btn.setAttribute('title',      isMuted ? _t('tp.mute') : _t('tp.unmute'));
   }
 
   document.getElementById('tpMuteBtn').addEventListener('click', function () {
@@ -312,7 +312,7 @@
             hls.recoverMediaError();
           } else {
             hls.destroy();
-            if (targetSlideId === id) showToast('Gagal memutar video. Geser ke video lain.');
+            if (targetSlideId === id) showToast(_t('tp.err.play'));
           }
         });
 
@@ -324,13 +324,13 @@
         startPlay(vid, slide, null);
 
       } else {
-        showToast('Browser tidak mendukung format video ini.');
+        showToast(_t('tp.err.browser'));
       }
 
     } catch (err) {
       console.error('[tp] loadAndPlaySlide error:', err.message);
       slide.dataset.loaded = '0';
-      if (targetSlideId === id) showToast('Gagal memuat video. Coba geser ke video lain.');
+      if (targetSlideId === id) showToast(_t('tp.err.load'));
     }
   }
 
@@ -582,7 +582,7 @@
 
     } catch (err) {
       console.error('[tp] loadPosts error:', err.message);
-      showToast('Gagal memuat video. Periksa koneksi internet.');
+      showToast(_t('tp.err.load2'));
     } finally {
       isLoading = false;
       document.getElementById('tpLoader').classList.add('hidden');
