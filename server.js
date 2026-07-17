@@ -22,6 +22,7 @@ const tp = require('./lib/scrapers/tp');
 const sb = require('./lib/scrapers/sb');
 const xn = require('./lib/scrapers/xn');
 const vd = require('./lib/scrapers/vd');
+const zg = require('./lib/scrapers/zg');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -165,6 +166,7 @@ app.use(tp.router);
 app.use(sb.router);
 app.use(xn.router);
 app.use(vd.router);
+app.use(zg.router);
 
 /* ── Monitor & health — cache stats digabung read-only dari semua platform.
    Urutan & daftar persis meniru server.js lama (ybFreshSessionCache sengaja
@@ -179,6 +181,7 @@ registerMonitorRoutes(app, {
     sb.caches[0], sb.caches[1], sb.caches[2], sb.caches[3], // p6: sbPostsCache, sbM3u8Cache, sbVideoCache, sbFreshCache
     xn.caches[0], xn.caches[1], xn.caches[2], xn.caches[3], xn.caches[4], // p8: xnPostsCache, xnM3u8Cache, xnVideoCache, xnFreshCache, xnCategoriesCache
     vd.caches[0], vd.caches[1], vd.caches[2],                              // vd: vdPostsCache, vdVideoCache, vdThumbCache
+    zg.caches[0], zg.caches[1], zg.caches[2],                              // zg: zgPostsCache, zgVideoCache, zgThumbCache
   ].map(c => c.stats()),
 });
 
@@ -186,7 +189,7 @@ registerMonitorRoutes(app, {
 /* ── Shortlink resolver — /api/s/:platform/:token → { slug } ── */
 app.get('/api/s/:platform/:token', (req, res) => {
   const { platform, token } = req.params;
-  if (!['rb', 'yb', 'bk', 'tp', 'sb', 'xn', 'vd'].includes(platform)) return res.status(404).json({ error: 'not found' });
+  if (!['rb', 'yb', 'bk', 'tp', 'sb', 'xn', 'vd', 'zg'].includes(platform)) return res.status(404).json({ error: 'not found' });
   if (!/^[a-z0-9]{11}$/.test(token)) return res.status(400).json({ error: 'invalid token' });
   const slug = resolveToken(platform, token);
   if (!slug) return res.status(404).json({ error: 'Link kadaluarsa atau tidak ditemukan' });

@@ -18,3 +18,4 @@
 - [New Platform Checklist](new-platform-checklist.md) — checklist 7 fase lengkap saat tambah platform baru; semua file yang harus diubah tercantum.
 - [XN Platform 8 Architecture](xn-platform8-architecture.md) — xchina.tube POST API + AES-CBC decrypt key "xxx" + HLS token TTL ~1.5h + self-healing + tp.helloye.com thumb.
 - [VD Platform 7 Architecture](vd-platform7-architecture.md) — videy.design PHP HTML scrape; `.video-card` root (not `a[href=...]`); title OUTSIDE `<a>` in sibling `.video-info`; direct MP4 no tokens; no search/categories.
+- [ZG Platform 8 Architecture](zg-platform8-architecture.md) — zoig.com; X-Forwarded-For residential IP bypass; signed MP4 token changes per request → 8-min cache + self-heal; poster attr for thumb; ul.browse.related for related videos.

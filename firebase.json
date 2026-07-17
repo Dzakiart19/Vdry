@@ -23,6 +23,8 @@
       { "source": "/xn/**", "destination": "/xn.html" },
       { "source": "/vd",    "destination": "/vd.html" },
       { "source": "/vd/**", "destination": "/vd.html" },
+      { "source": "/zg",    "destination": "/zg.html" },
+      { "source": "/zg/**", "destination": "/zg.html" },
       { "source": "**",     "destination": "/index.html" }
     ],
     "headers": [
