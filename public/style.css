@@ -1792,6 +1792,11 @@ body.rb-page .content {
 .rb-search-btn:hover { opacity: .85; }
 .rb-search-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 
+/* ── Searchbar hanya dengan kategori (tanpa form search) ── */
+.rb-searchbar.rb-searchbar-cat-only {
+  justify-content: flex-start;
+}
+
 /* ── Kategori picker (dropdown) — shared di semua platform listing ── */
 .vdry-cat-btn {
   background: var(--surface3);

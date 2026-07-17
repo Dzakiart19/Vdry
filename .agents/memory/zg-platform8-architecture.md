@@ -45,8 +45,19 @@ description: zoig.com (Vidorey 8) — amateur video site, direct MP4 proxy, sign
 - On 403/404 from CDN: `resolveZgVideo(id, true)` evicts cache + re-scrapes `/play/{id}` for fresh token
 - Pattern identical to xn.js / rb.js
 
+### Categories
+- Endpoint: `GET /api/zg/categories` — scrape `https://www.zoig.com/categories`
+- Selector: `$('li')` → find `h3 a.tt` (name+slug), `a.thumbnail img` (thumb), `a[href*="amateur-videos1.html"] span` (count)
+- Slug extracted with `/\/category\/([a-z0-9-]+)/` from h3 link href
+- Returns `[{ slug, name, thumb, count }]`, filter count > 0 → 62 categories
+- Category listing URL: `${ZG_BASE}/category/${slug}/amateur-videos${page}.html` works for all N (unlike main listing)
+- Category totalPages: parse `.browse_pagination a[href*="amateur-videos"]` max number
+- Cache: 1hr, max 1 entry (`zg_categories`)
+- Frontend: `initVdryCategoryPicker` with `apiPath=/api/zg/categories`; catSlug (not catId) as identifier
+
 ### Caches
-- `zg_posts`: 5 min, max 200
+- `zg_posts`: 5 min, max 200 (cache key includes cat slug: `${page}:${cat}`)
+- `zg_categories`: 1 hr, max 1
 - `zg_video`: 8 min, max 300 (short TTL due to signed token)
 - `zg_thumb`: 24 hr, max 500
 

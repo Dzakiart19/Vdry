@@ -34,6 +34,8 @@
     page:       1,
     totalPages: 1,
     loading:    false,
+    catSlug:    '',   // '' = semua kategori
+    catName:    '',
   };
 
   /* ── DOM refs ── */
@@ -45,6 +47,9 @@
     error:         $('zgErrorState'),
     errorMsg:      $('zgErrorMsg'),
     empty:         $('zgEmptyState'),
+    searchHeading: $('zgSearchHeading'),
+    catBtn:        $('zgCatBtn'),
+    catPanel:      $('zgCatPanel'),
     modal:         $('zgPlayerModal'),
     modalBackdrop: $('zgModalBackdrop'),
     modalClose:    $('zgModalClose'),
@@ -104,6 +109,26 @@
     els.empty.classList.add('hidden');
   }
 
+  /* ── Kategori heading ── */
+  function updateSearchHeading() {
+    const cat = state.catName;
+    if (!cat) {
+      els.searchHeading.classList.remove('visible');
+      els.searchHeading.innerHTML = '';
+      return;
+    }
+    els.searchHeading.classList.add('visible');
+    els.searchHeading.innerHTML =
+      `Kategori: <strong>${escHtml(cat)}</strong>` +
+      `<button class="rb-search-clear" id="zgCatClear">✕ Semua</button>`;
+    document.getElementById('zgCatClear').addEventListener('click', () => {
+      state.catSlug = '';
+      state.catName = '';
+      state.page    = 1;
+      loadPosts(true);
+    });
+  }
+
   /* ── fetch() dengan timeout ── */
   function fetchWithTimeout(url, ms = 15000) {
     const ctrl = new AbortController();
@@ -123,7 +148,7 @@
 
   /* ── History helpers ── */
   function saveNav(push) {
-    const s = { zgPage: state.page };
+    const s = { zgPage: state.page, zgCat: state.catSlug, zgCatName: state.catName };
     if (push) {
       history.pushState(s, '', '/zg');
     } else {
@@ -136,10 +161,14 @@
     if (state.loading) return;
     state.loading = true;
     showState('loading');
+    updateSearchHeading();
     saveNav(pushNav);
 
+    let qs = `p=${state.page}`;
+    if (state.catSlug) qs += `&cat=${encodeURIComponent(state.catSlug)}`;
+
     try {
-      const data = await apiFetch(`/api/zg/posts?p=${state.page}`);
+      const data = await apiFetch(`/api/zg/posts?${qs}`);
       state.totalPages = data.totalPages || 1;
 
       hideStates();
@@ -495,7 +524,9 @@
     }
 
     if (s && typeof s.zgPage !== 'undefined') {
-      state.page = s.zgPage || 1;
+      state.page    = s.zgPage || 1;
+      state.catSlug = s.zgCat     || '';
+      state.catName = s.zgCatName || '';
       loadPosts(false);
     }
   });
@@ -533,6 +564,23 @@
 
   /* ── Retry ── */
   els.retryBtn.addEventListener('click', () => loadPosts(false));
+
+  /* ── Kategori picker ── */
+  if (window.initVdryCategoryPicker && els.catBtn) {
+    initVdryCategoryPicker({
+      button:      els.catBtn,
+      panel:       els.catPanel,
+      apiPath:     `${API}/api/zg/categories`,
+      getActiveId: () => state.catSlug,
+      onSelect: (item) => {
+        state.catSlug = item ? (item.slug || String(item.id || '')) : '';
+        state.catName = item ? item.name : '';
+        state.page    = 1;
+        loadPosts(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+    });
+  }
 
   /* ── Escape helper ── */
   function escHtml(s) {
