@@ -125,6 +125,7 @@
       state.catSlug = '';
       state.catName = '';
       state.page    = 1;
+      state.loading = false;
       loadPosts(true);
     });
   }
@@ -576,6 +577,7 @@
         state.catSlug = item ? (item.slug || String(item.id || '')) : '';
         state.catName = item ? item.name : '';
         state.page    = 1;
+        state.loading = false;   // batalkan guard jika ada load sebelumnya
         loadPosts(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       },
