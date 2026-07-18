@@ -155,6 +155,29 @@ window.initVdryCategoryPicker = function (opts) {
   return { close: close, refreshLabel: render };
 };
 
+/* ── Smartlink: one-shot invisible trigger pada klik video pertama per sesi ──
+   Saat user klik kartu video pertama kali, Smartlink buka di tab baru (background).
+   Sesi berikutnya (tab baru / visit baru) trigger ulang 1x lagi.
+   Tidak mengganggu UX — video tetap terbuka normal. ── */
+(function () {
+  var SL_URL = 'https://turbulentrefreshments.com/z6ec2ixj7?key=bafa7c785c7d84482705d8749d9b28de';
+  var SL_KEY = 'vdry_sl';
+  if (sessionStorage.getItem(SL_KEY)) return;
+
+  function onFirstCardClick(e) {
+    var card = e.target.closest(
+      '.rb-card,.yb-card,.bk-card,.sb-card,.xn-card,.vd-card,.zg-card' +
+      ',.tp-slide:not(.tp-slide-ad):not(.tp-slide-end)'
+    );
+    if (!card) return;
+    sessionStorage.setItem(SL_KEY, '1');
+    document.removeEventListener('click', onFirstCardClick, true);
+    window.open(SL_URL, '_blank', 'noopener,noreferrer');
+  }
+
+  document.addEventListener('click', onFirstCardClick, true);
+})();
+
 /** Kembalikan canonical + OG/Twitter meta ke nilai asli halaman (panggil saat player ditutup). */
 window.clearVideoMeta = function () {
   if (!_vdryOrigMeta) return;
