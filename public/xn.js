@@ -529,6 +529,7 @@
       return;
     }
     els.modal.classList.remove('hidden');
+    if (window.VdryAds) VdryAds.reloadModalAds(els.modal);
     document.body.classList.add('modal-open');
     history.pushState({ xnModal: true, xnSlug: slug }, '', url);
     modalHistoryPushed = true;
@@ -643,6 +644,7 @@
   const deepLinkMatch = location.pathname.match(/^\/xn\/watch\/([^/]+)\/?$/);
 
   loadPosts(false);
+  if (window.VdryAds) VdryAds.initVideoOverlay('xn');
 
   if (deepLinkMatch) {
     const segment = deepLinkMatch[1];

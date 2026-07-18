@@ -592,6 +592,7 @@
     }
 
     els.modal.classList.remove('hidden');
+    if (window.VdryAds) VdryAds.reloadModalAds(els.modal);
     document.body.classList.add('modal-open');
     // Push state BERBEDA (/rb/watch/<slug>) supaya browser bisa membedakannya dari /rb biasa.
     // Ini penting karena history.back() dari dua URL /rb yang identik bisa melewati
@@ -713,6 +714,7 @@
 
   // replaceState (bukan push) agar entry pertama punya state yang bisa di-restore
   loadPosts(false);
+  if (window.VdryAds) VdryAds.initVideoOverlay('rb');
 
   // Deep-link: kalau URL-nya /rb/watch/<slug> (dari link Share), langsung
   // buka watch view video itu di atas listing yang baru saja dimuat.

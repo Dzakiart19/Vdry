@@ -591,6 +591,7 @@
     }
 
     els.modal.classList.remove('hidden');
+    if (window.VdryAds) VdryAds.reloadModalAds(els.modal);
     document.body.classList.add('modal-open');
     // Push state BERBEDA (/yb/watch/<slug>) supaya browser bisa membedakannya dari /yb biasa.
     // Ini penting karena history.back() dari dua URL /yb yang identik bisa melewati
@@ -702,6 +703,7 @@
   const deepLinkMatch = location.pathname.match(/^\/yb\/watch\/([^/]+)\/?$/);
 
   loadPosts(false);
+  if (window.VdryAds) VdryAds.initVideoOverlay('yb');
 
   // Deep-link: kalau URL-nya /yb/watch/<slug> (dari link Share), langsung
   // buka watch view video itu di atas listing yang baru saja dimuat.

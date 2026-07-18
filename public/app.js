@@ -615,6 +615,7 @@ const App = (() => {
       return;
     }
     el.modal.classList.remove('hidden');
+    if (window.VdryAds) VdryAds.reloadModalAds(el.modal);
     document.body.classList.add('modal-open');
     history.pushState({ p1Watch: true, p1Vid: id }, '', url);
     watchHistoryPushed = true;
@@ -782,6 +783,7 @@ const App = (() => {
       openPlayer(vid, '', { fromHistory: true });
     }
 
+    if (window.VdryAds) VdryAds.initVideoOverlay('p1');
     scheduleRefresh();
   })();
 

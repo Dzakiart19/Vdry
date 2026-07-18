@@ -353,30 +353,8 @@
         <div class="watch-main">
           <!-- ── Banner atas video: 728×90 desktop / 320×50 mobile ── -->
           <div class="watch-ad-above-player">
-            <div class="watch-lb-top">
-              <script>
-                atOptions = {
-                  'key' : 'ad23cecb6cc7205a344717b0998c822d',
-                  'format' : 'iframe',
-                  'height' : 90,
-                  'width' : 728,
-                  'params' : {}
-                };
-              </script>
-              <script src="https://turbulentrefreshments.com/ad23cecb6cc7205a344717b0998c822d/invoke.js"></script>
-            </div>
-            <div class="watch-mb-top">
-              <script>
-                atOptions = {
-                  'key' : 'd37e31d713d11b2ddde7d3efca199c9d',
-                  'format' : 'iframe',
-                  'height' : 50,
-                  'width' : 320,
-                  'params' : {}
-                };
-              </script>
-              <script src="https://www.highperformanceformat.com/d37e31d713d11b2ddde7d3efca199c9d/invoke.js"></script>
-            </div>
+            <div class="watch-lb-top" data-ad-zone="lb-728"></div>
+            <div class="watch-mb-top" data-ad-zone="mb-320"></div>
           </div>
           <div class="video-stage rb-video-stage">
             <div id="xnPlayerLoading" class="rb-player-loader">
@@ -390,20 +368,16 @@
               playsinline
               preload="none"
             ></video>
+          <div class="video-ad-overlay" id="xnVideoAdOverlay" style="display:none" aria-hidden="true">
+            <div class="video-ad-bar">
+              <span class="video-ad-label">Iklan</span>
+              <button class="video-ad-close-btn" id="xnVideoAdClose" disabled>Tutup (<span id="xnVideoAdTimer">5</span>s)</button>
+            </div>
+            <div class="video-ad-content" id="xnVideoAdContent"></div>
+          </div>
           </div>
           <!-- ─── Display Ad 300×250 — bawah player ─── -->
-          <div class="watch-ad-slot watch-ad-below-player">
-            <script>
-              atOptions = {
-                'key' : 'd50b941ac6d9bd5749dcdb0b417bf348',
-                'format' : 'iframe',
-                'height' : 250,
-                'width' : 300,
-                'params' : {}
-              };
-            </script>
-            <script src="https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js"></script>
-          </div>
+          <div class="watch-ad-slot watch-ad-below-player" data-ad-zone="box-300"></div>
           <div class="watch-info">
             <div class="watch-title-row">
               <h1 id="xnVideoTitle" class="watch-title">—</h1>
@@ -416,18 +390,7 @@
               </button>
             </div>
             <!-- ── 160×300 bawah judul — mobile only ── -->
-            <div class="watch-info-ad-slot">
-              <script>
-                atOptions = {
-                  'key' : 'd7a21e9839cad22a65ed9e21e6a33272',
-                  'format' : 'iframe',
-                  'height' : 300,
-                  'width' : 160,
-                  'params' : {}
-                };
-              </script>
-              <script src="https://turbulentrefreshments.com/d7a21e9839cad22a65ed9e21e6a33272/invoke.js"></script>
-            </div>
+            <div class="watch-info-ad-slot" data-ad-zone="half-160"></div>
             <div id="xnWatchDesc" class="watch-desc hidden">
               <p id="xnWatchDescText"></p>
             </div>
@@ -437,44 +400,11 @@
           <h3 class="watch-related-heading" data-i18n="player.related">Video Lainnya</h3>
           <div id="xnRelatedGrid" class="rb-grid rb-grid-related"></div>
           <div id="xnRelatedPagination" class="pagination hidden"></div>
-          <div class="watch-ad-slot">
-            <script>
-              atOptions = {
-                'key' : 'd50b941ac6d9bd5749dcdb0b417bf348',
-                'format' : 'iframe',
-                'height' : 250,
-                'width' : 300,
-                'params' : {}
-              };
-            </script>
-            <script src="https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js"></script>
-          </div>
+          <div class="watch-ad-slot" data-ad-zone="box-300"></div>
           <!-- Skyscraper 160×600 — desktop only -->
-          <div class="ad-skyscraper-slot">
-            <script>
-              atOptions = {
-                'key' : 'e0fc9f770eacb77e8afcfde28d8a06a8',
-                'format' : 'iframe',
-                'height' : 600,
-                'width' : 160,
-                'params' : {}
-              };
-            </script>
-            <script src="https://turbulentrefreshments.com/e0fc9f770eacb77e8afcfde28d8a06a8/invoke.js"></script>
-          </div>
+          <div class="ad-skyscraper-slot" data-ad-zone="sky-160"></div>
           <!-- Half page 160×300 — desktop only -->
-          <div class="ad-halfpage-slot">
-            <script>
-              atOptions = {
-                'key' : 'd7a21e9839cad22a65ed9e21e6a33272',
-                'format' : 'iframe',
-                'height' : 300,
-                'width' : 160,
-                'params' : {}
-              };
-            </script>
-            <script src="https://turbulentrefreshments.com/d7a21e9839cad22a65ed9e21e6a33272/invoke.js"></script>
-          </div>
+          <div class="ad-halfpage-slot" data-ad-zone="half-160"></div>
         </div>
       </div>
     </div>
@@ -488,6 +418,7 @@
 <script src="/config.js"></script>
 <script src="/utils.js"></script>
 <script src="/adblock.js"></script>
+<script src="/ads.js"></script>
 <script src="/xn.js"></script>
 
 <!-- ─── Nav Drawer ─── -->

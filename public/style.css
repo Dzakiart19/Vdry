@@ -813,6 +813,60 @@ body {
 .video-stage {
   background: #000;
   line-height: 0;
+  position: relative; /* needed for video-ad-overlay absolute positioning */
+}
+
+/* ── Video overlay ad — muncul di pojok bawah player saat video main ── */
+.video-ad-overlay {
+  position: absolute;
+  bottom: 48px;        /* di atas kontrol video (play/pause bar) */
+  right: 8px;
+  z-index: 30;
+  background: rgba(0, 0, 0, 0.88);
+  border-radius: 6px 6px 4px 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.55);
+  max-width: 312px;
+}
+.video-ad-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 8px;
+  background: rgba(0,0,0,0.92);
+  gap: 10px;
+}
+.video-ad-label {
+  color: #888;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.video-ad-close-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #bbb;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 3px;
+  white-space: nowrap;
+  transition: opacity 0.2s, border-color 0.2s;
+}
+.video-ad-close-btn:not(:disabled):hover {
+  border-color: rgba(255,255,255,0.55);
+  color: #fff;
+}
+.video-ad-close-btn:disabled { opacity: 0.45; cursor: default; }
+.video-ad-content { line-height: 0; }
+@media (max-width: 599px) {
+  .video-ad-overlay {
+    bottom: 54px;
+    right: 0; left: 0;
+    max-width: 100%;
+    border-radius: 4px 4px 0 0;
+  }
 }
 .video-stage video {
   width: 100%;

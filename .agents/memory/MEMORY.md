@@ -20,3 +20,4 @@
 - [VD Platform 7 Architecture](vd-platform7-architecture.md) — videy.design PHP HTML scrape; `.video-card` root (not `a[href=...]`); title OUTSIDE `<a>` in sibling `.video-info`; direct MP4 no tokens; no search/categories.
 - [ZG Platform 8 Architecture](zg-platform8-architecture.md) — zoig.com; X-Forwarded-For residential IP bypass; signed MP4 token changes per request → 8-min cache + self-heal; poster attr for thumb; ul.browse.related for related videos.
 - [Vidorey i18n EN/ID Toggle](vidorey-i18n.md) — full toggle stored in localStorage; data-i18n/html/placeholder attrs + _t() in all JS; langchange CustomEvent re-renders headings.
+- [Vidorey Ad Optimization](vidorey-ad-optimization.md) — modal ads dimuat display:none → fix dengan dynamic inject via VdryAds.reloadModalAds(); video overlay via VdryAds.initVideoOverlay(); ads.js shared utility.
