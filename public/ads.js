@@ -121,7 +121,7 @@
 
     function showOverlay() {
       clearTimeout(reshowTimer);
-      var zone = window.innerWidth < 600 ? 'mb-320' : 'box-300';
+      var zone = 'box-300'; /* selalu 300×250 — mb-320 (50px) terlalu tipis di overlay */
       if (contentEl) injectAd(contentEl, zone);
       overlay.style.display = 'block';
       overlay.setAttribute('aria-hidden', 'false');

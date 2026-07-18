@@ -816,14 +816,14 @@ body {
   position: relative; /* needed for video-ad-overlay absolute positioning */
 }
 
-/* ── Video overlay ad — muncul di pojok bawah player saat video main ── */
+/* ── Video overlay ad — muncul saat video main ── */
 .video-ad-overlay {
   position: absolute;
-  bottom: 48px;        /* di atas kontrol video (play/pause bar) */
+  bottom: 48px;        /* desktop: pojok kanan bawah, di atas kontrol */
   right: 8px;
   z-index: 30;
   background: rgba(0, 0, 0, 0.88);
-  border-radius: 6px 6px 4px 4px;
+  border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 2px 14px rgba(0,0,0,0.55);
   max-width: 312px;
@@ -859,13 +859,15 @@ body {
   color: #fff;
 }
 .video-ad-close-btn:disabled { opacity: 0.45; cursor: default; }
-.video-ad-content { line-height: 0; }
+.video-ad-content { line-height: 0; display: flex; justify-content: center; }
 @media (max-width: 599px) {
+  /* Mobile: tampilkan di ATAS video agar tidak bentrok dengan kontrol */
   .video-ad-overlay {
-    bottom: 54px;
+    top: 0;
+    bottom: auto;
     right: 0; left: 0;
     max-width: 100%;
-    border-radius: 4px 4px 0 0;
+    border-radius: 0 0 4px 4px;
   }
 }
 .video-stage video {
