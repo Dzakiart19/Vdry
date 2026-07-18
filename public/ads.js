@@ -71,6 +71,27 @@
     });
   }
 
+  // ── Popunder / Tab-under ─────────────────────────────────────────────
+  var POP_URL         = 'https://turbulentrefreshments.com/khj65tru?key=188aaea14e197cc95790b8dca5bbbdfd';
+  var POP_COOLDOWN_MS = 30000;  // maks 1x per 30 detik agar tidak diblokir browser
+  var _lastPop        = 0;
+
+  /**
+   * Buka popunder di tab baru di belakang tab saat ini.
+   * Dipanggil dari openModal() tiap platform — butuh user-gesture (klik)
+   * agar window.open tidak diblokir browser.
+   * Rate-limited: lewati jika sudah muncul dalam 30 detik terakhir.
+   */
+  function triggerPopunder() {
+    var now = Date.now();
+    if (now - _lastPop < POP_COOLDOWN_MS) return;
+    _lastPop = now;
+    try {
+      var w = window.open(POP_URL, '_blank', 'noopener,noreferrer');
+      if (w) { w.blur(); window.focus(); }
+    } catch (e) {}
+  }
+
   // ── Video Overlay ────────────────────────────────────────────────────
   var SHOW_DELAY_MS  = 5000;   // tunggu N ms setelah play sebelum muncul
   var SKIP_SECS      = 5;      // detik countdown sebelum tombol aktif
@@ -154,6 +175,7 @@
   window.VdryAds = {
     reloadModalAds:   reloadModalAds,
     initVideoOverlay: initVideoOverlay,
+    triggerPopunder:  triggerPopunder,
     injectAd:         injectAd,
     ZONES:            ZONES,
   };

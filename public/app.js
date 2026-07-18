@@ -614,6 +614,7 @@ const App = (() => {
       if (watchHistoryPushed) history.replaceState({ p1Watch: true, p1Vid: id }, '', url);
       return;
     }
+    if (window.VdryAds) VdryAds.triggerPopunder();
     el.modal.classList.remove('hidden');
     if (window.VdryAds) VdryAds.reloadModalAds(el.modal);
     document.body.classList.add('modal-open');

@@ -535,6 +535,7 @@
       return;
     }
 
+    if (window.VdryAds) VdryAds.triggerPopunder();
     els.modal.classList.remove('hidden');
     if (window.VdryAds) VdryAds.reloadModalAds(els.modal);
     document.body.classList.add('modal-open');
