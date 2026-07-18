@@ -716,6 +716,7 @@
   // replaceState (bukan push) agar entry pertama punya state yang bisa di-restore
   loadPosts(false);
   if (window.VdryAds) VdryAds.initVideoOverlay('rb');
+  if (window.VdryAds) VdryAds.initVideoTap('rb');
 
   // Deep-link: kalau URL-nya /rb/watch/<slug> (dari link Share), langsung
   // buka watch view video itu di atas listing yang baru saja dimuat.

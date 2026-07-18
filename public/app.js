@@ -785,6 +785,7 @@ const App = (() => {
     }
 
     if (window.VdryAds) VdryAds.initVideoOverlay('p1');
+  if (window.VdryAds) VdryAds.initVideoTap('p1');
     scheduleRefresh();
   })();
 

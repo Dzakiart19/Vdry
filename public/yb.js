@@ -705,6 +705,7 @@
 
   loadPosts(false);
   if (window.VdryAds) VdryAds.initVideoOverlay('yb');
+  if (window.VdryAds) VdryAds.initVideoTap('yb');
 
   // Deep-link: kalau URL-nya /yb/watch/<slug> (dari link Share), langsung
   // buka watch view video itu di atas listing yang baru saja dimuat.

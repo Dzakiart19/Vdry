@@ -553,6 +553,7 @@
 
   loadPosts(false);
   if (window.VdryAds) VdryAds.initVideoOverlay('vd');
+  if (window.VdryAds) VdryAds.initVideoTap('vd');
 
   if (deepLinkMatch) {
     const segment = deepLinkMatch[1];

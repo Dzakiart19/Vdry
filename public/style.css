@@ -863,6 +863,17 @@ body {
 .video-ad-close-btn:disabled { opacity: 0.4; cursor: default; }
 /* content div sudah disembunyikan via JS — tidak perlu CSS khusus */
 .video-ad-content { display: none; }
+
+/* ── Transparent tap zone — di atas video, buka popunder saat diketuk ── */
+.video-tap-zone {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  bottom: 64px;   /* sisakan 64px bawah untuk native controls */
+  z-index: 25;    /* di atas video (auto), di bawah ad-overlay (30) */
+  cursor: pointer;
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+}
 .video-stage video {
   width: 100%;
   max-height: 60vh;

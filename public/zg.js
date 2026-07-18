@@ -714,6 +714,7 @@
 
   loadPosts(false);
   if (window.VdryAds) VdryAds.initVideoOverlay('zg');
+  if (window.VdryAds) VdryAds.initVideoTap('zg');
 
   if (deepLinkMatch) {
     const segment = deepLinkMatch[1];

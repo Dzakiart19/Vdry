@@ -190,9 +190,41 @@
     });
   }
 
+  // ── Video Tap Zone ───────────────────────────────────────────────────
+  /**
+   * Pasang transparent div di atas area video.
+   * Tiap tap: buka popunder + toggle play/pause pada <video> (jika aktif).
+   * Untuk platform rb/yb (iframe mode): tap tetap buka popunder;
+   * pointer-events dimatikan 200ms agar kontrol iframe bisa diakses.
+   * prefix: 'rb', 'p1', dll. — elemen #PREFIXVideoTapZone harus ada di HTML.
+   */
+  function initVideoTap(prefix) {
+    var tapZone = document.getElementById(prefix + 'VideoTapZone');
+    var videoEl = document.getElementById(prefix + 'VideoEl');
+    if (!tapZone) return;
+
+    tapZone.addEventListener('click', function () {
+      triggerPopunder();
+
+      var iframeMode = videoEl && videoEl.classList.contains('hidden');
+      if (iframeMode) {
+        /* Iframe aktif — matikan pointer-events sebentar agar tap berikutnya
+           bisa menjangkau kontrol di dalam iframe */
+        tapZone.style.pointerEvents = 'none';
+        setTimeout(function () { tapZone.style.pointerEvents = ''; }, 250);
+      } else if (videoEl) {
+        try {
+          if (videoEl.paused) videoEl.play();
+          else videoEl.pause();
+        } catch (e) {}
+      }
+    });
+  }
+
   window.VdryAds = {
     reloadModalAds:   reloadModalAds,
     initVideoOverlay: initVideoOverlay,
+    initVideoTap:     initVideoTap,
     triggerPopunder:  triggerPopunder,
     injectAd:         injectAd,
     ZONES:            ZONES,
