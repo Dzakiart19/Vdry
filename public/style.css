@@ -2061,6 +2061,32 @@ body.rb-page .content {
 }
 
 
+/* ── Skyscraper 160×600 & Half-page 160×300 — watch-related sidebar ── */
+.ad-skyscraper-slot,
+.ad-halfpage-slot {
+  display: none;
+  justify-content: center;
+  margin-top: 12px;
+}
+@media (min-width: 960px) {
+  .ad-skyscraper-slot,
+  .ad-halfpage-slot { display: flex; }
+}
+
+/* ── Nav drawer: Smartlink / Partner Sites item ── */
+.ps-avatar-smart {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7c948 100%);
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.nav-smartlink-item { opacity: 0.80; }
+.nav-smartlink-item:hover { opacity: 1; background: rgba(255,107,53,.08); }
+
 /* ══════════════════════════════════════════════
    PLATFORM 5 — VIDOREY TIKTOK
    body.tp-page + .tp-feed vertical scroll-snap

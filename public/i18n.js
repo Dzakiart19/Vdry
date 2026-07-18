@@ -28,6 +28,8 @@
       'nav.tp.p3'    : 'Platform 3 \xb7 video premium',
       'nav.tp.p4'    : 'Platform 4 \xb7 video dewasa',
       'nav.tp'       : 'TikTok 1 \xb7 scroll vertikal',
+      'smartlink.name': 'Situs Partner',
+      'smartlink.desc': 'Situs video dewasa gratis lainnya',
       /* ── Search ── */
       'search.ph'    : 'Cari video\u2026',
       'search.btn'   : 'Cari',
@@ -96,6 +98,8 @@
       'nav.tp.p3'    : 'Platform 3 \xb7 premium videos',
       'nav.tp.p4'    : 'Platform 4 \xb7 adult videos',
       'nav.tp'       : 'TikTok 1 \xb7 vertical scroll',
+      'smartlink.name': 'Partner Sites',
+      'smartlink.desc': 'More free adult sites',
       /* ── Search ── */
       'search.ph'    : 'Search videos\u2026',
       'search.btn'   : 'Search',
