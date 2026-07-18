@@ -119,12 +119,28 @@
     var reshowTimer = null;
     var countdown   = null;
 
+    /* Handler klik overlay — buka popunder saat user ketuk area iklan */
+    function onOverlayClick(e) {
+      if (closeBtn && (e.target === closeBtn || closeBtn.contains(e.target))) return;
+      triggerPopunder();
+    }
+
     function showOverlay() {
       clearTimeout(reshowTimer);
-      var zone = 'box-300'; /* selalu 300×250 — mb-320 (50px) terlalu tipis di overlay */
-      if (contentEl) injectAd(contentEl, zone);
+
+      /* Sembunyikan area konten banner (tidak pakai iframe — zone duplikat
+         di halaman sama tidak dirender ulang oleh Adsterra). Overlay sendiri
+         yang menjadi unit iklan: ketuk = buka popunder. */
+      if (contentEl) contentEl.style.display = 'none';
+
+      /* Teks label — terlihat seperti notifikasi sponsor */
+      var labelEl = overlay.querySelector('.video-ad-label');
+      if (labelEl) labelEl.textContent = '🎁 Penawaran Eksklusif — Ketuk untuk melihat';
+
       overlay.style.display = 'block';
+      overlay.style.cursor  = 'pointer';
       overlay.setAttribute('aria-hidden', 'false');
+      overlay.addEventListener('click', onOverlayClick);
 
       var secs = SKIP_SECS;
       if (timerEl) timerEl.textContent = secs;
@@ -142,7 +158,9 @@
 
     function hideOverlay() {
       overlay.style.display = 'none';
+      overlay.style.cursor  = '';
       overlay.setAttribute('aria-hidden', 'true');
+      overlay.removeEventListener('click', onOverlayClick);
       clearInterval(countdown);
       clearTimeout(reshowTimer);
       reshowTimer = setTimeout(function () {

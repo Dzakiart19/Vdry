@@ -816,60 +816,53 @@ body {
   position: relative; /* needed for video-ad-overlay absolute positioning */
 }
 
-/* ── Video overlay ad — muncul saat video main ── */
+/* ── Video overlay ad — bar sponsorship, selalu terisi, ketuk = buka iklan ── */
 .video-ad-overlay {
   position: absolute;
-  bottom: 48px;        /* desktop: pojok kanan bawah, di atas kontrol */
-  right: 8px;
+  bottom: 52px;
+  left: 0; right: 0;
   z-index: 30;
-  background: rgba(0, 0, 0, 0.88);
-  border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 2px 14px rgba(0,0,0,0.55);
-  max-width: 312px;
+  cursor: pointer;
 }
 .video-ad-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 3px 8px;
-  background: rgba(0,0,0,0.92);
+  padding: 8px 12px;
+  background: linear-gradient(90deg, rgba(20,20,20,0.96) 0%, rgba(40,20,0,0.96) 100%);
+  border-top: 1px solid rgba(255,180,0,0.35);
   gap: 10px;
 }
 .video-ad-label {
-  color: #888;
-  font-size: 10px;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
+  color: #f5c842;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
   white-space: nowrap;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .video-ad-close-btn {
-  background: none;
-  border: 1px solid rgba(255,255,255,0.25);
-  color: #bbb;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: #ccc;
   cursor: pointer;
   font-size: 11px;
-  padding: 1px 7px;
+  padding: 3px 9px;
   border-radius: 3px;
   white-space: nowrap;
-  transition: opacity 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
 }
 .video-ad-close-btn:not(:disabled):hover {
-  border-color: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.16);
   color: #fff;
 }
-.video-ad-close-btn:disabled { opacity: 0.45; cursor: default; }
-.video-ad-content { line-height: 0; display: flex; justify-content: center; }
-@media (max-width: 599px) {
-  /* Mobile: tampilkan di ATAS video agar tidak bentrok dengan kontrol */
-  .video-ad-overlay {
-    top: 0;
-    bottom: auto;
-    right: 0; left: 0;
-    max-width: 100%;
-    border-radius: 0 0 4px 4px;
-  }
-}
+.video-ad-close-btn:disabled { opacity: 0.4; cursor: default; }
+/* content div sudah disembunyikan via JS — tidak perlu CSS khusus */
+.video-ad-content { display: none; }
 .video-stage video {
   width: 100%;
   max-height: 60vh;
