@@ -269,7 +269,7 @@
     });
 
     const cardEls = [...els.grid.querySelectorAll('.rb-card')];
-    [8, 16].forEach(pos => {
+    [8, 16, 24].forEach(pos => {
       if (cardEls[pos - 1]) cardEls[pos - 1].insertAdjacentElement('afterend', createInlineAd());
     });
   }

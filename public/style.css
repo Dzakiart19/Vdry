@@ -2466,6 +2466,26 @@ body.tp-page .nav-drawer  { z-index: 150; }
   min-height: 50px;
 }
 
+/* ── Footer banners tp.html — muncul setelah semua slide ── */
+.tp-footer-banner-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 16px 32px;
+  background: #0e0e0e;
+  min-height: 120px;
+}
+.tp-footer-lb     { display: none; }   /* default hidden */
+.tp-footer-mobile { display: flex; justify-content: center; }
+
+/* Desktop: tampilkan leaderboard, sembunyikan mobile banner */
+@media (min-width: 768px) {
+  .tp-footer-lb     { display: flex; justify-content: center; }
+  .tp-footer-mobile { display: none; }
+}
+
 /* ═══════════════════════════════════════════════
    P5: Slot iklan tambahan
    1. Native banner sticky bottom (#tpNativeAd)
