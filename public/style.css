@@ -2073,6 +2073,32 @@ body.rb-page .content {
   .ad-halfpage-slot { display: flex; }
 }
 
+/* ── Banner atas video di watch modal ── */
+.watch-ad-above-player {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 0 4px;
+  background: #0e0e0e;
+  min-height: 52px;
+}
+.watch-lb-top { display: none; }
+.watch-mb-top { display: flex; justify-content: center; }
+@media (min-width: 768px) {
+  .watch-lb-top { display: flex; }
+  .watch-mb-top { display: none; }
+}
+
+/* ── 160×300 bawah judul — mobile only (desktop pakai ad-halfpage-slot di sidebar) ── */
+.watch-info-ad-slot {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px;
+}
+@media (min-width: 960px) {
+  .watch-info-ad-slot { display: none; }
+}
+
 /* ── Nav drawer: Smartlink / Partner Sites item ── */
 .ps-avatar-smart {
   background: linear-gradient(135deg, #ff6b35 0%, #f7c948 100%);
