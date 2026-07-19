@@ -173,15 +173,33 @@ Langkah untuk update nav drawer:
 ### 3i. Body — Iklan Adsterra
 - Copy slot iklan dari platform yang paling mirip (listing → dari rb/yb/bk/sb, feed → dari tp/rc)
 - Jika pakai ad script domain baru → **wajib tambah ke CSP dulu** (lihat Fase 4)
+- **Untuk platform dengan modal:** ganti semua `<script>atOptions...</script>` di dalam modal dengan `<div data-ad-zone="ZONE_NAME"></div>`. Jangan inline script di dalam modal — lihat `vidorey-ad-optimization.md`.
+- **Tambah video overlay dan tap zone div** di dalam `.video-stage`:
+  ```html
+  <!-- Video overlay bar (muncul saat video play) -->
+  <div id="pNVideoAdOverlay" class="video-ad-overlay" style="display:none" aria-hidden="true">
+    <div class="video-ad-bar">
+      <span class="video-ad-label"></span>
+      <button id="pNVideoAdClose" class="video-ad-close-btn" disabled>Lewati <span id="pNVideoAdTimer">5</span>s</button>
+    </div>
+    <div id="pNVideoAdContent" class="video-ad-content"></div>
+  </div>
+  <!-- Transparent tap zone -->
+  <div id="pNVideoTapZone" class="video-tap-zone" role="button" aria-label="Video area"></div>
+  ```
 
 ### 3j. Body — Script sebelum `</body>`
 ```html
 <script src="/i18n.js"></script>   <!-- WAJIB: harus PERTAMA, sebelum config.js -->
 <script src="/config.js"></script>
-<script src="/pN.js"></script>   <!-- app logic platform -->
+<script src="/utils.js"></script>
+<script src="/adblock.js"></script>
+<script src="/ads.js"></script>    <!-- WAJIB: sebelum platform JS -->
+<script src="/pN.js"></script>     <!-- app logic platform -->
 <script src="/smartlinks.js"></script>  <!-- WAJIB ada -->
 ```
 ⚠️ **`i18n.js` HARUS urutan pertama** — `config.js` dan `pN.js` bergantung pada `window._t()` yang di-export `i18n.js`. Jika urutan terbalik, `_t is not defined` error.
+⚠️ **`ads.js` HARUS sebelum platform JS** — platform JS memanggil `VdryAds.*` saat init.
 
 ---
 
@@ -326,7 +344,7 @@ Tambahkan `<button id="langToggle" class="lang-toggle-btn">EN</button>` di topba
 | `server.js` | require router, health caches, shortlink whitelist, CSP domain |
 | `lib/monitor.js` | trackRequest branches + badge CSS |
 | `public/pN.html` | BARU (GTM, meta, OG, schema, H1, nav drawer di posisi benar, ads, **i18n.js script pertama, langToggle button, data-i18n attrs**, smartlinks) |
-| `public/pN.js` | BARU (app logic — **semua string pakai `_t()`, langchange listener wajib**) |
+| `public/pN.js` | BARU (app logic — **semua string pakai `_t()`, langchange listener wajib**, VdryAds hooks di openModal + init) |
 | `public/i18n.js` | Tambah key `nav.pN` (ID + EN) + key platform-specific lainnya jika diperlukan |
 | `public/style.css` | tambah `.ps-avatar-pN`, `.pN-page` rules |
 | `public/index.html` | tambah platform baru ke nav drawer (posisi sesuai tipe) |
