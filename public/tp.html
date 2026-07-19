@@ -287,7 +287,14 @@
 <script src="/config.js"></script>
 <script src="/utils.js"></script>
 <script src="/adblock.js"></script>
+<script src="/ads.js"></script>
 <script src="/tp.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.VdryAds) VdryAds.initTpFeed();
+  });
+</script>
 
 <!-- ── Adsterra: Popunder ── -->
 <script src="https://pl28418540.effectivecpmnetwork.com/e2/23/51/e223516a3660ad6a4214cb47e436c599.js"></script>

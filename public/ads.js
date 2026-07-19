@@ -61,14 +61,35 @@
    * Panggil tepat setelah modal.classList.remove('hidden').
    * Menemukan semua [data-ad-zone] di dalam modal dan meng-inject
    * script Adsterra segar dengan stagger kecil supaya tidak flood.
+   * Auto-refresh setiap 60 detik selama modal tetap terbuka
+   * untuk menambah jumlah impresi banner.
    */
+  var _modalRefreshMap = [];   // [{modalEl, tid}] — satu entry per modal
+
   function reloadModalAds(modalEl) {
     if (!modalEl) return;
-    var slots = Array.prototype.slice.call(modalEl.querySelectorAll('[data-ad-zone]'));
-    slots.forEach(function (slot, i) {
-      var zone = slot.getAttribute('data-ad-zone');
-      setTimeout(function () { injectAd(slot, zone); }, i * 250);
+
+    // Batalkan interval lama untuk modal yang sama (jika ada)
+    _modalRefreshMap = _modalRefreshMap.filter(function (item) {
+      if (item.modalEl === modalEl) { clearInterval(item.tid); return false; }
+      return true;
     });
+
+    var slots = Array.prototype.slice.call(modalEl.querySelectorAll('[data-ad-zone]'));
+
+    function doInject() {
+      if (modalEl.classList.contains('hidden')) return; // modal sudah ditutup
+      slots.forEach(function (slot, i) {
+        var zone = slot.getAttribute('data-ad-zone');
+        setTimeout(function () { injectAd(slot, zone); }, i * 250);
+      });
+    }
+
+    doInject(); // inject langsung saat modal dibuka
+
+    // Auto-refresh setiap 60 detik
+    var tid = setInterval(doInject, 60000);
+    _modalRefreshMap.push({ modalEl: modalEl, tid: tid });
   }
 
   // ── Popunder / Tab-under ─────────────────────────────────────────────
@@ -221,10 +242,66 @@
     });
   }
 
+  // ── TikTok Feed (tp.html) ────────────────────────────────────────────
+  /**
+   * Panggil sekali saat tp.html load.
+   * 1. Tap delegation di #tpFeed → triggerPopunder() saat user ketuk video.
+   * 2. Fixed overlay bar di bawah layar — muncul setelah 5 detik, ulang tiap 120 detik.
+   *    Ketuk bar → popunder. Tombol ✕ → sembunyikan + jadwal ulang.
+   */
+  function initTpFeed() {
+    var feed = document.getElementById('tpFeed');
+    if (!feed) return;
+
+    /* — Tap delegation: klik area video slide → popunder — */
+    feed.addEventListener('click', function (e) {
+      var slide = e.target.closest ? e.target.closest('.tp-slide') : null;
+      if (!slide) return;
+      if (slide.classList.contains('tp-slide-ad') ||
+          slide.classList.contains('tp-slide-end')) return;
+      triggerPopunder();
+    });
+
+    /* — Fixed overlay bar — */
+    var bar = document.createElement('div');
+    bar.id        = 'tpAdBar';
+    bar.className = 'tp-ad-bar';
+    bar.setAttribute('role', 'button');
+    bar.innerHTML =
+      '<span class="tp-ad-bar-label">🎁 <strong>Penawaran Eksklusif</strong> — Ketuk untuk melihat</span>' +
+      '<button class="tp-ad-bar-close" type="button" aria-label="Tutup">✕</button>';
+    document.body.appendChild(bar);
+    bar.style.display = 'none';
+
+    var tpCloseBtn   = bar.querySelector('.tp-ad-bar-close');
+    var tpReshowTimer = null;
+
+    function hideTpBar() {
+      bar.style.display = 'none';
+      clearTimeout(tpReshowTimer);
+      tpReshowTimer = setTimeout(showTpBar, RESHOW_SECS * 1000);
+    }
+
+    function showTpBar() {
+      bar.style.display = 'flex';
+    }
+
+    bar.addEventListener('click', function (e) {
+      if (tpCloseBtn && (e.target === tpCloseBtn || tpCloseBtn.contains(e.target))) {
+        hideTpBar();
+        return;
+      }
+      triggerPopunder();
+    });
+
+    setTimeout(showTpBar, SHOW_DELAY_MS);
+  }
+
   window.VdryAds = {
     reloadModalAds:   reloadModalAds,
     initVideoOverlay: initVideoOverlay,
     initVideoTap:     initVideoTap,
+    initTpFeed:       initTpFeed,
     triggerPopunder:  triggerPopunder,
     injectAd:         injectAd,
     ZONES:            ZONES,
