@@ -154,6 +154,9 @@
 
   // ── Popunder / Tab-under ─────────────────────────────────────────────
   var POP_URL         = 'https://turbulentrefreshments.com/khj65tru?key=188aaea14e197cc95790b8dca5bbbdfd';
+  // Smartlink — dipakai sebagai tujuan klik langsung di overlay bar video
+  // (berbeda dari popunder yg buka tab background saat modal pertama dibuka)
+  var SMARTLINK_URL   = 'https://turbulentrefreshments.com/z6ec2ixj7?key=bafa7c785c7d84482705d8749d9b28de';
   var POP_COOLDOWN_MS = 30000;  // maks 1x per 30 detik agar tidak diblokir browser
   var _lastPop        = 0;
 
@@ -200,10 +203,14 @@
     var reshowTimer = null;
     var countdown   = null;
 
-    /* Handler klik overlay — buka popunder saat user ketuk area iklan */
+    /* Handler klik overlay — buka Smartlink di tab baru saat user ketuk bar.
+       Popunder tetap ter-trigger secara terpisah saat modal pertama dibuka.
+       Dua zone berbeda = dua revenue event dari satu sesi menonton. */
     function onOverlayClick(e) {
       if (closeBtn && (e.target === closeBtn || closeBtn.contains(e.target))) return;
-      triggerPopunder();
+      try {
+        window.open(SMARTLINK_URL, '_blank', 'noopener,noreferrer');
+      } catch (e2) {}
     }
 
     function showOverlay() {
