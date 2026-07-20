@@ -23,14 +23,14 @@ Semua fungsi ad management terpusat di sini. Wajib di-load di setiap platform HT
 
 ### Zone registry (ZONES)
 
-| Key | Dimensi | CDN | Adsterra Zone ID |
-|-----|---------|-----|-----------------|
-| `lb-728`   | 728×90  | turbulentrefreshments.com | 30167643 |
-| `mb-320`   | 320×50  | highperformanceformat.com | 30167471 |
-| `box-300`  | 300×250 | highperformanceformat.com | 30152679 |
-| `sky-160`  | 160×600 | turbulentrefreshments.com | 30167387 |
-| `half-160` | 160×300 | turbulentrefreshments.com | 30167180 |
-| `banner-468` | 468×60 | turbulentrefreshments.com | 28322765 |
+| Key | Dimensi | CDN | Key Hash |
+|-----|---------|-----|----------|
+| `lb-728`     | 728×90  | turbulentrefreshments.com  | `ad23cecb6cc7205a344717b0998c822d` |
+| `mb-320`     | 320×50  | highperformanceformat.com  | `d37e31d713d11b2ddde7d3efca199c9d` |
+| `box-300`    | 300×250 | highperformanceformat.com  | `d50b941ac6d9bd5749dcdb0b417bf348` |
+| `sky-160`    | 160×600 | turbulentrefreshments.com  | `e0fc9f770eacb77e8afcfde28d8a06a8` |
+| `half-160`   | 160×300 | turbulentrefreshments.com  | `d7a21e9839cad22a65ed9e21e6a33272` |
+| `banner-468` | 468×60  | turbulentrefreshments.com  | `f517b5d3c983922d55c67370c8bd95fc` |
 
 ### URL khusus (bukan iframe zone)
 
@@ -41,11 +41,11 @@ Semua fungsi ad management terpusat di sini. Wajib di-load di setiap platform HT
 
 ### Script static di semua HTML (bukan via ZONES)
 
-| Format | Script hash | Adsterra Zone ID | CDN |
-|--------|-------------|-----------------|-----|
-| Native Banner | `761a1a8645cd2263043bfeb6f2e87eea` | 28322731 | pl28423230.effectivecpmnetwork.com |
-| Social Bar | `96e9ff95727320b49c1ea1aa80add9b6` | 28327358 | pl28427857.effectivecpmnetwork.com |
-| (format lain) | `e223516a3660ad6a4214cb47e436c599` | — | pl28418540.effectivecpmnetwork.com |
+| Format | Script hash | CDN |
+|--------|-------------|-----|
+| Native Banner | `761a1a8645cd2263043bfeb6f2e87eea` | pl28423230.effectivecpmnetwork.com |
+| Social Bar | `96e9ff95727320b49c1ea1aa80add9b6` | pl28427857.effectivecpmnetwork.com |
+| (format lain) | `e223516a3660ad6a4214cb47e436c599` | pl28418540.effectivecpmnetwork.com |
 
 **Native Banner** butuh container div: `<div id="container-761a1a8645cd2263043bfeb6f2e87eea"></div>`.
 
@@ -63,18 +63,19 @@ Semua fungsi ad management terpusat di sini. Wajib di-load di setiap platform HT
 - Auto-dipanggil via `DOMContentLoaded` — tidak perlu panggil manual
 - Inject semua `[data-ad-zone]` di luar modal (listing/grid page)
 - **Auto-refresh setiap 90 detik**
-- Jika iframe tidak muncul setelah 4 detik → container disembunyikan (mencegah kotak kosong)
+- Jika iframe tidak muncul setelah 6 detik → container disembunyikan (mencegah kotak kosong)
 
 **`injectAd(container, zoneName)`**
 - Low-level: bersihkan container, buat `atOptions` script + invoke script baru dengan cache-buster
-- **Hide-if-unfilled**: setTimeout 4s → jika tidak ada `<iframe>` → `container.style.display='none'`
-- MutationObserver membatalkan hide jika iframe muncul sebelum 4s
+- **Hide-if-unfilled**: setTimeout 6s → jika tidak ada `<iframe>` → `container.style.display='none'`
+- MutationObserver membatalkan hide jika iframe muncul sebelum 6s
 - Saat re-inject: `container.style.display=''` (restore dulu)
+- **Sticky slots tidak pernah di-hide** — cek `isSticky` via class check
 
 **`initVideoOverlay(prefix)`**
 - Persistent overlay bar di video player — muncul 5s setelah play, countdown 5s, muncul lagi tiap 120s
 - **Ketuk bar → buka `SMARTLINK_URL` di tab baru** (bukan triggerPopunder — karena Adsterra tidak re-render zone duplikat)
-- Elemen yang dibutuhkan: `#PREFIXVideoAdOverlay`, `#PREFIXVideoAdClose`, `#PREFIXVideoAdTimer`, `#PREFIXVideoAdContent`
+- Elemen yang dibutuhkan: `#PREFIXVideoEl`, `#PREFIXVideoAdOverlay`, `#PREFIXVideoAdClose`, `#PREFIXVideoAdTimer`, `#PREFIXVideoAdContent`
 
 **`initVideoTap(prefix)`**
 - Transparent div `#PREFIXVideoTapZone` menutup area video (top 0, bottom 64px)
@@ -91,21 +92,70 @@ Semua fungsi ad management terpusat di sini. Wajib di-load di setiap platform HT
 
 ---
 
+## Sticky Banner System (Juli 2026)
+
+Setiap halaman punya dua sticky banner yang berjalan sepanjang scroll:
+
+### `.vd-sticky-top` — below topbar
+```html
+<div class="vd-sticky-top" aria-label="Advertisement">
+  <div class="vd-sticky-top-lb" data-ad-zone="lb-728"></div>   <!-- desktop -->
+  <div class="vd-sticky-top-mb" data-ad-zone="mb-320"></div>   <!-- mobile -->
+</div>
+```
+- `position: fixed; top: var(--topbar-h); z-index: 90`
+- Desktop: lb-728 (728×90) tampil, mb-320 disembunyikan
+- Mobile: mb-320 (320×50) tampil, lb-728 disembunyikan
+
+### `.vd-sticky-bottom` — footer
+```html
+<div class="vd-sticky-bottom" aria-label="Advertisement">
+  <div class="vd-sticky-bottom-lb" data-ad-zone="banner-468"></div>  <!-- desktop only -->
+</div>
+```
+- `position: fixed; bottom: 0; z-index: 90`
+- **Desktop only** — `display: none` di mobile (`max-width: 768px`)
+- Pakai `banner-468` (468×60) bukan `lb-728` — **zone conflict rule** (lihat bawah)
+
+### ⚠️ Zone Conflict Rule — WAJIB DIPATUHI
+**Adsterra hanya serve 1 instance per zone key per halaman.**
+Jika top dan bottom pakai zone key yang sama (`lb-728`), bottom selalu blank.
+
+**Solusi:** Top = `lb-728` / `mb-320`; Bottom = **`banner-468`** (key berbeda).
+Jangan pernah pakai zone key yang sama di dua slot berbeda dalam satu halaman.
+
+### CSS Variables (style.css :root)
+```css
+--sticky-top-h:    54px;   /* mobile: mb-320 (50px) + 4px */
+--sticky-bottom-h: 0px;    /* mobile: no bottom banner */
+
+@media (min-width: 769px) {
+  --sticky-top-h:    94px; /* desktop: lb-728 (90px) + 4px */
+  --sticky-bottom-h: 64px; /* desktop: banner-468 (60px) + 4px */
+}
+```
+
+`.shell` padding-top/bottom menggunakan var ini agar konten tidak tertutup banner.
+`body.rb-page .shell` dan `.rb-searchbar` juga ikut disesuaikan.
+
+### Status per halaman
+Semua 9 HTML (index, rb, yb, bk, tp, sb, xn, vd, zg) sudah punya kedua div sticky di atas `</body>`.
+
+---
+
 ## Status per platform (audit Juli 2026)
 
-| Platform | ads.js | data-ad-zone slots | Social Bar | Native Banner | reloadModalAds | initVideoOverlay | initVideoTap |
-|----------|--------|--------------------|------------|---------------|----------------|------------------|--------------|
-| index (P1) | ✅ | 12 | ✅ | ✅ | ✅ app.js | ✅ | ✅ |
-| rb.html (P2) | ✅ | 12 | ✅ | ✅ | ✅ rb.js | ✅ | ✅ |
-| yb.html (P3) | ✅ | 12 | ✅ | ✅ | ✅ yb.js | ✅ | ✅ |
-| bk.html (P4) | ✅ | 12 | ✅ | ✅ | ✅ bk.js | ✅ | ✅ |
-| tp.html (P5) | ✅ | 2 (footer only) | ✅ | ✅ | — no modal | — (initTpFeed) | — (initTpFeed) |
-| sb.html (P6) | ✅ | 12 | ✅ | ✅ | ✅ sb.js | ✅ | ✅ |
-| vd.html (P7) | ✅ | 12 | ✅ | ✅ | ✅ vd.js | ✅ | ✅ |
-| xn.html (P8) | ✅ | 12 | ✅ | ✅ | ✅ xn.js | ✅ | ✅ |
-| zg.html (P9) | ✅ | 12 | ✅ | ✅ | ✅ zg.js | ✅ | ✅ |
-
-tp.html: 2 zone slot = footer (lb-728 + mb-320). Banner lain inline static (normal untuk format tanpa modal).
+| Platform | ads.js | data-ad-zone slots | Social Bar | Native Banner | reloadModalAds | initVideoOverlay | initVideoTap | Sticky Top | Sticky Bottom |
+|----------|--------|--------------------|------------|---------------|----------------|------------------|--------------|------------|---------------|
+| index (P1) | ✅ | 12 | ✅ | ✅ | ✅ app.js | ✅ | ✅ | ✅ lb-728/mb-320 | ✅ banner-468 |
+| rb.html (P2) | ✅ | 12 | ✅ | ✅ | ✅ rb.js | ✅ | ✅ | ✅ lb-728/mb-320 | ✅ banner-468 |
+| yb.html (P3) | ✅ | 12 | ✅ | ✅ | ✅ yb.js | ✅ | ✅ | ✅ lb-728/mb-320 | ✅ banner-468 |
+| bk.html (P4) | ✅ | 12 | ✅ | ✅ | ✅ bk.js | ✅ | ✅ | ✅ lb-728/mb-320 | ✅ banner-468 |
+| tp.html (P5) | ✅ | 2 (footer only) | ✅ | ✅ | — no modal | — (initTpFeed) | — (initTpFeed) | ✅ lb-728/mb-320 | ✅ banner-468 |
+| sb.html (P6) | ✅ | 12 | ✅ | ✅ | ✅ sb.js | ✅ | ✅ | ✅ lb-728/mb-320 | ✅ banner-468 |
+| vd.html (P7) | ✅ | 12 | ✅ | ✅ | ✅ vd.js | ✅ | ✅ | ✅ lb-728/mb-320 | ✅ banner-468 |
+| xn.html (P8) | ✅ | 12 | ✅ | ✅ | ✅ xn.js | ✅ | ✅ | ✅ lb-728/mb-320 | ✅ banner-468 |
+| zg.html (P9) | ✅ | 12 | ✅ | ✅ | ✅ zg.js | ✅ | ✅ | ✅ lb-728/mb-320 | ✅ banner-468 |
 
 ---
 
@@ -117,7 +167,9 @@ tp.html: 2 zone slot = footer (lb-728 + mb-320). Banner lain inline static (norm
 | Smartlink | Ketuk overlay bar video | 28322880 | $0.5–2 |
 | Social Bar | Auto per pageview | 28327358 | Stabil rendah |
 | Native Banner | Auto per pageview | 28322731 | Medium |
-| Banner modal (6-7 slot × auto-refresh 60s) | Modal buka | 30152679 dll | $0.3–1 |
+| Sticky Top Banner (desktop lb-728 / mobile mb-320) | Scroll sepanjang halaman | lb-728 / mb-320 | $0.3–1 |
+| Sticky Bottom Banner (desktop banner-468 only) | Scroll sepanjang halaman | banner-468 | $0.2–0.6 |
+| Banner modal (6-7 slot × auto-refresh 60s) | Modal buka | box-300 dll | $0.3–1 |
 | Banner listing (auto-refresh 90s) | Page load | semua ZONES | $0.2–0.8 |
 | Video overlay bar | Play video +5s | → Smartlink | via Smartlink |
 | Video tap zone | Tap area video | → Popunder | via Popunder |
@@ -132,6 +184,8 @@ tp.html: 2 zone slot = footer (lb-728 + mb-320). Banner lain inline static (norm
 .video-tap-zone { position: absolute; top: 0; bottom: 64px; z-index: 25; }
 .tp-ad-bar { position: fixed; bottom: 0; z-index: 200; }   /* khusus tp */
 .watch-ad-slot:empty { display: none; }   /* `:empty` untuk pre-inject; JS hide-if-unfilled untuk post-inject */
+.vd-sticky-top  { position: fixed; top: var(--topbar-h); left: 0; right: 0; z-index: 90; }
+.vd-sticky-bottom { position: fixed; bottom: 0; left: 0; right: 0; z-index: 90; }
 ```
 
 ---
@@ -157,6 +211,7 @@ if (window.VdryAds) VdryAds.initTpFeed();
 ## Bug yang pernah terjadi
 
 - **vd.html + zg.html Social Bar salah zone** (`ba0fd8e8...` dari website lain). Fix: ganti ke `96e9ff95727320b49c1ea1aa80add9b6` (zone 28327358 vidorey.web.app).
-- **`:empty` tidak bekerja setelah script inject** — CSS `:empty` tidak match setelah `<script>` ditambah ke container. Fix: JS hide-if-no-iframe setelah 4s di `injectAd()`.
+- **`:empty` tidak bekerja setelah script inject** — CSS `:empty` tidak match setelah `<script>` ditambah ke container. Fix: JS hide-if-no-iframe setelah 6s di `injectAd()`.
 - **tp.html footer banner zone salah** — `.tp-footer-lb` dan `.tp-footer-mobile` awalnya pakai key box-300 (300×250). Fix: ganti ke `lb-728` dan `mb-320`.
 - **index.html modal kurang 1 slot** — `watch-info-ad-slot` (half-160) hilang. Fix: tambah setelah `.watch-title-row`.
+- **Sticky bottom blank** — top dan bottom pakai zone `lb-728` yang sama. Adsterra hanya serve 1 instance per zone key per halaman → bottom selalu kosong. Fix: bottom pakai `banner-468` (key berbeda).

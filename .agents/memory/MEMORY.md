@@ -2,12 +2,12 @@
 - [Vidorey Caching Strategy](vidorey-caching-strategy.md) — makeCache helper (get()→null not undefined); P1/P2/P3/P4 caches + TTLs; sentinel values; monitor buffer ring buffer 50k.
 - [RB Layout Scroll Fix](rb-layout-scroll-fix.md) — override via body.rb-page in style.css (NOT inline style in html); #ybSearchHeading CSS rules must mirror #rbSearchHeading.
 - [P1 Watch View + Cross-Origin Video](p1-crossorigin-video.md) — full-page modal (modal-fullpage); MP4 via /proxy/stream; related=currentData.videos; watch URL /watch/:id; no hls.js; no shortlink token.
-- [Vidorey Monitor](vidorey-monitor.md) — ring buffer 50k + virtual list client; REST /monitor/log pagination; checkMonitorKey protects all monitor routes.
+- [Vidorey Monitor](vidorey-monitor.md) — ring buffer 50k + virtual list; SSE Koyeb fix; Histats counter hanya render di domain terdaftar (vidorey.web.app), bukan dev URL.
 - [SSE vs Compression Middleware](vidorey-sse-compression-bug.md) — compression() global mematikan SSE; filter /monitor/events + setNoDelay + res.flush() wajib.
 - [P3 yobokep Architecture](yb-pagination-thumbnail.md) — HTML pagination broken (pakai WP REST API); thumbnail via parallel og:image fetch; self-healing handleYbSeg+reresolveYbUrl; CDN allowlist owphbf24.com.
 - [Vidorey Modular Refactor](vidorey-modular-refactor.md) — server.js split into lib/{cache,proxy,monitor,scrapers/p1,rb,yb,bk,tp,sb}.js; 6 platforms; new platform needs trackRequest branches + badge CSS in monitor + update all 6 HTML nav drawers.
 - [Vidorey Deploy Config](vidorey-deploy-config.md) — config.js pakai placeholder __REPLIT_BACKEND_URL__; deploy.sh pakai trap EXIT restore + sed delimiter |; jangan hardcode URL di file.
-- [Vidorey CSP Allowlist](vidorey-csp-allowlist.md) — script-src tidak pakai https: wildcard; domain eksplisit wajib ditambah jika ada script/ad network baru.
+- [Vidorey CSP Allowlist](vidorey-csp-allowlist.md) — script-src eksplisit; connect-src wajib include www.histats.com + Histats subdomains agar counter render.
 - [Vidorey Nav Drawer](vidorey-nav-drawer.md) — platform switcher adalah sidebar drawer (hamburger ≡), bukan dropdown; ID lama platformSwitcher/psTrigger/psMenu sudah dihapus dari semua HTML.
 - [RB Watch View + Related + Share](rb-watch-view-related.md) — watch URL sekarang 11-char token (bukan slug); encodeSlug/decodeSlug + currentToken flow; deep-link dual-path (token vs legacy base64); openModal() idempotent + popstate 3-branch.
 - [Vidorey Shortlink](vidorey-shortlink.md) — lib/shortlink.js token registry; registerSlug(platform,slug)→11char; /api/s/:platform/:token di server.js; full client encodeSlug/decodeSlug + currentToken flow.
@@ -20,4 +20,4 @@
 - [VD Platform 7 Architecture](vd-platform7-architecture.md) — videy.design PHP HTML scrape; `.video-card` root (not `a[href=...]`); title OUTSIDE `<a>` in sibling `.video-info`; direct MP4 no tokens; no search/categories.
 - [ZG Platform 8 Architecture](zg-platform8-architecture.md) — zoig.com; X-Forwarded-For residential IP bypass; signed MP4 token changes per request → 8-min cache + self-heal; poster attr for thumb; ul.browse.related for related videos.
 - [Vidorey i18n EN/ID Toggle](vidorey-i18n.md) — full toggle stored in localStorage; data-i18n/html/placeholder attrs + _t() in all JS; langchange CustomEvent re-renders headings.
-- [Vidorey Ad Optimization](vidorey-ad-optimization.md) — ads.js shared utility: reloadModalAds (60s auto-refresh), initVideoOverlay, initVideoTap, initTpFeed, triggerPopunder; semua 9 platform sudah terpasang penuh.
+- [Vidorey Ad Optimization](vidorey-ad-optimization.md) — ads.js + sticky banner system (top lb-728/mb-320, bottom banner-468); zone conflict rule; CSS vars --sticky-top/bottom-h; semua 9 platform lengkap.

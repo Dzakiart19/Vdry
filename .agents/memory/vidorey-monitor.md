@@ -1,6 +1,6 @@
 ---
 name: Vidorey Monitor — Real-Time SSE Dashboard
-description: /monitor dan /health/detail: auth pattern, SSE architecture, virtual list rendering, ring buffer + REST pagination.
+description: /monitor dan /health/detail: auth pattern, SSE architecture, virtual list rendering, ring buffer + REST pagination, Histats counter.
 ---
 
 # Vidorey Monitor
@@ -130,6 +130,51 @@ stuck "Connecting..." di Koyeb deployment.
 | `tp_posts` | `/api/tp/posts` | `#3a0a1a` → `#ff4d6d` |
 
 IP dari `x-forwarded-for` header (first value), truncated karena Replit proxy.
+
+---
+
+## Histats Counter di Monitor Page
+
+Counter muncul di strip tipis antara stat boxes dan log list (`#histats_wrap`).
+
+### Implementasi saat ini
+```html
+<div id="histats_wrap">
+  <!-- JS counter — hanya render di domain terdaftar Histats -->
+  <div id="histats_counter"></div>
+  <!-- Fallback link langsung ke halaman statistik -->
+  <a href="https://www.histats.com/viewstats/?sid=5040431&act=2" target="_blank">
+    📊 Lihat Statistik Histats
+  </a>
+</div>
+
+<!-- Tracking script di bawah body -->
+<script>
+  var _Hasync = _Hasync || [];
+  _Hasync.push(['Histats.start', '1,5040431,4,5,172,25,00011111']);
+  _Hasync.push(['Histats.fasi', '1']);
+  _Hasync.push(['Histats.track_hits', '']);
+  // Histats.framed_page TIDAK dipakai — menyebabkan counter tidak render
+  ...
+</script>
+```
+
+### Kenapa counter JS tidak muncul di dev URL
+Histats JS (`js15_as.js`) memvalidasi domain sebelum render counter widget.
+URL `*.pike.replit.dev` (Replit dev) bukan domain terdaftar → counter tidak render.
+URL `vidorey.web.app` (deployed) = domain terdaftar → counter muncul.
+Ini perilaku normal Histats, bukan bug. Link fallback "Lihat Statistik" selalu bisa diklik.
+
+### CSP yang dibutuhkan Histats
+- `scriptSrc`: `https://s10.histats.com`
+- `connectSrc`: `https://s10.histats.com`, `https://sstatic1.histats.com`, `https://histats.com`, `https://www.histats.com`
+- `imgSrc`: `https:` (wildcard sudah cukup, covers `sstatic1.histats.com`)
+
+Jika `www.histats.com` absen dari `connectSrc`, counter JS tidak bisa fetch data dan tidak render — meski script-nya sendiri load sukses.
+
+### Yang TIDAK boleh dilakukan
+- `_Hasync.push(['Histats.framed_page', ''])` — bikin Histats anggap halaman dalam iframe, counter tidak render
+- Pakai `0.gif` sebagai counter visual — `0.gif` adalah tracking pixel transparan 1×1, bukan counter badge
 
 ---
 
