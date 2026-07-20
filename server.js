@@ -92,6 +92,7 @@ app.use(helmet({
         'https://s10.histats.com',
         'https://sstatic1.histats.com',
         'https://histats.com',
+        'https://www.histats.com',
       ],
       frameSrc:       ['https:'],
       objectSrc:      ["'none'"],
