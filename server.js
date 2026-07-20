@@ -71,10 +71,12 @@ app.use(helmet({
         'https://pl26548687.profitableratecpm.com',
         // Adsterra 728×90 leaderboard + 468×60 banner (semua listing pages)
         'https://turbulentrefreshments.com',
+        // Histats.com visitor counter (/monitor page)
+        'https://s10.histats.com',
 
       ],
       styleSrc:  ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      imgSrc:    ["'self'", 'data:', 'https:'],
+      imgSrc:    ["'self'", 'data:', 'https:', 'http://sstatic1.histats.com'],
       fontSrc:   ["'self'", 'https://fonts.gstatic.com', 'data:'],
       mediaSrc:       ["'self'", 'blob:', 'https:'],
       connectSrc: [
