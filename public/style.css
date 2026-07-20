@@ -30,6 +30,10 @@
   --topbar-h:  56px;
   --sidebar-w: 220px;
 
+  /* Sticky ad banner heights (mobile default) */
+  --sticky-top-h:    54px;
+  --sticky-bottom-h: 54px;
+
   --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --mono: 'SF Mono', 'Fira Code', monospace;
 
@@ -270,7 +274,7 @@ body {
 .shell {
   display: flex;
   height: 100vh;
-  padding-top: var(--topbar-h);
+  padding-top: calc(var(--topbar-h) + var(--sticky-top-h));
 }
 
 /* ════════════════════════════════════
@@ -1449,22 +1453,69 @@ body {
 }
 .ad-mobile-banner-slot:empty { display: none; }
 
-/* ── Sticky 320×50 di bawah layar (mobile only) ── */
-@media (max-width: 767px) {
-  .ad-mobile-banner-slot {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 199;
-    background: var(--bg);
-    border-top: 1px solid var(--border);
-    padding: 3px 0 4px;
-    min-height: 58px;
-    margin: 0;
-  }
-  .shell { padding-bottom: 64px; }
+/* ══════════════════════════════════════════════════════════════════════
+   STICKY AD BANNERS — top (bawah topbar) + bottom (dasar layar)
+   Permanen di semua halaman, tidak hilang saat scroll.
+══════════════════════════════════════════════════════════════════════ */
+.vd-sticky-top,
+.vd-sticky-bottom {
+  position: fixed;
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg);
+  overflow: hidden;
 }
+
+.vd-sticky-top {
+  top: var(--topbar-h);
+  min-height: var(--sticky-top-h);
+  z-index: 98;          /* di bawah topbar (100) tapi di atas konten */
+  border-bottom: 1px solid var(--border);
+}
+
+.vd-sticky-bottom {
+  bottom: 0;
+  min-height: var(--sticky-bottom-h);
+  z-index: 150;
+  border-top: 1px solid var(--border);
+}
+
+/* Mobile default: tampilkan slot mb-320, sembunyikan lb-728 */
+.vd-sticky-top-lb,
+.vd-sticky-bottom-lb {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  min-height: 90px;
+  max-width: 728px;
+  width: 100%;
+}
+.vd-sticky-top-mb,
+.vd-sticky-bottom-mb {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50px;
+  max-width: 320px;
+  width: 100%;
+}
+
+/* Desktop: tampilkan lb-728, sembunyikan mb-320 */
+@media (min-width: 768px) {
+  :root {
+    --sticky-top-h:    94px;
+    --sticky-bottom-h: 94px;
+  }
+  .vd-sticky-top-lb,
+  .vd-sticky-bottom-lb { display: flex; }
+  .vd-sticky-top-mb,
+  .vd-sticky-bottom-mb { display: none; }
+}
+
+/* Shell: tambah padding bawah agar konten tidak tertutup sticky bottom */
+.shell { padding-bottom: var(--sticky-bottom-h); }
 
 /* ── Inline grid ad (300×250 disisipi di antara video cards) ── */
 .ad-inline-grid {
@@ -1824,7 +1875,7 @@ body.rb-page .shell {
   display: block;
   height: auto;
   min-height: calc(100vh - var(--topbar-h));
-  padding-top: 0;
+  padding-top: var(--sticky-top-h);
 }
 
 /* Content: tidak punya scroll sendiri, ikut page scroll */
@@ -1834,15 +1885,15 @@ body.rb-page .content {
   overflow: visible;
   margin: 0;
   max-width: 100%;
-  padding: 0 0 60px;
+  padding: 0 0 var(--sticky-bottom-h);
 }
 
 /* ── Search bar ── */
 .rb-searchbar {
   position: sticky;
-  top: var(--topbar-h);
+  top: calc(var(--topbar-h) + var(--sticky-top-h));
   z-index: 90;
-  margin-top: var(--topbar-h);
+  margin-top: calc(var(--topbar-h) + var(--sticky-top-h));
   background: var(--surface2);
   border-bottom: 1px solid var(--border);
   padding: 10px 16px;

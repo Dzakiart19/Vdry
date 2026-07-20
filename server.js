@@ -88,6 +88,10 @@ app.use(helmet({
         'https://analytics.google.com',
         'https://www.googletagmanager.com',
         'https://www.google.com',
+        // Histats visitor counter (/monitor page) — butuh connect ke server statistik
+        'https://s10.histats.com',
+        'https://sstatic1.histats.com',
+        'https://histats.com',
       ],
       frameSrc:       ['https:'],
       objectSrc:      ["'none'"],

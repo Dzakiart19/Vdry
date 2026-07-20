@@ -61,11 +61,15 @@
     invEl.src = z.src + '?_t=' + Date.now();
     container.appendChild(invEl);
 
-    // Slot sticky/fixed (mobile bottom bar, tp footer) jangan pernah disembunyikan
+    // Slot sticky/fixed jangan pernah disembunyikan
     // — mereka selalu terlihat di layar dan harus tetap ada walau belum terisi.
     var isSticky = container.classList.contains('ad-mobile-banner-slot') ||
                    container.classList.contains('tp-footer-lb') ||
-                   container.classList.contains('tp-footer-mobile');
+                   container.classList.contains('tp-footer-mobile') ||
+                   container.classList.contains('vd-sticky-top-lb') ||
+                   container.classList.contains('vd-sticky-top-mb') ||
+                   container.classList.contains('vd-sticky-bottom-lb') ||
+                   container.classList.contains('vd-sticky-bottom-mb');
     if (isSticky) return;
 
     // Untuk slot non-sticky: sembunyikan jika tidak ada iframe setelah 6 detik.
@@ -132,7 +136,9 @@
    */
   var LISTING_SELECTORS = [
     '.ad-display-slot', '.ad-leaderboard-slot', '.ad-468-slot',
-    '.ad-mobile-banner-slot', '.tp-footer-lb', '.tp-footer-mobile'
+    '.ad-mobile-banner-slot', '.tp-footer-lb', '.tp-footer-mobile',
+    '.vd-sticky-top-lb', '.vd-sticky-top-mb',
+    '.vd-sticky-bottom-lb', '.vd-sticky-bottom-mb'
   ];
 
   function initListingAds() {
