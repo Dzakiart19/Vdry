@@ -1,6 +1,6 @@
 # Vidorey — Multi-Platform Video Browser
 
-Web app untuk browse dan nonton video dari tujuh platform terpisah.
+Web app untuk browse dan nonton video dari sembilan platform terpisah.
 
 ## Cara Menjalankan (Replit)
 - Workflow **Start application** menjalankan `node server.js`, serve di port 5000.
@@ -10,11 +10,11 @@ Web app untuk browse dan nonton video dari tujuh platform terpisah.
 
 ## Stack
 - **Backend**: Node.js + Express (proxy + HTML scraper), modular — lihat struktur di bawah
-- **Frontend**: Vanilla JS SPA (no framework), enam halaman terpisah
+- **Frontend**: Vanilla JS SPA (no framework), sembilan halaman terpisah
 - **Port**: 5000
 
 ## Struktur Backend
-`server.js` (composition root) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 7 router platform → monitor/health routes → SPA fallback.
+`server.js` (composition root) hanya merakit: security middleware (Helmet + CSP, CORS, rate limit) → static → monitor tracking → mount 9 router platform → monitor/health routes → SPA fallback.
 
 ```
 server.js                 ← composition root (helmet/CSP, CORS, rate limit, mount routers, /api/s/:platform/:token shortlink resolver, listen)
@@ -31,11 +31,13 @@ lib/
     tp.js                 ← tik.porn: __NEXT_DATA__ scrape, HLS via hls.js, TikTok-style feed, /tp SPA route
     sb.js                 ← situsbokep.cc: WP HTML scrape (cheerio), xvideos embedframe → HLS, /sb SPA route
     xn.js                 ← xchina.tube: POST REST API + AES-CBC decrypt key "xxx", HLS token TTL ~1.5h, self-healing, /xn SPA route
+    vd.js                 ← videy.design: PHP HTML scrape, direct MP4 proxy (no HLS, no tokens), /vd SPA route
+    zg.js                 ← zoig.com: HTML scrape + X-Forwarded-For bypass, signed MP4 self-heal (8-min cache), /zg SPA route
 ```
 
 Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai `server.js` untuk agregasi `getCacheStats()` di `/health/detail`. **Tidak ada cross-import antar scraper files** — hanya `lib/cache.js` dan `lib/proxy.js` yang generik/stateless di-share.
 
-## Tujuh Platform (Completely Isolated)
+## Sembilan Platform (Completely Isolated)
 
 | Platform | URL | Source | HTML | JS | Nama UI |
 |---|---|---|---|---|---|
@@ -45,11 +47,13 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 | Platform 4 | `/bk` | bokepking.cam | `bk.html` | `bk.js` | Vidorey 4 |
 | Platform 5 | `/tp` | tik.porn | `tp.html` | `tp.js` | Vidorey TikTok 1 |
 | Platform 6 | `/sb` | situsbokep.cc | `sb.html` | `sb.js` | Vidorey 5 |
+| Platform 7 | `/vd` | videy.design | `vd.html` | `vd.js` | Vidorey 7 |
 | Platform 8 | `/xn` | xchina.tube | `xn.html` | `xn.js` | Vidorey 6 |
+| Platform 9 | `/zg` | zoig.com | `zg.html` | `zg.js` | Vidorey 8 |
 
 **Nama UI tidak menyebut nama web sumber** — user hanya melihat "Vidorey 1", "Vidorey 2", dst.
 
-Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan dua seksi terpisah: **seksi atas** (listing biasa: Vidorey 1–5) dan **seksi bawah "Fitur Lain"** (khusus TikTok-style: Vidorey TikTok 1–2). Highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
+Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan dua seksi terpisah: **seksi atas** (listing biasa: Vidorey 1–8) dan **seksi bawah "Fitur Lain"** (khusus TikTok-style: Vidorey TikTok 1). Highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
 
 ## Iklan (Adsterra)
 Empat jenis slot iklan aktif, posisi strategis per halaman:
@@ -72,7 +76,7 @@ Iklan hanya dari **Adsterra**. ExoClick telah dihapus sepenuhnya.
 - **Unit yang sudah dihapus dan tidak boleh dipasang lagi:** 728×90 Leaderboard, 468×60 Banner, 160×300 Half-page, 160×600 Skyscraper, Smartlinks (`smartlinks.js` sudah dihapus dari repo). ExoClick (semua unit) dihapus — hanya Adsterra yang aktif.
 - Kalau nambah jaringan iklan baru, domain barunya wajib ditambah ke `scriptSrc` di `server.js` (CSP tidak pakai wildcard `https:`).
 
-### Struktur Nav Drawer (sama di keenam HTML)
+### Struktur Nav Drawer (sama di semua HTML)
 - `.nav-burger` (id `navBurger`) — tombol hamburger di dalam `.brand` di topbar (listing platform P1–P4, P6/Vidorey 5); `tpNavBurger` untuk P5 yang punya topbar custom
 - `div.nav-overlay` (id `navOverlay`) — backdrop gelap, z-index 149
 - `nav.nav-drawer` (id `navDrawer`) — panel slide-in, z-index 150
@@ -80,13 +84,13 @@ Iklan hanya dari **Adsterra**. ExoClick telah dihapus sepenuhnya.
 - `.nav-plat-item` + `.nav-plat-item.active` — item platform; avatar selalu `<img src="/logo.png">` (logo Vidorey sama untuk semua platform, konsisten dengan topbar)
 
 **Dua seksi nav drawer:**
-- **Seksi atas** (tanpa label) — listing platform biasa: P1 `/` (Vidorey 1), P2 `/rb` (Vidorey 2), P3 `/yb` (Vidorey 3), P4 `/bk` (Vidorey 4), P6 `/sb` (Vidorey 5), P8 `/xn` (Vidorey 6)
+- **Seksi atas** (tanpa label) — listing platform biasa: P1 `/` (Vidorey 1), P2 `/rb` (Vidorey 2), P3 `/yb` (Vidorey 3), P4 `/bk` (Vidorey 4), P6 `/sb` (Vidorey 5), P8 `/xn` (Vidorey 6), P7 `/vd` (Vidorey 7), P9 `/zg` (Vidorey 8)
 - `<hr class="nav-section-divider">` — pemisah visual
 - **"Fitur Lain"** — KHUSUS TikTok-style (vertical scroll-snap): P5 `/tp`
 
 ⚠️ Platform listing baru WAJIB masuk seksi atas (sebelum `<hr>`). Platform TikTok-style WAJIB masuk di bawah label "Fitur Lain". Jangan campur.
 
-**ID lama yang sudah dihapus:** `platformSwitcher`, `psTrigger`, `psMenu` — tidak ada lagi di HTML manapun. CSS `.ps-trigger`, `.ps-menu`, `.ps-chevron` di style.css adalah dead code (tidak membahayakan, tapi tidak dipakai).
+**ID lama yang sudah dihapus:** `platformSwitcher`, `psTrigger`, `psMenu` — tidak ada lagi di HTML manapun. CSS `.ps-trigger`, `.ps-menu`, `.ps-chevron`, `@keyframes psIn`, `.ps-item` sudah dibersihkan dari style.css.
 
 ## Cara Kerja — Platform 1 (xpvid.cc)
 1. `/api/folder/:id` → scrape subfolder & video list dari xpvid.cc
@@ -191,6 +195,39 @@ TikTok-style vertical scroll-snap feed (`tp-feed` position:fixed, `body.tp-page 
 ### Watch View P6 (sama seperti P2/P3/P4)
 Full-page layout: `watch-topbar` (← Kembali) + `watch-main` (hls.js player + judul + deskripsi) + `watch-related` sticky sidebar. Deep-link `/sb/watch/<token>` (11-char shortlink).
 
+## Cara Kerja — Platform 7 / Vidorey 7 (videy.design)
+
+1. `/api/vd/posts?p=N` → HTML scrape `/?page=N&sort=terbaru` → parse `.video-card` grid; title diambil dari `.video-title` di sibling `.video-info` (BUKAN di dalam `<a>`); thumbnail dari `<img>` dalam link; tidak ada search/kategori
+2. `/api/vd/video/:id` → scrape `/watch.php?id=N` → `<source type="video/mp4">` / `video#videoPlayer` attr `src` → MP4 URL langsung; thumb dari `poster` attr; related dari `a.related-video-link`; response menyertakan `token` (11-char shortlink)
+3. `/proxy/vd/stream/:id` → proxy MP4 ke `videy.design` dengan Range support; self-heal evict+retry sekali jika CDN 403/404
+4. `/proxy/vd/thumb?url=` → proxy thumbnail (allowlist domain videy.design)
+5. `/vd/watch/:token` → SPA route deep-link (serve `vd.html`)
+
+### Kenapa Direct MP4 (bukan HLS) untuk P7
+videy.design menyimpan video sebagai MP4 langsung — tidak ada playlist `.m3u8` dan tidak ada signed token CDN. Proksi via `/proxy/vd/stream/:id` dengan Range support agar seek/scrubbing berfungsi. Tidak ada search atau filter kategori.
+
+### CDN P7
+- `videy.design` — CDN origin langsung, no hotlink protection, no signed token, Range OK
+
+## Cara Kerja — Platform 9 / Vidorey 8 (zoig.com)
+
+1. `/api/zg/categories` → scrape `/categories` → list `{ slug, name, thumb, count }` (cache 1 jam)
+2. `/api/zg/posts?p=N[&cat=slug]` → HTML scrape; listing umum: `/amateur-videos1.html` (N=1) / `/amateur-videos/tr-week-{N}` (N>1); per-kategori: `/category/{slug}/amateur-videos{N}.html`; card via `a.thumbnailz[href*="/play/"]`
+3. `/api/zg/video/:id` → scrape `/play/{id}` → `<source type="video/mp4">` → signed MP4 URL; `poster` attr untuk thumbnail; related via `ul.browse.related`; response menyertakan `token` (11-char shortlink)
+4. `/proxy/zg/stream/:id` → proxy signed MP4 ke `zoigvids.zoigg.com` dengan Range support; self-heal evict+re-resolve jika CDN 403/404 (token berubah tiap request)
+5. `/proxy/zg/thumb?url=` → proxy thumbnail dari `cdn-o9.zoig1.com`
+6. `/zg/watch/:token` → SPA route deep-link (serve `zg.html`)
+
+### Bypass IP-block P9
+zoig.com memblokir datacenter IP. Solusi: inject header `X-Forwarded-For: 98.139.180.149` (residential IP) — zoig.com mempercayai header ini tanpa verifikasi.
+
+### CDN P9
+- `zoigvids.zoigg.com` — signed token TTL sangat pendek (berubah tiap request) → cache MP4 URL hanya 8 menit; self-heal wajib
+- `cdn-o9.zoig1.com` — thumbnail stabil, no hotlink restriction (cache 24 jam)
+
+### Watch View P9 (sama seperti P2/P3/P4/P6)
+Full-page layout: `watch-topbar` (← Kembali) + `watch-main` (`<video>` MP4 langsung) + `watch-related` sticky sidebar. Deep-link `/zg/watch/<token>` (11-char shortlink).
+
 ## SEO
 
 ### Strategi
@@ -213,7 +250,7 @@ Semua halaman menggunakan **keyword bahasa Inggris** (bukan Indonesia) agar Goog
 | File | Fungsi |
 |---|---|
 | `robots.txt` | Allow semua kecuali `/monitor` dan `/health` |
-| `sitemap.xml` | 6 URL platform, `changefreq: daily` |
+| `sitemap.xml` | 9 URL platform, `changefreq: daily` |
 
 Setiap platform baru wajib ditambahkan ke `sitemap.xml`.
 
@@ -227,6 +264,8 @@ Setiap platform baru wajib ditambahkan ke `sitemap.xml`.
 | tp.html | "Free Short Porn Clips \| Scroll XXX Videos" |
 | sb.html | "Free HD Sex Videos \| Adult Porn Streaming" |
 | xn.html | "Free Chinese XXX Videos \| HD Asian Porn Streaming" |
+| vd.html | "Vidorey 7 - Free Amateur Sex Videos \| Indonesian Porn Streaming" |
+| zg.html | "Vidorey 8 - Free Homemade Amateur Porn Videos \| Real People Sex" |
 
 ## Deployment
 - **Replit (backend + dev frontend)**: server jalan di port 5000
@@ -281,6 +320,10 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 | `sb_posts` | `/api/sb/posts` dipanggil (P6 / Vidorey 5) |
 | `xn_video` | `/api/xn/video/:vId` dipanggil (P8 / Vidorey 6) |
 | `xn_posts` | `/api/xn/posts` dipanggil (P8 / Vidorey 6) |
+| `vd_video` | `/api/vd/video/:id` dipanggil (P7 / Vidorey 7) |
+| `vd_posts` | `/api/vd/posts` dipanggil (P7 / Vidorey 7) |
+| `zg_video` | `/api/zg/video/:id` dipanggil (P9 / Vidorey 8) |
+| `zg_posts` | `/api/zg/posts` dipanggil (P9 / Vidorey 8) |
 
 ### Implementasi Monitor
 - **Ring buffer server**: `MON_BUF=50.000` event, `CDN_ALERT_MAX=500` alert
@@ -303,7 +346,7 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 `public/utils.js` expose `window.setVideoJsonLd()` / `window.clearVideoJsonLd()`. Wajib dipanggil saat video mulai diputar (set) dan saat player ditutup/ganti video (clear) — kalau tidak, schema lama nyangkut di halaman. Sudah terpasang lengkap di app.js (P1), rb.js (P2), yb.js (P3), bk.js (P4), sb.js (P6/Vidorey 5), tp.js (P5/Vidorey TikTok 1).
 
 ### Ad-blocker detection
-`public/adblock.js` (dimuat di semua 6 HTML setelah `utils.js`) mendeteksi ad-blocker via bait element (`class="ads ad-banner adsbox ad-placement pub_300x250 text-ad textAd"`, cek `offsetParent`/`display`/`visibility` setelah 300ms). Kalau terdeteksi, tampilkan banner non-blocking di pojok bawah (`#vdry-adb-banner`, style di `style.css`) minta user whitelist — dismiss disimpan 24 jam di `localStorage` (`vdry_adb_dismiss_until`) supaya tidak nge-spam user yang sama.
+`public/adblock.js` (dimuat di semua HTML setelah `utils.js`) mendeteksi ad-blocker via bait element (`class="ads ad-banner adsbox ad-placement pub_300x250 text-ad textAd"`, cek `offsetParent`/`display`/`visibility` setelah 300ms). Kalau terdeteksi, tampilkan banner non-blocking di pojok bawah (`#vdry-adb-banner`, style di `style.css`) minta user whitelist — dismiss disimpan 24 jam di `localStorage` (`vdry_adb_dismiss_until`) supaya tidak nge-spam user yang sama.
 
 ## User Preferences
 - Dark theme (Obsidian Archive design system)
