@@ -50,6 +50,7 @@
   function injectAd(container, zoneName) {
     var z = ZONES[zoneName];
     if (!z || !container) return;
+    container.style.display = '';   // restore kalau sebelumnya disembunyikan
     container.innerHTML = '';
     var optEl = document.createElement('script');
     optEl.text = 'window.atOptions={"key":"' + z.key +
@@ -59,6 +60,25 @@
     var invEl = document.createElement('script');
     invEl.src = z.src + '?_t=' + Date.now();
     container.appendChild(invEl);
+
+    // Sembunyikan container jika ad network tidak mengisi iframe setelah 4 detik.
+    // Ini mencegah kotak kosong terlihat saat slot tidak diisi (low fill rate).
+    var hideCheck = setTimeout(function () {
+      if (!container.querySelector('iframe')) {
+        container.style.display = 'none';
+      }
+    }, 4000);
+
+    // Batalkan hide jika iframe muncul sebelum 4 detik
+    var obs = window.MutationObserver
+      ? new MutationObserver(function () {
+          if (container.querySelector('iframe')) {
+            clearTimeout(hideCheck);
+            obs.disconnect();
+          }
+        })
+      : null;
+    if (obs) obs.observe(container, { childList: true, subtree: true });
   }
 
   /**
