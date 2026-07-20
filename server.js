@@ -198,9 +198,17 @@ app.get('/api/s/:platform/:token', (req, res) => {
 
 /* ═══════════════════════════════════════
    SPA FALLBACK
+   Paths yang valid → 200; unknown → 404
+   agar crawler tidak mencatat soft-404.
 ═══════════════════════════════════════ */
+const VALID_SPA_PATHS = new Set(['/', '/rb', '/yb', '/bk', '/tp', '/sb', '/xn', '/vd', '/zg']);
+
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const p = req.path;
+  const isValid = VALID_SPA_PATHS.has(p) || p.startsWith('/watch/');
+  res
+    .status(isValid ? 200 : 404)
+    .sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
