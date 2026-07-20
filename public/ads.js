@@ -61,15 +61,21 @@
     invEl.src = z.src + '?_t=' + Date.now();
     container.appendChild(invEl);
 
-    // Sembunyikan container jika ad network tidak mengisi iframe setelah 4 detik.
-    // Ini mencegah kotak kosong terlihat saat slot tidak diisi (low fill rate).
+    // Slot sticky/fixed (mobile bottom bar, tp footer) jangan pernah disembunyikan
+    // — mereka selalu terlihat di layar dan harus tetap ada walau belum terisi.
+    var isSticky = container.classList.contains('ad-mobile-banner-slot') ||
+                   container.classList.contains('tp-footer-lb') ||
+                   container.classList.contains('tp-footer-mobile');
+    if (isSticky) return;
+
+    // Untuk slot non-sticky: sembunyikan jika tidak ada iframe setelah 6 detik.
     var hideCheck = setTimeout(function () {
       if (!container.querySelector('iframe')) {
         container.style.display = 'none';
       }
-    }, 4000);
+    }, 6000);
 
-    // Batalkan hide jika iframe muncul sebelum 4 detik
+    // Batalkan hide jika iframe muncul sebelum 6 detik
     var obs = window.MutationObserver
       ? new MutationObserver(function () {
           if (container.querySelector('iframe')) {
