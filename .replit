@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "bash", "python-base-3.13"]
+modules = ["nodejs-20", "web", "bash"]
 [agent]
 expertMode = true
 stack = "BEST_EFFORT_FALLBACK"
@@ -27,7 +27,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "fuser -k 5000/tcp 2>/dev/null; sleep 0.5; node server.js"
+args = "kill $(lsof -t -i:5000) 2>/dev/null; sleep 0.5; node server.js"
 waitForPort = 5000
 
 [[ports]]
