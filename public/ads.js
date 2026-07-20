@@ -36,6 +36,10 @@
       key: 'd7a21e9839cad22a65ed9e21e6a33272', w: 160, h: 300,
       src: 'https://turbulentrefreshments.com/d7a21e9839cad22a65ed9e21e6a33272/invoke.js'
     },
+    'banner-468': {
+      key: 'f517b5d3c983922d55c67370c8bd95fc', w: 468, h: 60,
+      src: 'https://turbulentrefreshments.com/f517b5d3c983922d55c67370c8bd95fc/invoke.js'
+    },
   };
 
   /**
@@ -91,6 +95,42 @@
     var tid = setInterval(doInject, 60000);
     _modalRefreshMap.push({ modalEl: modalEl, tid: tid });
   }
+
+  // ── Listing Page Ads (banner di halaman grid, bukan modal) ───────────
+  /**
+   * Inject + auto-refresh semua banner iklan di halaman listing
+   * (di luar modal watch). Target: elemen dengan data-ad-zone pada
+   * class .ad-display-slot, .ad-leaderboard-slot, .ad-468-slot,
+   * .ad-mobile-banner-slot, .tp-footer-lb, .tp-footer-mobile.
+   * Auto-refresh setiap 90 detik untuk menambah impresi saat user browse.
+   */
+  var LISTING_SELECTORS = [
+    '.ad-display-slot', '.ad-leaderboard-slot', '.ad-468-slot',
+    '.ad-mobile-banner-slot', '.tp-footer-lb', '.tp-footer-mobile'
+  ];
+
+  function initListingAds() {
+    var slots = [];
+    LISTING_SELECTORS.forEach(function (sel) {
+      var els = document.querySelectorAll(sel + '[data-ad-zone]');
+      Array.prototype.forEach.call(els, function (el) { slots.push(el); });
+    });
+    if (!slots.length) return;
+
+    function doInject() {
+      slots.forEach(function (slot, i) {
+        var zone = slot.getAttribute('data-ad-zone');
+        setTimeout(function () { injectAd(slot, zone); }, i * 300);
+      });
+    }
+
+    doInject(); // inject saat halaman pertama kali load
+    setInterval(doInject, 90000); // auto-refresh tiap 90 detik
+  }
+
+  // Auto-call saat DOM siap — berlaku di semua halaman tanpa perlu
+  // panggilan manual di tiap HTML.
+  document.addEventListener('DOMContentLoaded', initListingAds);
 
   // ── Popunder / Tab-under ─────────────────────────────────────────────
   var POP_URL         = 'https://turbulentrefreshments.com/khj65tru?key=188aaea14e197cc95790b8dca5bbbdfd';
@@ -302,6 +342,7 @@
     initVideoOverlay: initVideoOverlay,
     initVideoTap:     initVideoTap,
     initTpFeed:       initTpFeed,
+    initListingAds:   initListingAds,
     triggerPopunder:  triggerPopunder,
     injectAd:         injectAd,
     ZONES:            ZONES,
