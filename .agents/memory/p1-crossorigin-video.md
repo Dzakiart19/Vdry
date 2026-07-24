@@ -1,6 +1,6 @@
 ---
 name: Platform 1 Cross-Origin Video Playback
-description: How Platform 1 watch view works — full-page modal, MP4 via proxy, related videos from folder, deep-link /watch/:id, and cross-origin video rules.
+description: How Platform 1 watch view works — full-page modal, MP4 via proxy, related videos from folder, deep-link /watch/:id, and cross-origin video rules. Source: vdy.to (menggantikan xpvid.cc yang mati).
 ---
 
 # Platform 1 — Watch View & Video Playback

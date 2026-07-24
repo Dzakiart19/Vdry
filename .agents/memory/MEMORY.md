@@ -2,6 +2,7 @@
 - [Vidorey Caching Strategy](vidorey-caching-strategy.md) — makeCache helper (get()→null not undefined); P1/P2/P3/P4 caches + TTLs; sentinel values; monitor buffer ring buffer 50k.
 - [RB Layout Scroll Fix](rb-layout-scroll-fix.md) — override via body.rb-page in style.css (NOT inline style in html); #ybSearchHeading CSS rules must mirror #rbSearchHeading.
 - [P1 Watch View + Cross-Origin Video](p1-crossorigin-video.md) — full-page modal (modal-fullpage); MP4 via /proxy/stream; related=currentData.videos; watch URL /watch/:id; no hls.js; no shortlink token.
+- [P1 Migration xpvid.cc → vdy.to](p1-vdyto-migration.md) — xpvid.cc mati; vdy.to pengganti; selectors folder sama; video resolve via JWT 2-part (part[0]=payload); im sudah include .jpg; fallback stream.php.
 - [Vidorey Monitor](vidorey-monitor.md) — ring buffer 50k + virtual list; SSE Koyeb fix; Histats counter hanya render di domain terdaftar (vidorey.web.app), bukan dev URL.
 - [SSE vs Compression Middleware](vidorey-sse-compression-bug.md) — compression() global mematikan SSE; filter /monitor/events + setNoDelay + res.flush() wajib.
 - [P3 yobokep Architecture](yb-pagination-thumbnail.md) — HTML pagination broken (pakai WP REST API); thumbnail via parallel og:image fetch; self-healing handleYbSeg+reresolveYbUrl; CDN allowlist owphbf24.com.
