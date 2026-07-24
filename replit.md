@@ -24,7 +24,7 @@ lib/
   monitor.js              ← MONITOR_KEY, monitorLog, cdnAlerts, trackRequest, checkMonitorKey, registerMonitorRoutes (/health, /health/detail, /monitor, /monitor/events)
   shortlink.js            ← token ↔ slug registry (in-memory, 48h TTL, 20k slots); registerSlug(platform,slug)→token; resolveToken(platform,token)→slug
   scrapers/
-    p1.js                 ← xpvid.cc: folder/video API, stream+thumb proxy, /embed/:id
+    p1.js                 ← vdy.to: folder/video API, stream+thumb proxy via JWT decode, /embed/:id
     rb.js                 ← ruangbokep.ws: PackerJS decode, self-healing CDN token, HLS proxy, /rb SPA route
     yb.js                 ← yobokep.com: dual embed provider (bysezejataos AES-256-GCM + streamhls.to), HLS proxy, /yb SPA route
     bk.js                 ← bokepking.cam: WP REST API listing, direct MP4 proxy, /bk SPA route
@@ -41,7 +41,7 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 
 | Platform | URL | Source | HTML | JS | Nama UI |
 |---|---|---|---|---|---|
-| Platform 1 | `/` | xpvid.cc | `index.html` | `app.js` | Vidorey 1 |
+| Platform 1 | `/` | vdy.to | `index.html` | `app.js` | Vidorey 1 |
 | Platform 2 | `/rb` | ruangbokep.ws | `rb.html` | `rb.js` | Vidorey 2 |
 | Platform 3 | `/yb` | yobokep.com | `yb.html` | `yb.js` | Vidorey 3 |
 | Platform 4 | `/bk` | bokepking.cam | `bk.html` | `bk.js` | Vidorey 4 |
@@ -92,11 +92,11 @@ Iklan hanya dari **Adsterra**. ExoClick telah dihapus sepenuhnya.
 
 **ID lama yang sudah dihapus:** `platformSwitcher`, `psTrigger`, `psMenu` — tidak ada lagi di HTML manapun. CSS `.ps-trigger`, `.ps-menu`, `.ps-chevron`, `@keyframes psIn`, `.ps-item` sudah dibersihkan dari style.css.
 
-## Cara Kerja — Platform 1 (xpvid.cc)
-1. `/api/folder/:id` → scrape subfolder & video list dari xpvid.cc
-2. `/api/video/:id` → ambil direct MP4 URL dari `embed.php?bucket=vidoycdn&id=:id`
-3. `/proxy/stream/:id` → stream video dengan Range support & Referer spoofing ke xpvid.cc
-4. `/proxy/thumb?url=` → proxy thumbnail dari `i.xpvid.cc` (allowlist only)
+## Cara Kerja — Platform 1 (vdy.to)
+1. `/api/folder/:id` → scrape subfolder & video list dari vdy.to/f/:id (selector identik dengan xpvid.cc lama: folder-chip, thumb-link, drive-title)
+2. `/api/video/:id` → scrape vdy.to/d/:id → ekstrak `var embedToken` → decode JWT 2-part (part[0]=payload base64 JSON) → field `rf` = CDN path; fallback ke stream.php jika JWT gagal
+3. `/proxy/stream/:id` → stream video dengan Range support; MP4 di `vidoycdn.b-cdn.net/<rf>`
+4. `/proxy/thumb?url=` → proxy thumbnail dari `i.vdy.to` (allowlist only); URL thumbnail dari field `im` di JWT payload (sudah include ekstensi, contoh: `RD7qf5A7S7.jpg`)
 5. `/embed/:id` → minimal HTML player page (same-origin iframe, menghindari cross-origin video issue)
 
 ### CDN Allowlist (STREAM_HOSTS)
@@ -352,5 +352,5 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 - Dark theme (Obsidian Archive design system)
 - Bahasa Indonesia untuk UI
 - Setiap platform harus terisolasi penuh — tidak boleh ada data/logic yang bocor antar platform
-- Tidak ada nama sumber asli (xpvid.cc, ruangbokep.ws, yobokep.com) yang ditampilkan ke user di frontend
+- Tidak ada nama sumber asli (vdy.to, ruangbokep.ws, yobokep.com, dst.) yang ditampilkan ke user di frontend
 - **Platform baru wajib bebas iklan dari web sumber** — video harus di-resolve ke MP4/m3u8 langsung dan diproxy server-side; tidak boleh ada iframe/embed dari situs sumber yang di-load di browser user. Jika chain embed tidak bisa di-resolve server-side (provider IP-block server, atau SPA tanpa API terbuka), platform tersebut tidak boleh diimplementasikan.

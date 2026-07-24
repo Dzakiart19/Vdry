@@ -1,21 +1,23 @@
 ---
 name: adding-scraping-platform
-description: Add a new scraping platform (Platform N) to Vidorey following the Platform 1 (xpvid.cc) direct-proxy / Platform 2-4's HLS-or-MP4 pattern, so video streams never expose raw CDN tokens to the client and never show "stream expired" errors. Use when the user asks to add a new video source/platform, integrate a new site, or wants a new platform to behave reliably like the existing ones.
+description: Add a new scraping platform (Platform N) to Vidorey following the Platform 1 (vdy.to) direct-proxy / Platform 2-4's HLS-or-MP4 pattern, so video streams never expose raw CDN tokens to the client and never show "stream expired" errors. Use when the user asks to add a new video source/platform, integrate a new site, or wants a new platform to behave reliably like the existing ones.
 ---
 
 # Adding a New Scraping Platform to Vidorey
 
-Vidorey currently has **seven** platforms, all completely isolated from each other:
+Vidorey currently has **nine** platforms, all completely isolated from each other:
 
 | Platform | URL | Source | Delivery | Backend module | HTML | JS | Nama UI | Tipe UI |
 |---|---|---|---|---|---|---|---|---|
-| Platform 1 | `/` | xpvid.cc | direct MP4 | `lib/scrapers/p1.js` | `index.html` | `app.js` | Vidorey 1 | Listing |
+| Platform 1 | `/` | vdy.to | direct MP4 | `lib/scrapers/p1.js` | `index.html` | `app.js` | Vidorey 1 | Listing |
 | Platform 2 | `/rb` | ruangbokep.ws | HLS (m3u8) | `lib/scrapers/rb.js` | `rb.html` | `rb.js` | Vidorey 2 | Listing |
 | Platform 3 | `/yb` | yobokep.com | HLS (m3u8) | `lib/scrapers/yb.js` | `yb.html` | `yb.js` | Vidorey 3 | Listing |
 | Platform 4 | `/bk` | bokepking.cam | direct MP4 | `lib/scrapers/bk.js` | `bk.html` | `bk.js` | Vidorey 4 | Listing |
 | Platform 5 | `/tp` | tik.porn | HLS (m3u8) | `lib/scrapers/tp.js` | `tp.html` | `tp.js` | Vidorey TikTok 1 | TikTok-style |
-| Platform 6 | `/rc` | api.reddclips.com | direct MP4 | `lib/scrapers/rc.js` | `rc.html` | `rc.js` | Vidorey TikTok 2 | TikTok-style |
-| Platform 7 | `/sb` | situsbokep.cc | HLS (m3u8) | `lib/scrapers/sb.js` | `sb.html` | `sb.js` | Vidorey 7 | Listing |
+| Platform 6 | `/sb` | situsbokep.cc | HLS (m3u8) | `lib/scrapers/sb.js` | `sb.html` | `sb.js` | Vidorey 5 | Listing |
+| Platform 7 | `/vd` | videy.design | direct MP4 | `lib/scrapers/vd.js` | `vd.html` | `vd.js` | Vidorey 7 | Listing |
+| Platform 8 | `/xn` | xchina.tube | HLS (m3u8) | `lib/scrapers/xn.js` | `xn.html` | `xn.js` | Vidorey 6 | Listing |
+| Platform 9 | `/zg` | zoig.com | direct MP4 | `lib/scrapers/zg.js` | `zg.html` | `zg.js` | Vidorey 8 | Listing |
 
 **Nama UI tidak menyebut nama web sumber** — ini aturan eksplisit dari user.
 
@@ -41,7 +43,7 @@ Nav drawer dibagi dua seksi yang tidak boleh dicampur:
 ### Seksi Atas (tidak ada label)
 Platform **listing biasa** (grid/card + pagination + search bar). Ditempatkan **SEBELUM** `<hr class="nav-section-divider">`.
 
-Urutan saat ini: P1 → P2 → P3 → P4 → P7 → *platform listing baru di sini*
+Urutan saat ini: P1(/) → P2(/rb) → P3(/yb) → P4(/bk) → P6(/sb) → P8(/xn) → P7(/vd) → P9(/zg) → *platform listing baru di sini*
 
 ### Pemisah
 ```html
@@ -52,9 +54,9 @@ Urutan saat ini: P1 → P2 → P3 → P4 → P7 → *platform listing baru di si
 ### Seksi Bawah — "Fitur Lain"
 Platform **TikTok-style** (vertical scroll-snap, tidak ada grid/card). Ditempatkan **SETELAH** label "Fitur Lain".
 
-Urutan saat ini: P5 (TikTok 1) → P6 (TikTok 2) → *platform TikTok baru di sini*
+Urutan saat ini: P5(/tp, TikTok 1) → *platform TikTok baru di sini*
 
-**⚠️ Bug yang sudah terjadi:** Platform 7 (SB, listing biasa) awalnya ditempatkan di seksi "Fitur Lain" → user complaint. Pelajaran: **listing platform TIDAK BOLEH masuk "Fitur Lain"**. "Fitur Lain" hanya untuk TikTok-style.
+**⚠️ Bug yang sudah terjadi:** Platform SB (listing biasa) awalnya ditempatkan di seksi "Fitur Lain" → user complaint. Pelajaran: **listing platform TIDAK BOLEH masuk "Fitur Lain"**. "Fitur Lain" hanya untuk TikTok-style.
 
 ---
 
