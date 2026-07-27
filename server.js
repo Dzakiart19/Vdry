@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   Vidorey — Hexa-Platform Video Browser
-   Composition root: security middleware + mount enam platform (terisolasi
+   Vidorey — Multi-Platform Video Browser
+   Composition root: security middleware + mount sembilan platform (terisolasi
    penuh satu sama lain) + monitor/health routes + SPA fallback.
-   Detail per-platform ada di lib/scrapers/{p1,rb,yb,bk,tp,sb}.js
+   Detail per-platform ada di lib/scrapers/{p1,rb,yb,bk,tp,sb,xn,vd,zg}.js
 ═══════════════════════════════════════════════════════════════════════ */
 
 const express   = require('express');
@@ -88,6 +88,9 @@ app.use(helmet({
         'https://analytics.google.com',
         'https://www.googletagmanager.com',
         'https://www.google.com',
+        // GA4 / DoubleClick collect endpoint — dipakai GTM untuk mengirim
+        // measurement events; tanpa ini beacon diblokir CSP di console.
+        'https://stats.g.doubleclick.net',
         // Histats visitor counter (/monitor page) — butuh connect ke server statistik
         'https://s10.histats.com',
         'https://sstatic1.histats.com',
@@ -164,7 +167,7 @@ const proxyLimiter = rateLimit({
 app.use('/api', apiLimiter);
 app.use('/proxy', proxyLimiter);
 
-/* ── Delapan platform, terisolasi penuh — tidak ada path yang overlap ── */
+/* ── Sembilan platform, terisolasi penuh — tidak ada path yang overlap ── */
 app.use(p1.router);
 app.use(rb.router);
 app.use(yb.router);
@@ -180,15 +183,15 @@ app.use(zg.router);
    tidak dimasukkan di sana, jadi tetap tidak dimasukkan di sini). ── */
 registerMonitorRoutes(app, {
   getCacheStats: () => [
-    p1.caches[0],                                   // p1: videoUrlCache
-    rb.caches[0], rb.caches[1], rb.caches[2], rb.caches[3], // p2: m3u8Cache, postsCache, freshSessionCache, rbVideoCache
-    yb.caches[0], yb.caches[1], yb.caches[2], yb.caches[3], // p3: ybM3u8Cache, ybPostsCache, ybVideoCache, ybThumbCache
-    bk.caches[0], bk.caches[1], bk.caches[2],               // p4: bkPostsCache, bkVideoUrlCache, bkThumbCache
-    tp.caches[0], tp.caches[1],                              // p5: tpPostsCache, tpVideoCache
-    sb.caches[0], sb.caches[1], sb.caches[2], sb.caches[3], // p6: sbPostsCache, sbM3u8Cache, sbVideoCache, sbFreshCache
-    xn.caches[0], xn.caches[1], xn.caches[2], xn.caches[3], xn.caches[4], // p8: xnPostsCache, xnM3u8Cache, xnVideoCache, xnFreshCache, xnCategoriesCache
-    vd.caches[0], vd.caches[1], vd.caches[2],                              // vd: vdPostsCache, vdVideoCache, vdThumbCache
-    zg.caches[0], zg.caches[1], zg.caches[2],                              // zg: zgPostsCache, zgVideoCache, zgThumbCache
+    p1.caches[0],                                                            // p1: videoUrlCache
+    rb.caches[0], rb.caches[1], rb.caches[2], rb.caches[3],                 // p2: m3u8Cache, postsCache, freshSessionCache, rbVideoCache
+    yb.caches[0], yb.caches[1], yb.caches[2], yb.caches[3], yb.caches[4], yb.caches[5], // p3: m3u8, posts, video, thumb, freshSession, categories
+    bk.caches[0], bk.caches[1], bk.caches[2], bk.caches[3],                // p4: posts, videoUrl, thumb, categories
+    tp.caches[0], tp.caches[1],                                              // p5: tpPostsCache, tpVideoCache
+    sb.caches[0], sb.caches[1], sb.caches[2], sb.caches[3], sb.caches[4],  // p6: posts, m3u8, video, fresh, categories
+    xn.caches[0], xn.caches[1], xn.caches[2], xn.caches[3], xn.caches[4], // p8: posts, m3u8, video, fresh, categories
+    vd.caches[0], vd.caches[1], vd.caches[2],                               // vd: posts, video, thumb
+    zg.caches[0], zg.caches[1], zg.caches[2], zg.caches[3],                // zg: posts, categories, video, thumb
   ].map(c => c.stats()),
 });
 
