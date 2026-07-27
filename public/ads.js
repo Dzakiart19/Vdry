@@ -4,7 +4,7 @@
 
    1. MODAL ADS — script iklan di modal dimuat saat div TERSEMBUNYI
       (display:none). Ini menyebabkan iklan tidak punya dimensi saat
-      dibuat, viewability 0%, dan kesan tidak dihitung oleh Adsterra.
+      dibuat, viewability 0%, dan kesan tidak dihitung oleh ad network.
       Fix: inject ulang script secara dinamis saat modal BARU terbuka.
 
    2. VIDEO OVERLAY — tidak ada iklan yang muncul di layar video.
@@ -94,7 +94,7 @@
   /**
    * Panggil tepat setelah modal.classList.remove('hidden').
    * Menemukan semua [data-ad-zone] di dalam modal dan meng-inject
-   * script Adsterra segar dengan stagger kecil supaya tidak flood.
+   * script iklan segar dengan stagger kecil supaya tidak flood.
    * Auto-refresh setiap 60 detik selama modal tetap terbuka
    * untuk menambah jumlah impresi banner.
    */
@@ -229,7 +229,7 @@
       clearTimeout(reshowTimer);
 
       /* Sembunyikan area konten banner (tidak pakai iframe — zone duplikat
-         di halaman sama tidak dirender ulang oleh Adsterra). Overlay sendiri
+         di halaman sama tidak dirender ulang oleh ad network). Overlay sendiri
          yang menjadi unit iklan: ketuk = buka popunder. */
       if (contentEl) contentEl.style.display = 'none';
 

@@ -2,7 +2,7 @@
 /* ── Vidorey — Ad-blocker detection ─────────────────────────────
    Deteksi ad-blocker via bait element (class/id yang lazim masuk
    filter list EasyList/EasyPrivacy) + fallback cek gagal load
-   invoke.js Adsterra. Kalau terdeteksi, tampilkan banner non-blocking
+   invoke.js ad network. Kalau terdeteksi, tampilkan banner non-blocking
    yang minta user whitelist situs (revenue iklan = satu-satunya
    sumber pendapatan Vidorey).
 

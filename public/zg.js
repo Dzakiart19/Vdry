@@ -608,7 +608,7 @@
     }, { passive: true });
 
     /* ── Mobile touch override ──────────────────────────────────
-       Adsterra Popunder menggunakan document.addEventListener('click',…,true)
+       Ad popunder menggunakan document.addEventListener('click',…,true)
        capture-phase yang menangkap tap SEBELUM button handler jalan.
        Fix: gunakan 'touchend' pada mobile yang tidak diintersept popunder. */
     if ('ontouchstart' in window) {
