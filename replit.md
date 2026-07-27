@@ -55,10 +55,10 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 
 Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan dua seksi terpisah: **seksi atas** (listing biasa: Vidorey 1–8) dan **seksi bawah "Fitur Lain"** (khusus TikTok-style: Vidorey TikTok 1). Highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
 
-## Iklan (Adsterra)
+## Iklan
 Empat jenis slot iklan aktif, posisi strategis per halaman:
 
-Iklan hanya dari **Adsterra**. ExoClick telah dihapus sepenuhnya.
+Iklan dari jaringan iklan sendiri. ExoClick telah dihapus sepenuhnya.
 
 | Slot | Ukuran | Class CSS | Key | Posisi |
 |---|---|---|---|---|
@@ -73,7 +73,7 @@ Iklan hanya dari **Adsterra**. ExoClick telah dihapus sepenuhnya.
 **Aturan penting:**
 - Native banner punya `id` container tetap (`container-761a1a8645cd2263043bfeb6f2e87eea`) — **jangan duplikat** di halaman yang sama.
 - Display banner 300×250 **aman diduplikat** — `atOptions` di-reset sebelum tiap `invoke.js`.
-- **Unit yang sudah dihapus dan tidak boleh dipasang lagi:** 728×90 Leaderboard, 468×60 Banner, 160×300 Half-page, 160×600 Skyscraper, Smartlinks (`smartlinks.js` sudah dihapus dari repo). ExoClick (semua unit) dihapus — hanya Adsterra yang aktif.
+- **Unit yang sudah dihapus dan tidak boleh dipasang lagi:** 728×90 Leaderboard, 468×60 Banner, 160×300 Half-page, 160×600 Skyscraper, Smartlinks (`smartlinks.js` sudah dihapus dari repo). ExoClick (semua unit) dihapus.
 - Kalau nambah jaringan iklan baru, domain barunya wajib ditambah ke `scriptSrc` di `server.js` (CSP tidak pakai wildcard `https:`).
 
 ### Struktur Nav Drawer (sama di semua HTML)
@@ -334,7 +334,7 @@ Semua endpoint monitoring diproteksi dengan `SESSION_SECRET` env var sebagai key
 - Dashboard realtime: event baru via SSE langsung prepend ke top; koneksi SSE tetap terbuka (keepalive ping tiap 25 detik, auto-reconnect 3 detik jika putus)
 
 ## Keamanan (server.js)
-- **CSP**: aktif via Helmet. `script-src` pakai `'unsafe-inline'` (wajib karena HTML masih pakai inline `<script>`) tapi **tidak pakai wildcard `https:`** — hanya domain eksplisit yang diizinkan: `cdn.jsdelivr.net` (hls.js), `pl28423230/pl28418540/pl28427857.effectivecpmnetwork.com` + `www.highperformanceformat.com` (Adsterra). `style-src` → `fonts.googleapis.com` saja. `font-src` → `fonts.gstatic.com` saja. Proteksi nyata dari `object-src 'none'`, `base-uri 'self'`, `connect-src 'self'`. **Jika menambah script/ad network baru, wajib tambahkan domainnya ke `scriptSrc` di server.js.**
+- **CSP**: aktif via Helmet. `script-src` pakai `'unsafe-inline'` (wajib karena HTML masih pakai inline `<script>`) tapi **tidak pakai wildcard `https:`** — hanya domain eksplisit yang diizinkan: `cdn.jsdelivr.net` (hls.js), `pl28423230/pl28418540/pl28427857.effectivecpmnetwork.com` + `www.highperformanceformat.com` (ad scripts). `style-src` → `fonts.googleapis.com` saja. `font-src` → `fonts.gstatic.com` saja. Proteksi nyata dari `object-src 'none'`, `base-uri 'self'`, `connect-src 'self'`. **Jika menambah script/ad network baru, wajib tambahkan domainnya ke `scriptSrc` di server.js.**
 - `/embed/:id` (P1) override `frame-ancestors`-nya sendiri lewat `res.setHeader` supaya bisa di-iframe dari Firebase frontend.
 - **Rate limiting** (`express-rate-limit`): `/api/*` → 60 req/menit/IP (endpoint yang memicu scraping upstream), `/proxy/*` → 300 req/menit/IP (stream/segment/thumbnail, butuh limit lebih longgar). `app.set('trust proxy', 1)` wajib ada — tanpa ini semua pengunjung di belakang proxy Replit akan dianggap satu IP yang sama.
 - **Monitor buffer**: ring buffer 50.000 event di server; client pakai virtual list sehingga puluhan ribu event bisa ditampilkan tanpa lag DOM.

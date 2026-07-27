@@ -170,7 +170,7 @@ Langkah untuk update nav drawer:
 ```
 `.sr-only` sudah ada di `style.css` — tidak perlu tambah ulang.
 
-### 3i. Body — Iklan Adsterra
+### 3i. Body — Slot Iklan
 - Copy slot iklan dari platform yang paling mirip (listing → dari rb/yb/bk/sb, feed → dari tp/rc)
 - Jika pakai ad script domain baru → **wajib tambah ke CSP dulu** (lihat Fase 4)
 - **Untuk platform dengan modal:** ganti semua `<script>atOptions...</script>` di dalam modal dengan `<div data-ad-zone="ZONE_NAME"></div>`. Jangan inline script di dalam modal — lihat `vidorey-ad-optimization.md`.

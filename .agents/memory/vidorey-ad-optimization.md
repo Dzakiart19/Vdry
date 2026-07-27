@@ -6,14 +6,14 @@ description: Semua layer iklan aktif di Vidorey — arsitektur ads.js, cara kerj
 # Vidorey Ad Optimization
 
 ## Root cause awal: Modal ads loaded while display:none
-`.modal.hidden { display: none; }` → semua inline `<script>` di dalam modal run saat page load ketika container `display:none`. Adsterra membuat iframe 0×0, viewability 0%, kesan tidak dihitung.
+`.modal.hidden { display: none; }` → semua inline `<script>` di dalam modal run saat page load ketika container `display:none`. Ad network membuat iframe 0×0, viewability 0%, kesan tidak dihitung.
 
 **Fix:** Hapus semua inline `<script>atOptions...</script>` dari modal HTML, ganti dengan `data-ad-zone="ZONE"` attribute. Inject ulang secara dinamis saat modal terbuka via `VdryAds.reloadModalAds(modalEl)`.
 
 ---
 
-## Domain mirror Adsterra
-`effectivecpmnetwork.com`, `turbulentrefreshments.com`, dan `highperformanceformat.com` adalah **CDN mirror Adsterra** — hash key identik, domain pengiriman berbeda. Jangan dianggap provider berbeda.
+## Domain mirror ad network
+`effectivecpmnetwork.com`, `turbulentrefreshments.com`, dan `highperformanceformat.com` adalah **CDN mirror dari jaringan iklan yang sama** — hash key identik, domain pengiriman berbeda. Jangan dianggap provider berbeda.
 
 ---
 
@@ -74,7 +74,7 @@ Semua fungsi ad management terpusat di sini. Wajib di-load di setiap platform HT
 
 **`initVideoOverlay(prefix)`**
 - Persistent overlay bar di video player — muncul 5s setelah play, countdown 5s, muncul lagi tiap 120s
-- **Ketuk bar → buka `SMARTLINK_URL` di tab baru** (bukan triggerPopunder — karena Adsterra tidak re-render zone duplikat)
+- **Ketuk bar → buka `SMARTLINK_URL` di tab baru** (bukan triggerPopunder — karena ad network tidak re-render zone duplikat)
 - Elemen yang dibutuhkan: `#PREFIXVideoEl`, `#PREFIXVideoAdOverlay`, `#PREFIXVideoAdClose`, `#PREFIXVideoAdTimer`, `#PREFIXVideoAdContent`
 
 **`initVideoTap(prefix)`**
@@ -118,7 +118,7 @@ Setiap halaman punya dua sticky banner yang berjalan sepanjang scroll:
 - Pakai `banner-468` (468×60) bukan `lb-728` — **zone conflict rule** (lihat bawah)
 
 ### ⚠️ Zone Conflict Rule — WAJIB DIPATUHI
-**Adsterra hanya serve 1 instance per zone key per halaman.**
+**Ad network hanya serve 1 instance per zone key per halaman.**
 Jika top dan bottom pakai zone key yang sama (`lb-728`), bottom selalu blank.
 
 **Solusi:** Top = `lb-728` / `mb-320`; Bottom = **`banner-468`** (key berbeda).
@@ -214,4 +214,4 @@ if (window.VdryAds) VdryAds.initTpFeed();
 - **`:empty` tidak bekerja setelah script inject** — CSS `:empty` tidak match setelah `<script>` ditambah ke container. Fix: JS hide-if-no-iframe setelah 6s di `injectAd()`.
 - **tp.html footer banner zone salah** — `.tp-footer-lb` dan `.tp-footer-mobile` awalnya pakai key box-300 (300×250). Fix: ganti ke `lb-728` dan `mb-320`.
 - **index.html modal kurang 1 slot** — `watch-info-ad-slot` (half-160) hilang. Fix: tambah setelah `.watch-title-row`.
-- **Sticky bottom blank** — top dan bottom pakai zone `lb-728` yang sama. Adsterra hanya serve 1 instance per zone key per halaman → bottom selalu kosong. Fix: bottom pakai `banner-468` (key berbeda).
+- **Sticky bottom blank** — top dan bottom pakai zone `lb-728` yang sama. Ad network hanya serve 1 instance per zone key per halaman → bottom selalu kosong. Fix: bottom pakai `banner-468` (key berbeda).

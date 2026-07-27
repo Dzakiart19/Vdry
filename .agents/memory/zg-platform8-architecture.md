@@ -55,10 +55,10 @@ description: zoig.com (Vidorey 8) — amateur video site, direct MP4 proxy, sign
 - Cache: 1hr, max 1 entry (`zg_categories`)
 - Frontend: `initVdryCategoryPicker` with `apiPath=/api/zg/categories`; catSlug (not catId) as identifier
 - Category bar: `rb-searchbar rb-searchbar-cat-only` dengan `justify-content: flex-end` (kanan, konsisten dengan platform lain)
-- **Mobile touch fix (Adsterra popunder interference)**:
+- **Mobile touch fix (popunder interference)**:
   - Tombol Kategori: `touchend` + `e.preventDefault()` + `e.stopImmediatePropagation()` + one-shot capture `click` handler untuk blokir ghost click ke utils.js
   - Chip di panel: `touchstart` simpan posisi Y/X → `touchend` cek `dy > 8 || dx > 8` untuk bedakan scroll vs tap; jika scroll → return (jangan select); jika tap → `e.preventDefault()` + pilih kategori
-  - Pattern ini wajib diterapkan ke platform lain yang punya masalah serupa dengan Adsterra
+  - Pattern ini wajib diterapkan ke platform lain yang punya masalah touch interference serupa
 
 ### Caches
 - `zg_posts`: 5 min, max 200 (cache key includes cat slug: `${page}:${cat}`)

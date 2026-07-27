@@ -136,7 +136,7 @@ Ringkasan checklist HTML saja:
 1. Template `<head>` di atas — GTM + meta + OG (en_US) + Twitter + favicon + schema array [WebSite+WebPage]
 2. GTM noscript tepat setelah `<body class="pN-page">`
 3. H1 `.sr-only` di dalam `<main>` (lihat section H1 Tag di atas)
-4. Nav drawer + Adsterra scripts (Popunder + Social Bar) sebelum `</body>`
+4. Nav drawer + ad scripts (Popunder + Social Bar) sebelum `</body>`
 5. Tambah `<url>` ke `sitemap.xml`
 
 ## Keyword tiers untuk adult site (prioritas)

@@ -6,7 +6,7 @@ description: Syarat mutlak saat menambah platform baru — tidak boleh ada iklan
 ## Rule
 Platform baru wajib proxy video sebagai MP4/m3u8 langsung dari CDN ke browser user via backend Vidorey. Tidak boleh ada halaman embed, iframe, atau script milik situs sumber yang di-load di browser user.
 
-**Why:** Semua embed host pihak ketiga (putarvid, filemoon, dood, dsb.) menyuntikkan script iklan mereka sendiri ke dalam halaman embed. Kalau embed-nya di-load di browser user, iklan itu ikut tampil — bertentangan dengan desain Vidorey yang hanya menampilkan iklan Adsterra milik sendiri.
+**Why:** Semua embed host pihak ketiga (putarvid, filemoon, dood, dsb.) menyuntikkan script iklan mereka sendiri ke dalam halaman embed. Kalau embed-nya di-load di browser user, iklan itu ikut tampil — bertentangan dengan desain Vidorey yang hanya menampilkan iklan dari jaringan iklan milik sendiri.
 
 **How to apply:**
 1. Sebelum mulai build platform baru, curl setiap lapisan chain video dari server (bukan browser). Chain harus bisa di-resolve sampai ke URL MP4 atau m3u8 yang bisa diproxy langsung.
