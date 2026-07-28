@@ -56,25 +56,53 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan dua seksi terpisah: **seksi atas** (listing biasa: Vidorey 1–8) dan **seksi bawah "Fitur Lain"** (khusus TikTok-style: Vidorey TikTok 1). Highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
 
 ## Iklan
-Empat jenis slot iklan aktif, posisi strategis per halaman:
+Jaringan iklan: **Adsterra** (direkomendasikan untuk traffic Indonesia). ExoClick sudah dihapus sepenuhnya. Semua iklan dikelola terpusat via `public/ads.js`.
 
-Iklan dari jaringan iklan sendiri. ExoClick telah dihapus sepenuhnya.
+### Prinsip optimasi (rekomendasi Adsterra AI Support)
+Traffic Indonesia = Tier-3, CPM lebih rendah dari US/UK. Strategi paling optimal:
+- **Popunder + Social Bar** membayar lebih baik dari banner biasa untuk traffic ID
+- **Native Banner** menyatu dengan feed, tidak terasa seperti iklan, fill rate tinggi
+- **Jangan pasang zone key yang sama lebih dari 1× di halaman yang sama** — ad network hanya serve 1 instance per zone key per halaman; duplikat = impresi kanibal satu sama lain → CPM turun
 
-| Slot | Ukuran | Class CSS | Key | Posisi |
-|---|---|---|---|---|
-| Display banner | 300×250 | `.ad-display-slot` | `d50b941ac6d9bd5749dcdb0b417bf348` | Atas grid + bawah native (2× per listing page) |
-| Inline grid banner | 300×250 | `.ad-inline-grid` | `d50b941ac6d9bd5749dcdb0b417bf348` | Di antara card video (setelah card ke-8 dan ke-16), diinjeksi JS via `createInlineAd()` di rb/yb/bk/sb.js |
-| Native banner | — | `.ad-native-slot` | `761a1a8645cd2263043bfeb6f2e87eea` | Tengah listing (antara 2 display slot) |
-| Mobile banner | 320×50 | `.ad-mobile-banner-slot` | `d37e31d713d11b2ddde7d3efca199c9d` | **Sticky fixed bottom** di mobile (≤767px); static di desktop |
-| Popunder + Social Bar | — | *(inline script)* | `pl28418540` + `pl28427857` | Akhir `<body>`, sekali per halaman |
+### Slot aktif per halaman
 
-**Watch view (P2/P3/P4/P6):** dua slot 300×250 — satu di bawah player (`watch-ad-below-player`, tepat setelah video-stage), satu lagi di bawah grid related di sidebar kanan (`watch-ad-slot`). Tidak ada popunder/social bar di watch view karena mengganggu nonton.
+**Listing page (P1–P4, P6–P9):**
 
-**Aturan penting:**
-- Native banner punya `id` container tetap (`container-761a1a8645cd2263043bfeb6f2e87eea`) — **jangan duplikat** di halaman yang sama.
-- Display banner 300×250 **aman diduplikat** — `atOptions` di-reset sebelum tiap `invoke.js`.
-- **Unit yang sudah dihapus dan tidak boleh dipasang lagi:** 728×90 Leaderboard, 468×60 Banner, 160×300 Half-page, 160×600 Skyscraper, Smartlinks (`smartlinks.js` sudah dihapus dari repo). ExoClick (semua unit) dihapus.
-- Kalau nambah jaringan iklan baru, domain barunya wajib ditambah ke `scriptSrc` di `server.js` (CSP tidak pakai wildcard `https:`).
+| Layer | Format | Zone | Class/Trigger |
+|---|---|---|---|
+| Popunder | Buka tab baru | `POP_URL` | Saat user klik video pertama (30s cooldown) |
+| Social Bar | Floating bar | script `pl28427857` | Auto per pageview |
+| Native Banner | In-feed | `761a1a8645cd2263043bfeb6f2e87eea` | `.ad-native-slot`, static |
+| Display banner | 300×250 | `box-300` | `.ad-display-slot`, 1× di bawah native, auto-refresh 90s |
+| Inline grid banner | 300×250 | `box-300` | `.ad-inline-grid`, inject JS di posisi card ke-8 & ke-16 (P2/P4/P6/P7 via `createInlineAd()`) |
+| Sticky top | 728×90 desktop / 320×50 mobile | `lb-728` / `mb-320` | `.vd-sticky-top-lb` / `.vd-sticky-top-mb`, fixed bawah topbar |
+| Sticky bottom | 468×60 desktop only | `banner-468` | `.vd-sticky-bottom-lb`, fixed footer |
+
+**Watch modal (P1–P4, P6–P9):**
+
+| Posisi | Zone | Keterangan |
+|---|---|---|
+| Atas player | `lb-728` (desktop) / `mb-320` (mobile) | `.watch-lb-top` / `.watch-mb-top` |
+| Bawah player | `box-300` | `.watch-ad-below-player` |
+| Bawah judul | `half-160` (160×300) | `.watch-info-ad-slot`, mobile only |
+| Video overlay bar | → Smartlink | Muncul 5s setelah play, setiap 2 menit |
+| Video tap zone | → Popunder | Tap area video |
+
+**tp.html (TikTok feed, P5) — layout berbeda, tidak ada modal:**
+
+| Layer | Keterangan |
+|---|---|
+| Fixed top banner | `mb-320` di `.tp-display-top` (fixed, bawah topbar, dikelola ads.js) |
+| Native ad bottom | `#tpNativeAd` (fixed bottom, static script) |
+| Sticky top/bottom | sama seperti platform lain |
+| Popunder + Social Bar | sama seperti platform lain |
+
+### Aturan wajib
+- **Zone conflict rule:** sticky top pakai `lb-728`/`mb-320`; sticky bottom wajib pakai `banner-468` (key berbeda). Kalau top dan bottom pakai zone key sama → bottom selalu kosong.
+- **Native banner tidak boleh diduplikat** — punya `id` container tetap (`container-761a1a8645cd2263043bfeb6f2e87eea`).
+- **Jangan tambah zona baru sembarangan** — setiap zone key baru harus berbeda dari yang sudah ada di halaman yang sama.
+- **Saat tambah jaringan iklan baru**, domain CDN-nya wajib ditambah ke `scriptSrc` di `server.js` (CSP tidak pakai wildcard `https:`).
+- `sky-160` (160×600) dan slot duplikat di related section sudah dihapus — **jangan dipasang ulang**.
 
 ### Struktur Nav Drawer (sama di semua HTML)
 - `.nav-burger` (id `navBurger`) — tombol hamburger di dalam `.brand` di topbar (listing platform P1–P4, P6/Vidorey 5); `tpNavBurger` untuk P5 yang punya topbar custom
