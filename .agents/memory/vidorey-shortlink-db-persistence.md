@@ -1,22 +1,17 @@
 ---
-name: Vidorey shortlink DB persistence — table must exist
-description: shortlinks table is created via manual migration, not app startup DDL — a fresh/cloned DB will 500 until the table is created once.
+name: Vidorey shortlink DB persistence — auto DDL on startup
+description: shortlinks table is now created automatically at startup via ensureTable() in lib/shortlink.js — no manual migration needed on fresh project/clone.
 ---
 
-`lib/shortlink.js` / `lib/db.js` deliberately do NOT run `CREATE TABLE` at startup (by design, per code comments). This means any fresh environment (new Replit clone, DB reset) will log
-`relation "shortlinks" does not exist` on every shortlink read/write until someone runs the migration once via the database skill (`executeSql`).
+`lib/shortlink.js` menjalankan `ensureTable()` di awal `initShortlinkStore()` saat startup.
+`CREATE TABLE IF NOT EXISTS` + dua index dibuat otomatis — aman dijalankan berulang kali (no-op jika sudah ada).
 
-**Why:** the original author wanted schema changes to go through explicit dev migrations, not implicit boot-time DDL, to avoid startup races and match the project's "no startup-time DDL" convention (see db.js comment).
+**Urutan boot:**
+1. `ensureTable()` — buat tabel + index jika belum ada
+2. `seedDbFromFileIfEmpty()` — isi DB kosong dari `data/shortlinks-seed.json` (ikut ter-clone dari GitHub)
+3. `hydrateFromDb()` — load semua token aktif ke in-memory cache
 
-**How to apply:** if this project's logs show `relation "shortlinks" does not exist`, don't touch app code — just run the CREATE TABLE once via the database skill:
-```sql
-CREATE TABLE IF NOT EXISTS shortlinks (
-  platform VARCHAR(16) NOT NULL,
-  token VARCHAR(16) NOT NULL,
-  slug TEXT NOT NULL,
-  expires_at TIMESTAMPTZ NOT NULL,
-  PRIMARY KEY (platform, token),
-  UNIQUE (platform, slug)
-);
-```
-After that, `data/shortlinks-seed.json` auto-restores previously shared tokens into the empty table on boot, and the token registry survives restarts going forward. Verify with two consecutive workflow restarts + checking for `[shortlink] hydrated N token(s) from database` in logs (not `error`).
+**Why:** user sering buat project baru dari GitHub fresh clone; startup DDL menghilangkan kebutuhan migrasi manual di setiap environment baru.
+
+**How to apply:** tidak perlu tindakan apapun — berjalan otomatis. Verifikasi via log:
+`[shortlink] hydrated N token(s) from database` (bukan error) setelah restart.
