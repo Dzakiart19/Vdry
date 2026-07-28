@@ -680,7 +680,7 @@ body {
 .modal {
   position: fixed;
   inset: 0;
-  z-index: 500;
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -947,12 +947,18 @@ body {
   overflow-x: hidden;
   /* padding bawah = tinggi sticky-bottom banner agar konten tidak tertutup */
   padding-bottom: var(--sticky-bottom-h);
+  /* Mobile scroll fixes: prevent chaining + enable momentum scroll on iOS */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ── Watch layout: main (kiri) + sidebar sticky (kanan) ── */
 .watch-layout {
   display: flex;
   min-height: 100%;
+  /* isolation: isolate membuat stacking context baru — mencegah layer GPU
+     dari <video> naik di atas related section saat scroll di Android Chrome */
+  isolation: isolate;
 }
 
 /* Kolom utama: player + judul + deskripsi */
@@ -1097,7 +1103,10 @@ body {
     flex-shrink: 1;
     border-left: none;
     border-top: 1px solid var(--border);
-    position: static;
+    /* position:relative + z-index:1 mencegah layer GPU dari <video> muncul
+       di atas kartu related saat scroll di Android Chrome */
+    position: relative;
+    z-index: 1;
     height: auto;
     overflow-y: visible;
     align-self: auto;
@@ -1255,7 +1264,7 @@ body {
 .welcome-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 10001;
   background: rgba(6, 6, 8, .7);
   backdrop-filter: blur(6px);
   display: flex;
@@ -2213,6 +2222,8 @@ body.rb-page .content {
   padding: 6px 0 4px;
   background: #0e0e0e;
   min-height: 52px;
+  overflow: hidden;        /* cegah konten iklan overflow ke luar container */
+  position: relative;      /* containing block untuk anak position:absolute */
 }
 .watch-lb-top { display: none; }
 .watch-mb-top { display: flex; justify-content: center; }
@@ -2772,7 +2783,7 @@ body.tp-page .tp-loader { bottom: 140px; }
   left: 50%;
   bottom: 16px;
   transform: translateX(-50%);
-  z-index: 9999;
+  z-index: 10001;
   width: min(92vw, 480px);
   animation: vdry-adb-in .28s var(--ease-out);
 }

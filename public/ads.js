@@ -369,6 +369,79 @@
     setTimeout(showTpBar, SHOW_DELAY_MS);
   }
 
+  // ── Social Bar / Fixed Ad Suppressor ─────────────────────────────────
+  // Ketika watch modal dibuka (body.modal-open), semua elemen position:fixed
+  // di luar modal disembunyikan agar tidak muncul di atas modal.
+  // Ini mencegah Social Bar & sticky ad bertumpuk di atas konten watch.
+  (function () {
+    var _suppressed = [];
+
+    function suppressFixed() {
+      _suppressed = [];
+      var children = document.body.children;
+      for (var i = 0; i < children.length; i++) {
+        var el = children[i];
+        // Lewati modal, script, style, toast, dan adblock banner
+        if (!el || !el.tagName) continue;
+        if (/^(SCRIPT|STYLE|LINK|NOSCRIPT)$/.test(el.tagName)) continue;
+        if (el.classList && el.classList.contains('modal')) continue;
+        if (el.id === 'toast' || el.id === 'vdry-adb-banner') continue;
+        var pos = window.getComputedStyle(el).position;
+        if (pos === 'fixed' || pos === 'sticky') {
+          var saved = el.style.display;
+          _suppressed.push({ el: el, display: saved });
+          el.style.setProperty('display', 'none', 'important');
+        }
+      }
+    }
+
+    function restoreFixed() {
+      for (var j = 0; j < _suppressed.length; j++) {
+        _suppressed[j].el.style.display = _suppressed[j].display;
+      }
+      _suppressed = [];
+    }
+
+    // Tangkap elemen fixed yang di-inject SETELAH modal terbuka (mis. Social Bar)
+    var _newNodeObs = null;
+    function watchNewFixed() {
+      if (_newNodeObs || !window.MutationObserver) return;
+      _newNodeObs = new MutationObserver(function (mutations) {
+        if (!document.body.classList.contains('modal-open')) return;
+        for (var mi = 0; mi < mutations.length; mi++) {
+          var added = mutations[mi].addedNodes;
+          for (var ni = 0; ni < added.length; ni++) {
+            var node = added[ni];
+            if (!node || node.nodeType !== 1) continue;
+            if (/^(SCRIPT|STYLE|LINK|NOSCRIPT)$/.test(node.tagName)) continue;
+            if (node.classList && node.classList.contains('modal')) continue;
+            if (node.id === 'toast' || node.id === 'vdry-adb-banner') continue;
+            var npos = window.getComputedStyle(node).position;
+            if (npos === 'fixed' || npos === 'sticky') {
+              var nsaved = node.style.display;
+              _suppressed.push({ el: node, display: nsaved });
+              node.style.setProperty('display', 'none', 'important');
+            }
+          }
+        }
+      });
+      _newNodeObs.observe(document.body, { childList: true });
+    }
+
+    if (window.MutationObserver) {
+      var classObs = new MutationObserver(function () {
+        if (document.body.classList.contains('modal-open')) {
+          suppressFixed();
+          watchNewFixed();
+        } else {
+          restoreFixed();
+          if (_newNodeObs) { _newNodeObs.disconnect(); _newNodeObs = null; }
+        }
+      });
+      classObs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    }
+  })();
+
   window.VdryAds = {
     reloadModalAds:   reloadModalAds,
     initVideoOverlay: initVideoOverlay,

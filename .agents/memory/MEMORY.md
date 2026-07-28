@@ -23,4 +23,5 @@
 - [Vidorey i18n EN/ID Toggle](vidorey-i18n.md) — full toggle stored in localStorage; data-i18n/html/placeholder attrs + _t() in all JS; langchange CustomEvent re-renders headings.
 - [Vidorey Ad Optimization](vidorey-ad-optimization.md) — ads.js + sticky banner system (top lb-728/mb-320, bottom banner-468); zone conflict rule; CSS vars --sticky-top/bottom-h; semua 9 platform lengkap.
 - [Vidorey Audit 2026-07-28](vidorey-audit-2026-07-28.md) — P3 playmogo.com & P6/P7 fbplay.vip already handled gracefully (dead-cache); p1 deadStreamIds cleanup added; tpThumbCache dead comment removed.
+- [Watch Modal Scroll/Overlap Fix](vidorey-watch-scroll-fix.md) — GPU video layer bleed fix (isolation:isolate + z-index:1 on related); Social Bar suppressor in ads.js; modal z-index bumped to 10000.
 - [Vidorey Shortlink DB Persistence](vidorey-shortlink-db-persistence.md) — ensureTable() auto-DDL at startup; no manual migration needed; seed from data/shortlinks-seed.json on fresh clone.
