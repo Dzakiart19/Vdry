@@ -23,3 +23,4 @@
 - [Vidorey i18n EN/ID Toggle](vidorey-i18n.md) — full toggle stored in localStorage; data-i18n/html/placeholder attrs + _t() in all JS; langchange CustomEvent re-renders headings.
 - [Vidorey Ad Optimization](vidorey-ad-optimization.md) — ads.js + sticky banner system (top lb-728/mb-320, bottom banner-468); zone conflict rule; CSS vars --sticky-top/bottom-h; semua 9 platform lengkap.
 - [Vidorey Audit 2026-07-28](vidorey-audit-2026-07-28.md) — P3 playmogo.com bot-protected (unresolvable via plain fetch); P6/P7 fbplay.vip native player may inject ads / stuck "processing", not a quick regex fix.
+- [Vidorey Shortlink DB Persistence](vidorey-shortlink-db-persistence.md) — shortlinks table needs one-time manual migration (no startup DDL); logs show "relation does not exist" until created.
