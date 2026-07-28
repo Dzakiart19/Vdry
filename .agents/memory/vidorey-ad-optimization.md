@@ -166,7 +166,7 @@ Jangan pernah pasang zone key yang sama di dua slot berbeda dalam satu halaman.
 [Popunder saat klik pertama] [Social Bar auto]
 [Native Banner] ← .ad-native-slot (static script, 1×)
 [box-300] ← .ad-display-slot (1×, auto-refresh 90s)
-[box-300 di card ke-8 & ke-16] ← .ad-inline-grid via createInlineAd() — P2/P4/P6/P7
+[box-300 di card ke-8, ke-16, ke-24] ← .ad-inline-grid via createInlineAd() — SEMUA P1–P9 kecuali P5
 [Sticky Top: lb-728 desktop / mb-320 mobile]
 [Sticky Bottom: banner-468 desktop only]
 ```
@@ -196,15 +196,15 @@ Jangan pernah pasang zone key yang sama di dua slot berbeda dalam satu halaman.
 
 | Platform | Social Bar | Native | Popunder | Sticky Top | Sticky Bottom | Modal Ads | Video Overlay | createInlineAd |
 |----------|-----------|--------|----------|------------|---------------|-----------|---------------|----------------|
-| index (P1) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — |
-| rb (P2) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16 |
-| yb (P3) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — |
-| bk (P4) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16 |
-| tp (P5) | ✅ | ✅ | ✅ | ✅ | ✅ | — | — (initTpFeed) | — |
-| sb (P6) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16 |
-| xn (P8) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — |
-| vd (P7) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| zg (P9) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — |
+| index (P1) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
+| rb (P2)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
+| yb (P3)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
+| bk (P4)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
+| tp (P5)    | ✅ | ✅ | ✅ | ✅ | ✅ | — | — (initTpFeed) | — (TikTok feed, bukan grid) |
+| sb (P6)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
+| vd (P7)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
+| xn (P8)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
+| zg (P9)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
 
 ---
 
