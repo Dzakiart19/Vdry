@@ -133,37 +133,46 @@ IP dari `x-forwarded-for` header (first value), truncated karena Replit proxy.
 
 ---
 
-## Histats Counter di Monitor Page
+## Histats Counter — Site-Wide Tracking (fixed 2026-07-28)
 
-Counter muncul di strip tipis antara stat boxes dan log list (`#histats_wrap`).
+**Status saat ini: tracking script terpasang di SEMUA 9 halaman publik**
+(`public/index.html`, `rb.html`, `yb.html`, `bk.html`, `sb.html`, `tp.html`,
+`vd.html`, `xn.html`, `zg.html`) — bukan cuma `/monitor`.
 
-### Implementasi saat ini
+**Bug lama (sudah diperbaiki):** sebelumnya kode `_Hasync.push(['Histats.start', ...])`
+HANYA ada di halaman `/monitor` (dashboard admin internal, di `lib/monitor.js`).
+Akibatnya statistik Histats situs (sid 5040431) tidak pernah bertambah dari
+pengunjung asli — yang tertrack cuma sesi admin sendiri saat buka `/monitor`.
+Fix: tambahkan snippet yang sama (tanpa widget counter visual, cuma tracking)
+sebelum `</body>` di kesembilan halaman publik tadi.
+
+### Snippet yang dipasang di tiap halaman publik (sebelum `</body>`)
 ```html
-<div id="histats_wrap">
-  <!-- JS counter — hanya render di domain terdaftar Histats -->
-  <div id="histats_counter"></div>
-  <!-- Fallback link langsung ke halaman statistik -->
-  <a href="https://www.histats.com/viewstats/?sid=5040431&act=2" target="_blank">
-    📊 Lihat Statistik Histats
-  </a>
-</div>
-
-<!-- Tracking script di bawah body -->
-<script>
-  var _Hasync = _Hasync || [];
-  _Hasync.push(['Histats.start', '1,5040431,4,5,172,25,00011111']);
-  _Hasync.push(['Histats.fasi', '1']);
-  _Hasync.push(['Histats.track_hits', '']);
-  // Histats.framed_page TIDAK dipakai — menyebabkan counter tidak render
-  ...
-</script>
+<script type="text/javascript">var _Hasync= _Hasync|| [];
+_Hasync.push(['Histats.start', '1,5040431,4,5,172,25,00011111']);
+_Hasync.push(['Histats.fasi', '1']);
+_Hasync.push(['Histats.track_hits', '']);
+(function() {
+var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async = true;
+hs.src = (document.location.protocol === 'https:' ? 'https://' : 'http://') + 's10.histats.com/js15_as.js';
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+})();</script>
 ```
+
+### Halaman /monitor tetap punya widget counter + link terpisah
+`lib/monitor.js` masih punya `#histats_wrap` (widget counter visual + link
+"Lihat Statistik Histats") DAN duplikat tracking script-nya sendiri — ini
+tidak masalah (double-track dari sesi admin saja, dampaknya kecil), tapi
+kalau mau dibersihkan, ini area yang bisa disederhanakan (bukan prioritas).
 
 ### Kenapa counter JS tidak muncul di dev URL
 Histats JS (`js15_as.js`) memvalidasi domain sebelum render counter widget.
-URL `*.pike.replit.dev` (Replit dev) bukan domain terdaftar → counter tidak render.
-URL `vidorey.web.app` (deployed) = domain terdaftar → counter muncul.
-Ini perilaku normal Histats, bukan bug. Link fallback "Lihat Statistik" selalu bisa diklik.
+URL `*.pike.replit.dev` (Replit dev) bukan domain terdaftar → counter widget
+visual tidak render, TAPI tracking hit tetap terkirim (ini bagian penting:
+render widget vs kirim data adalah dua hal terpisah).
+URL `vidorey.web.app` (deployed, domain terdaftar di akun Histats) → baik
+tracking maupun widget counter berfungsi penuh.
+Statistik baru akan naik setelah project di-publish ulang ke domain produksi.
 
 ### CSP yang dibutuhkan Histats
 - `scriptSrc`: `https://s10.histats.com`
