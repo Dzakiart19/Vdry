@@ -1,42 +1,42 @@
 ---
 name: Vidorey full audit findings (2026-07-28)
-description: Known-broken upstream embed providers on P3 (yb) and P6/P7 (sb) discovered during a full-project audit; check before assuming these platforms are healthy.
+description: Known-broken upstream embed providers on P3 (yb) and P6/P7 (sb); and minor code issues found and resolved during audit.
 ---
 
 ## P3 (yobokep.com / yb.js) — playmogo.com provider unresolvable
 yobokep.com started serving some posts via a third embed provider, `playmogo.com/e/{code}`
 (previously only `bysezejataos.com` and `streamhls.to` were handled). `isEmbedUrl()` in
-`fetchYbEmbedInfo` doesn't recognize it, so `embedUrl` comes back empty and the API returns
-"Player tidak ditemukan di halaman ini". Sampled ~42% of recent posts hit this path.
+`fetchYbEmbedInfo` doesn't recognize it, so `embedUrl` comes back empty → "Player tidak
+ditemukan di halaman ini" → video di-dead-cache 6 jam lalu difilter dari listing.
 
-**Investigated and found not easily fixable:** even with correct browser-like headers +
-Referer, `playmogo.com/e/{code}` (Cloudflare-fronted) consistently returns "The resource you
-are looking for has been removed or is temporarily unavailable" for every code tested (4/4).
-This looks like bot/anti-scraping protection rather than a simple selector fix — a plain
-axios/cheerio fetch cannot get past it. Would need real browser automation (Playwright/Puppeteer)
-to confirm if it's fixable at all, which is a much bigger lift than the other providers.
+**Status: handled gracefully.** `DEAD_VIDEO_TTL` (6 jam) + filter `_status !== 404` di
+`/api/yb/posts` memastikan video playmogo tidak terus muncul di listing. Tidak perlu fix tambahan.
 
-**Why this matters:** don't assume "add playmogo to isEmbedUrl allowlist" is a quick fix —
-verify the resource actually resolves before spending time wiring it into resolveYbVideoUrl().
+**Jangan tambahkan playmogo ke isEmbedUrl** tanpa verifikasi — Cloudflare-fronted, setiap
+fetch (axios/cheerio) mengembalikan "resource removed or unavailable" (4/4 sample). Butuh
+browser automation untuk konfirmasi, bukan patch scraper biasa.
 
 ## P6/P7 (situsbokep.cc / sb.js) — xvideos embed migrated to native fbplay.vip player
-situsbokep.cc used to embed `xvideos.com/embedframe/{id}` (sometimes proxied through
-`fbplay.vip/embed/https://www.xvideos.com/embedframe/{id}`). Newer posts now embed a
-**native** fbplay.vip player instead: `db.fbplay.vip/embed/video/{hash}` — no xvideos.com
-substring at all, so `extractXvId()`'s regex (`xvideos\.com\/embedframe\/`) never matches →
-"Sumber video tidak didukung". Sampled ~83% of recent posts hit this path (only old
-xvideos-backed posts still work).
+situsbokep.cc embed terbaru memakai `db.fbplay.vip/embed/video/{hash}` — tanpa substring
+`xvideos.com`, sehingga `extractXvId()` mengembalikan null → "Sumber video tidak didukung"
+→ dead-cache. Hanya post lama (yang masih pakai xvideos embedframe) yang bisa diputar.
 
-**Investigated the native fbplay.vip player and found it unsafe to "just fix":**
-- The embed HTML contains an inline `playlistUrl = 'https://zz.fbplay.vip/api/stream/{id}/playlist.m3u8'` that *is* fetchable without auth.
-- But the manifest's actual media segment for at least one sampled video pointed to a
-  `tiktokcdn.com` **ad creative image URL** disguised as a `.ts` segment — i.e. this provider
-  appears to inject ad content into the stream, not just host real video.
-- Other sampled fbplay.vip embeds returned `<title>Video Processing</title>` with no
-  playlistUrl at all (video still transcoding / never finished).
-- Given the no-source-ads rule (never let ad content flow to the client as if it were the
-  video), wiring this provider in as-is would risk serving ads as "video playback" — needs
-  explicit user sign-off before attempting, not a routine scraper patch.
+**Status: handled gracefully.** Kode sudah benar: fbplay.vip di-bypass total (extractXvId
+ekstrak xv_id, lalu server langsung hit xvideos.com/embedframe — fbplay.vip tidak pernah
+di-fetch). Post yang tidak punya xvId langsung dead-cache.
 
-**Why this matters:** if situsbokep.cc keeps migrating more posts to fbplay.vip, the whole P6/P7
-platform degrades further over time; this is a source-side change, not a proxy/token bug.
+**Jangan wire native fbplay.vip:** manifest-nya menyisipkan ad creative (tiktokcdn.com .ts
+segment) dan sebagian video masih "processing". Melanggar no-source-ads rule. Butuh
+sign-off eksplisit sebelum diimplementasikan.
+
+**Why this matters:** P6/P7 degradasi seiring migrasi post baru ke fbplay.vip — ini source-side
+change, bukan bug proxy/token.
+
+## Minor issues resolved (2026-07-28)
+- **p1.js `deadStreamIds` cleanup**: Ditambahkan `setInterval` 10 menit untuk hapus entry
+  expired dari Map → mencegah memory leak di server long-running (Koyeb).
+- **tp.js `tpThumbCache` dead comment**: Dihapus komentar yang menyebut tpThumbCache sebagai
+  "disertakan di module.exports" padahal variabelnya tidak ada. Hanya 2 cache aktif di P5.
+- **rb.js cache count audit**: Confirmed 4 caches (m3u8, posts, freshSession, rbVideo), semua
+  sudah masuk monitor stats di server.js. Tidak ada yang kurang.
+- **Shortlink DB**: `ensureTable()` auto-DDL di startup — tidak perlu migrasi manual.
