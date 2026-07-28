@@ -756,6 +756,8 @@ body {
   background: #000;
   line-height: 0;
   position: relative; /* needed for video-ad-overlay absolute positioning */
+  width: 100%;
+  aspect-ratio: 16 / 9; /* fix: tanpa ini semua absolute children → container kolaps → player tiny */
 }
 
 /* ── Video overlay ad — bar sponsorship, selalu terisi, ketuk = buka iklan ── */
@@ -854,10 +856,14 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 .video-stage video {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  max-height: 60vh;
+  height: 100%;
   display: block;
   outline: none;
+  object-fit: contain;
+  background: #000;
 }
 
 /* ── Watch view (player + info + related) — XNXX full-page style ──
@@ -1095,14 +1101,42 @@ body {
     height: auto;
     overflow-y: visible;
     align-self: auto;
+    padding: 0 14px 28px;
+    background: var(--bg);
   }
-  .rb-grid-related { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .watch-info { padding: 12px 14px 12px; }
+  .watch-related-heading {
+    font-size: 11px;
+    padding: 18px 0 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  .rb-grid-related {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 0;
+  }
+  .watch-info { padding: 14px 16px 14px; border-bottom: 1px solid var(--border); }
   .watch-title { font-size: 15px; }
 }
+
+/* Tablet menengah */
+@media (max-width: 600px) {
+  .rb-grid-related { gap: 10px; }
+  .watch-related { padding: 0 12px 24px; }
+}
+
+/* Phone ≤480px — tetap 2 kolom, card lebih kompak */
 @media (max-width: 480px) {
-  .rb-grid-related { grid-template-columns: 1fr; }
   .watch-back-btn { font-size: 12px; padding: 0 12px; }
+  .rb-grid-related { gap: 9px; }
+  .rb-card-info { padding: 7px 9px 9px; }
+  .rb-card-title { font-size: 11px; }
+  .watch-info { padding: 12px 14px 12px; }
+}
+
+/* Sangat kecil ≤380px — 1 kolom */
+@media (max-width: 380px) {
+  .rb-grid-related { grid-template-columns: 1fr; gap: 10px; }
 }
 
 /* ════════════════════════════════════
@@ -1169,7 +1203,6 @@ body {
     overflow-y: auto;
   }
   .modal-title { font-size: 13px; }
-  .video-stage video { max-height: 52vw; min-height: 180px; }
 }
 
 /* ── Mobile: kategori RB horizontal scroll (sidebar tersembunyi) ── */
