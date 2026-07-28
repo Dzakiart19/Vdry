@@ -59,13 +59,10 @@
 
     // Slot sticky/fixed jangan pernah disembunyikan
     // — mereka selalu terlihat di layar dan harus tetap ada walau belum terisi.
-    var isSticky = container.classList.contains('ad-mobile-banner-slot') ||
-                   container.classList.contains('tp-footer-lb') ||
-                   container.classList.contains('tp-footer-mobile') ||
-                   container.classList.contains('vd-sticky-top-lb') ||
+    var isSticky = container.classList.contains('vd-sticky-top-lb') ||
                    container.classList.contains('vd-sticky-top-mb') ||
                    container.classList.contains('vd-sticky-bottom-lb') ||
-                   container.classList.contains('vd-sticky-bottom-mb');
+                   container.classList.contains('tp-display-top');
     if (isSticky) return;
 
     // Untuk slot non-sticky: sembunyikan jika tidak ada iframe setelah 6 detik.
@@ -126,14 +123,15 @@
   /**
    * Inject + auto-refresh semua banner iklan di halaman listing
    * (di luar modal watch). Target: elemen dengan data-ad-zone pada
-   * class .ad-display-slot, .ad-leaderboard-slot, .ad-468-slot,
-   * .ad-mobile-banner-slot, .tp-footer-lb, .tp-footer-mobile.
+   * class .ad-display-slot, .tp-display-top (tp.html fixed top banner),
+   * dan semua slot sticky (.vd-sticky-top-lb/mb, .vd-sticky-bottom-lb).
    * Auto-refresh setiap 90 detik untuk menambah impresi saat user browse.
    */
   var LISTING_SELECTORS = [
     '.ad-display-slot',
+    '.tp-display-top',
     '.vd-sticky-top-lb', '.vd-sticky-top-mb',
-    '.vd-sticky-bottom-lb', '.vd-sticky-bottom-mb'
+    '.vd-sticky-bottom-lb'
   ];
 
   function initListingAds() {
