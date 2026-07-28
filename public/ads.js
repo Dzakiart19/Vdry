@@ -28,10 +28,6 @@
       key: 'd50b941ac6d9bd5749dcdb0b417bf348', w: 300, h: 250,
       src: 'https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js'
     },
-    'sky-160':  {
-      key: 'e0fc9f770eacb77e8afcfde28d8a06a8', w: 160, h: 600,
-      src: 'https://turbulentrefreshments.com/e0fc9f770eacb77e8afcfde28d8a06a8/invoke.js'
-    },
     'half-160': {
       key: 'd7a21e9839cad22a65ed9e21e6a33272', w: 160, h: 300,
       src: 'https://turbulentrefreshments.com/d7a21e9839cad22a65ed9e21e6a33272/invoke.js'
@@ -135,8 +131,7 @@
    * Auto-refresh setiap 90 detik untuk menambah impresi saat user browse.
    */
   var LISTING_SELECTORS = [
-    '.ad-display-slot', '.ad-leaderboard-slot', '.ad-468-slot',
-    '.ad-mobile-banner-slot', '.tp-footer-lb', '.tp-footer-mobile',
+    '.ad-display-slot',
     '.vd-sticky-top-lb', '.vd-sticky-top-mb',
     '.vd-sticky-bottom-lb', '.vd-sticky-bottom-mb'
   ];
