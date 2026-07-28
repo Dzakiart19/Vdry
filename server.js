@@ -143,8 +143,8 @@ app.use(express.static(path.join(__dirname, 'public'), {
 app.use(trackRequest);
 
 /* ── Rate limiting ────────────────────────────────────────────────────
-   Melindungi upstream (xpvid.cc/ruangbokep.ws/yobokep.com) dari spam
-   scraping dan mencegah server sendiri dibanjiri request.
+   Melindungi upstream dari spam scraping dan mencegah server sendiri
+   dibanjiri request.
    - /api/* — endpoint scraping (folder/posts/video info), limit ketat
      karena tiap hit memicu HTTP request baru ke situs sumber.
    - /proxy/* — stream/HLS segment & thumbnail, limit jauh lebih longgar
