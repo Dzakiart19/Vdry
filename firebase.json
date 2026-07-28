@@ -15,8 +15,6 @@
       { "source": "/bk/**", "destination": "/bk.html" },
       { "source": "/tp",    "destination": "/tp.html" },
       { "source": "/tp/**", "destination": "/tp.html" },
-      { "source": "/rc",    "destination": "/rc.html" },
-      { "source": "/rc/**", "destination": "/rc.html" },
       { "source": "/sb",    "destination": "/sb.html" },
       { "source": "/sb/**", "destination": "/sb.html" },
       { "source": "/xn",    "destination": "/xn.html" },
