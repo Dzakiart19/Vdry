@@ -95,9 +95,9 @@ Native Banner butuh container: `<div id="container-761a1a8645cd2263043bfeb6f2e87
 - MutationObserver cancel hide jika iframe muncul sebelum 6s
 
 ### `initVideoOverlay(prefix)`
-- Overlay bar di video player — muncul 5s setelah play, countdown 5s sebelum bisa ditutup, reshow tiap 120s
-- **Ketuk bar → buka `SMARTLINK_URL`** di tab baru
-- Elemen yang dibutuhkan: `#PREFIXVideoEl`, `#PREFIXVideoAdOverlay`, `#PREFIXVideoAdClose`, `#PREFIXVideoAdTimer`, `#PREFIXVideoAdContent`
+- **DIHAPUS / NO-OP** — fungsi masih ada tapi langsung `return`. Overlay bar dihapus karena semua zone key Adsterra sudah terpakai di posisi lain (zone conflict) sehingga konten ad tidak pernah muncul.
+- CSS: `.video-ad-overlay { display: none !important }` — force hide agar tidak tampil bahkan dengan cached JS.
+- **Jangan restore overlay ini** kecuali ada zone Adsterra baru yang belum dipakai.
 
 ### `initVideoTap(prefix)`
 - Transparent div `#PREFIXVideoTapZone` menutup area video
@@ -110,7 +110,13 @@ Native Banner butuh container: `<div id="container-761a1a8645cd2263043bfeb6f2e87
 
 ### `triggerPopunder()`
 - `window.open(POP_URL, '_blank')` + `w.blur(); window.focus()`
-- Rate-limit: 1× per 30 detik global
+- Rate-limit: 1× per 30 detik global (`_lastPop`, `POP_COOLDOWN_MS = 30000`)
+
+### `triggerDirectlink()`
+- `window.open(SMARTLINK_URL, '_blank')` — tab depan (foreground), bukan background
+- **Cooldown TERPISAH** dari `triggerPopunder()` — pakai `_lastDirectlink` + `DL_COOLDOWN_MS = 5000`
+- ⚠️ Sebelumnya share `_lastPop` sama dengan popunder → klik Download dalam 30 detik setelah buka modal tidak trigger. Fix: pisah variabel.
+- Dipakai di download button semua platform MP4 (P1/BK/VD/ZG)
 
 ---
 
@@ -174,9 +180,11 @@ Jangan pernah pasang zone key yang sama di dua slot berbeda dalam satu halaman.
 **Watch modal:**
 ```
 [lb-728 / mb-320 atas player]
-[video player + tap zone → popunder + overlay bar → smartlink]
+[video player + tap zone → popunder]   ← overlay bar DIHAPUS
 [box-300 bawah player]
 [half-160 bawah judul — mobile only]
+[Download button → triggerDirectlink (cooldown 5s) + 800ms delay → download]
+[Share button → navigator.share / clipboard]
 [related videos grid]
 ```
 
@@ -194,17 +202,17 @@ Jangan pernah pasang zone key yang sama di dua slot berbeda dalam satu halaman.
 
 ### Status per platform
 
-| Platform | Social Bar | Native | Popunder | Sticky Top | Sticky Bottom | Modal Ads | Video Overlay | createInlineAd |
-|----------|-----------|--------|----------|------------|---------------|-----------|---------------|----------------|
-| index (P1) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
-| rb (P2)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
-| yb (P3)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
-| bk (P4)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
-| tp (P5)    | ✅ | ✅ | ✅ | ✅ | ✅ | — | — (initTpFeed) | — (TikTok feed, bukan grid) |
-| sb (P6)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
-| vd (P7)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
-| xn (P8)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
-| zg (P9)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ pos 8+16+24 |
+| Platform | Social Bar | Native | Popunder | Sticky Top | Sticky Bottom | Modal Ads | Video Overlay | Download Btn | createInlineAd |
+|----------|-----------|--------|----------|------------|---------------|-----------|---------------|--------------|----------------|
+| index (P1) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ dihapus | ✅ MP4 fungsional | ✅ pos 8+16+24 |
+| rb (P2)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ dihapus | ⚠️ HLS — disabled+toast | ✅ pos 8+16+24 |
+| yb (P3)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ dihapus | ⚠️ HLS — disabled+toast | ✅ pos 8+16+24 |
+| bk (P4)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ dihapus | ✅ MP4 fungsional | ✅ pos 8+16+24 |
+| tp (P5)    | ✅ | ✅ | ✅ | ✅ | ✅ | — | — (initTpFeed) | — (TikTok, tidak ada modal) | — |
+| sb (P6)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ dihapus | ⚠️ HLS — disabled+toast | ✅ pos 8+16+24 |
+| vd (P7)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ dihapus | ✅ MP4 fungsional | ✅ pos 8+16+24 |
+| xn (P8)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ dihapus | ⚠️ HLS — disabled+toast | ✅ pos 8+16+24 |
+| zg (P9)    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ dihapus | ✅ MP4 fungsional | ✅ pos 8+16+24 |
 
 ---
 
@@ -216,12 +224,43 @@ if (window.VdryAds) VdryAds.triggerPopunder();
 if (window.VdryAds) VdryAds.reloadModalAds(els.modal);
 
 // Di DOMContentLoaded (sekali saja):
-if (window.VdryAds) VdryAds.initVideoOverlay('PREFIX');
+// initVideoOverlay tidak dipakai lagi — no-op, jangan tambahkan untuk platform baru
 if (window.VdryAds) VdryAds.initVideoTap('PREFIX');
 
 // Khusus tp.html:
 if (window.VdryAds) VdryAds.initTpFeed();
 ```
+
+## Download button (MP4 platform)
+
+Platform yang deliver MP4 langsung (P1, P4/BK, P7/VD, P9/ZG) wajib punya download button:
+
+```js
+// State:
+let currentDownloadUrl = null;
+
+// Set saat video resolve:
+currentDownloadUrl = `${API}${data.mp4Url}`;  // atau URL proxy stream
+if (els.dlBtn) els.dlBtn.disabled = false;
+
+// Handler (triggerDirectlink TERPISAH dari popunder cooldown):
+if (els.dlBtn) {
+  els.dlBtn.disabled = true;
+  els.dlBtn.addEventListener('click', () => {
+    if (!currentDownloadUrl) return;
+    if (window.VdryAds) VdryAds.triggerDirectlink();  // buka smartlink dulu
+    const url   = currentDownloadUrl;
+    const title = (els.videoTitle.textContent || 'video').replace(/[/\\?%*:|"<>]/g, '-');
+    setTimeout(() => {                                 // 800ms delay lalu download
+      const a = document.createElement('a');
+      a.href = url; a.download = title + '.mp4'; a.target = '_blank';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }, 800);
+  });
+}
+```
+
+Platform HLS (P2/RB, P3/YB, P6/SB, P8/XN): button ada tapi `disabled` di HTML + click handler showToast saja.
 
 Semua wrapped `if (window.VdryAds)` — graceful degradation jika ads.js gagal load.
 
@@ -230,19 +269,48 @@ Semua wrapped `if (window.VdryAds)` — graceful degradation jika ads.js gagal l
 ## CSS yang wajib ada (style.css)
 
 ```css
-.video-stage { position: relative; }           /* agar overlay absolute bekerja */
-.video-ad-overlay { position: absolute; bottom: 52px; }
+.video-stage { position: relative; }
+.video-ad-overlay { display: none !important; }  /* dihapus — force hide */
 .video-tap-zone { position: absolute; top: 0; bottom: 64px; z-index: 25; }
 .tp-ad-bar { position: fixed; bottom: 0; z-index: 200; }
 .watch-ad-slot:empty { display: none; }
 .vd-sticky-top  { position: fixed; top: var(--topbar-h); z-index: 98; }
 .vd-sticky-bottom { position: fixed; bottom: 0; z-index: 150; }
 .modal-fullpage .modal-body { padding-bottom: var(--sticky-bottom-h); }
+
+/* Download + Share button */
+.watch-share-btn, .watch-dl-btn { /* pill button — shared style */ }
+.watch-dl-btn:disabled { opacity: .38; cursor: not-allowed; }
+.watch-share-btn svg, .watch-dl-btn svg { width: 15px; height: 15px; } /* explicit size wajib — CSS alone tidak reliable di mobile Chrome */
 ```
 
 ---
 
+## Download Button — Status per Platform
+
+| Platform | Format | Download |
+|----------|--------|----------|
+| P1 (index) | MP4 | ✅ triggerDirectlink + 800ms delay + anchor download |
+| P2 (rb) | HLS m3u8 | ❌ disabled HTML + toast |
+| P3 (yb) | HLS m3u8 | ❌ disabled HTML + toast |
+| P4 (bk) | MP4 | ✅ triggerDirectlink + 800ms delay + anchor download |
+| P5 (tp) | HLS | — tidak ada download button (TikTok feed) |
+| P6 (sb) | HLS m3u8 | ❌ disabled HTML + toast |
+| P7 (vd) | MP4 | ✅ triggerDirectlink + 800ms delay + anchor download |
+| P8 (xn) | HLS m3u8 | ❌ disabled HTML + toast |
+| P9 (zg) | MP4 | ✅ triggerDirectlink + 800ms delay + anchor download |
+
+HTML button (MP4): `<button id="pNDlBtn" class="watch-dl-btn">`
+HTML button (HLS): `<button id="pNDlBtn" class="watch-dl-btn" disabled title="Download tidak tersedia...">`
+SVG wajib punya `width="15" height="15"` — **wajib di attribute, TIDAK cukup CSS saja di mobile Chrome**.
+
+---
+
 ## Bug history
+
+- **Video overlay selalu blank (garis doang)** — semua 10 Adsterra zone sudah dipakai di posisi lain; zone 300×250 yang di-inject ke overlay adalah duplikat dari `createInlineAd()`. Ad network tidak render zone yang sama 2×. Fix: hapus overlay sepenuhnya (`initVideoOverlay` = no-op, CSS `display:none !important`).
+- **triggerDirectlink tidak fire saat klik Download** — `triggerDirectlink()` share `_lastPop` dengan `triggerPopunder()` (cooldown 30 detik). Saat modal buka → popunder set `_lastPop` → klik Download dalam 30 detik → directlink blocked. Fix: pisah variabel `_lastDirectlink` + `DL_COOLDOWN_MS = 5000`.
+- **Download button — download langsung tanpa iklan dulu** — `a.click()` dipanggil langsung setelah `triggerDirectlink()` (yang buka tab baru). Fix: tambah `setTimeout 800ms` sebelum `a.click()` agar tab iklan keburu terbuka.
 
 - **Sticky bottom selalu blank** — top dan bottom pakai zone `lb-728` yang sama. Fix: bottom pakai `banner-468`.
 - **vd.html + zg.html Social Bar zone salah** (`ba0fd8e8...` dari website lain). Fix: ganti ke `96e9ff95...`.

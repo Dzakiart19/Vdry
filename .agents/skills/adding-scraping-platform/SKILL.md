@@ -30,7 +30,7 @@ description: Add a new scraping platform (Platform N) to Vidorey. Covers BOTH la
 | Referensi implementasi | `rb.js` + `rb.html` (HLS) atau `bk.js` + `bk.html` (MP4) | `tp.js` + `tp.html` |
 | Layout | Grid card + pagination + search bar + kategori + watch modal | Vertical scroll-snap full-screen |
 | Watch | Modal di atas listing | Inline di setiap slide |
-| Ads pattern | createInlineAd + modal ads + video overlay + tap zone | createAdSlide (tiap 5 video) |
+| Ads pattern | createInlineAd + modal ads + tap zone + download btn | createAdSlide (tiap 5 video) |
 | Nav drawer | Seksi ATAS (sebelum divider) | Seksi BAWAH "Fitur Lain" |
 
 ---
@@ -450,17 +450,6 @@ File yang harus diupdate: `index.html`, `rb.html`, `yb.html`, `bk.html`, `tp.htm
         <!-- Untuk HLS iframe: -->
         <!-- <iframe id="pNIframeEl" class="watch-iframe hidden" allowfullscreen></iframe> -->
 
-        <!-- Video overlay ad (muncul 5s setelah play, bisa ditutup 5s kemudian) -->
-        <div id="pNVideoAdOverlay" class="video-ad-overlay" style="display:none" aria-hidden="true">
-          <div class="video-ad-bar">
-            <span class="video-ad-label"></span>
-            <button id="pNVideoAdClose" class="video-ad-close-btn" disabled>
-              Lewati <span id="pNVideoAdTimer">5</span>s
-            </button>
-          </div>
-          <div id="pNVideoAdContent" class="video-ad-content"></div>
-        </div>
-
         <!-- Transparent tap zone (klik video → popunder) -->
         <div id="pNVideoTapZone" class="video-tap-zone" role="button" aria-label="Video area"></div>
       </div>
@@ -468,12 +457,21 @@ File yang harus diupdate: `index.html`, `rb.html`, `yb.html`, `bk.html`, `tp.htm
       <!-- Ad: BAWAH player -->
       <div class="watch-ad-slot watch-ad-below-player" data-ad-zone="box-300"></div>
 
-      <!-- Video info + share -->
+      <!-- Video info + download + share -->
       <div class="watch-info">
         <h2 class="watch-title" id="pNWatchTitle"></h2>
-        <div class="watch-actions">
-          <button class="share-btn" id="pNShareBtn">
-            <svg>…</svg><span data-i18n="player.share">Bagikan</span>
+        <div class="watch-btn-group">
+          <!-- MP4 platform: tanpa disabled. HLS platform: tambah disabled + title -->
+          <button type="button" id="pNDlBtn" class="watch-dl-btn" title="Download video">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Download</span>
+          </button>
+          <button type="button" id="pNShareBtn" class="watch-share-btn" title="Bagikan video">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/>
+            </svg>
+            <span data-i18n="player.share">Bagikan</span>
           </button>
         </div>
         <p class="watch-desc" id="pNWatchDesc"></p>
@@ -816,11 +814,50 @@ Copy dari `bk.js` atau `rb.js`. Ganti prefix. Struktur wajib:
   }
 ```
 
-#### 6k. VdryAds init di DOMContentLoaded
+#### 6k. Download button handler (MP4 platform)
+
+```js
+  let currentDownloadUrl = null;
+
+  // Set saat video resolve (di openPlayer setelah API response):
+  currentDownloadUrl = `${API}${data.mp4Url}`;
+  if (els.dlBtn) els.dlBtn.disabled = false;
+
+  // Reset saat modal tutup:
+  currentDownloadUrl = null;
+  if (els.dlBtn) els.dlBtn.disabled = true;
+
+  // Handler:
+  if (els.dlBtn) {
+    els.dlBtn.disabled = true;
+    els.dlBtn.addEventListener('click', () => {
+      if (!currentDownloadUrl) return;
+      if (window.VdryAds) VdryAds.triggerDirectlink(); // iklan dulu (cooldown 5s terpisah dari popunder)
+      const url   = currentDownloadUrl;
+      const title = (els.watchTitle.textContent || 'video').replace(/[/\\?%*:|"<>]/g, '-');
+      setTimeout(() => {                               // 800ms delay lalu download mulai
+        const a = document.createElement('a');
+        a.href = url; a.download = title + '.mp4'; a.target = '_blank';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }, 800);
+    });
+  }
+```
+
+Untuk **HLS platform** (rb/yb/sb/xn): button di HTML sudah `disabled`. Tambah handler toast:
+```js
+  if (els.dlBtn) {
+    els.dlBtn.addEventListener('click', () => {
+      showToast('Download tidak tersedia untuk format stream ini');
+    });
+  }
+```
+
+#### 6l. VdryAds init di DOMContentLoaded
 
 ```js
   document.addEventListener('DOMContentLoaded', () => {
-    if (window.VdryAds) VdryAds.initVideoOverlay('pN');
+    // initVideoOverlay sudah dihapus — jangan tambahkan
     if (window.VdryAds) VdryAds.initVideoTap('pN');
 
     // Kategori (jika platform punya)

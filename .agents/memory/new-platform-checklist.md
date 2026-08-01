@@ -174,19 +174,26 @@ Langkah untuk update nav drawer:
 - Copy slot iklan dari platform yang paling mirip (listing → dari rb/yb/bk/sb, feed → dari tp/rc)
 - Jika pakai ad script domain baru → **wajib tambah ke CSP dulu** (lihat Fase 4)
 - **Untuk platform dengan modal:** ganti semua `<script>atOptions...</script>` di dalam modal dengan `<div data-ad-zone="ZONE_NAME"></div>`. Jangan inline script di dalam modal — lihat `vidorey-ad-optimization.md`.
-- **Tambah video overlay dan tap zone div** di dalam `.video-stage`:
+- **Video overlay DIHAPUS** — jangan tambahkan `#pNVideoAdOverlay` div untuk platform baru. Cukup tap zone saja.
+- **Tambah tap zone dan download+share button** di dalam `.video-stage` / `.watch-btn-group`:
   ```html
-  <!-- Video overlay bar (muncul saat video play) -->
-  <div id="pNVideoAdOverlay" class="video-ad-overlay" style="display:none" aria-hidden="true">
-    <div class="video-ad-bar">
-      <span class="video-ad-label"></span>
-      <button id="pNVideoAdClose" class="video-ad-close-btn" disabled>Lewati <span id="pNVideoAdTimer">5</span>s</button>
-    </div>
-    <div id="pNVideoAdContent" class="video-ad-content"></div>
-  </div>
-  <!-- Transparent tap zone -->
+  <!-- Transparent tap zone (popunder) -->
   <div id="pNVideoTapZone" class="video-tap-zone" role="button" aria-label="Video area"></div>
   ```
+  ```html
+  <!-- Download + Share buttons (di .watch-btn-group, di luar .video-stage) -->
+  <!-- MP4 platform: tanpa disabled -->
+  <button type="button" id="pNDlBtn" class="watch-dl-btn" title="Download video">
+    <svg width="15" height="15" viewBox="0 0 24 24" ...>...</svg>
+    <span>Download</span>
+  </button>
+  <!-- HLS platform: tambah disabled + title berbeda -->
+  <button type="button" id="pNDlBtn" class="watch-dl-btn" disabled title="Download tidak tersedia untuk format stream ini">
+    <svg width="15" height="15" ...>...</svg>
+    <span>Download</span>
+  </button>
+  ```
+- SVG download dan share **WAJIB** ada `width="15" height="15"` di attribute — CSS saja tidak reliable di mobile Chrome.
 
 ### 3j. Body — Script sebelum `</body>`
 ```html

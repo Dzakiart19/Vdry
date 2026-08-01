@@ -24,4 +24,5 @@
 - [Vidorey Ad Optimization](vidorey-ad-optimization.md) — ads.js + sticky banner system; createInlineAd() pos 8/16/24 di semua P1–P9 kecuali tp; 9 unit Adsterra aktif semua sudah diimplementasi; zone conflict rule.
 - [Vidorey Audit 2026-07-28](vidorey-audit-2026-07-28.md) — P3 playmogo.com & P6/P7 fbplay.vip already handled gracefully (dead-cache); p1 deadStreamIds cleanup added; tpThumbCache dead comment removed.
 - [Watch Modal Scroll/Overlap Fix](vidorey-watch-scroll-fix.md) — GPU video layer bleed fix (isolation:isolate + z-index:1 on related); Social Bar suppressor in ads.js; modal z-index bumped to 10000.
+- [Download Button + Directlink Fix](vidorey-download-directlink.md) — triggerDirectlink pakai cooldown terpisah (_lastDirectlink 5s); 800ms delay sebelum download; overlay dihapus (no-op + CSS display:none !important).
 - [Vidorey Shortlink DB Persistence](vidorey-shortlink-db-persistence.md) — ensureTable() auto-DDL at startup; no manual migration needed; seed from data/shortlinks-seed.json on fresh clone.

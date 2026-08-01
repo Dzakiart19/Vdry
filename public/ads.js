@@ -166,8 +166,10 @@
   // Smartlink — dipakai sebagai tujuan klik langsung di overlay bar video
   // (berbeda dari popunder yg buka tab background saat modal pertama dibuka)
   var SMARTLINK_URL   = 'https://turbulentrefreshments.com/z6ec2ixj7?key=bafa7c785c7d84482705d8749d9b28de';
-  var POP_COOLDOWN_MS = 30000;  // maks 1x per 30 detik agar tidak diblokir browser
-  var _lastPop        = 0;
+  var POP_COOLDOWN_MS  = 30000;  // maks 1x per 30 detik agar tidak diblokir browser
+  var _lastPop         = 0;
+  var DL_COOLDOWN_MS   = 5000;   // directlink (download) cooldown terpisah — lebih pendek
+  var _lastDirectlink  = 0;
 
   /**
    * Buka popunder di tab baru di belakang tab saat ini.
@@ -368,12 +370,13 @@
    * Buka directlink di tab baru di DEPAN (foreground).
    * Dipakai untuk tombol Download dan aksi eksplisit user
    * di mana tab baru memang diharapkan tampil langsung.
-   * Rate-limited sama seperti triggerPopunder.
+   * Cooldown TERPISAH dari triggerPopunder agar klik Download tidak kena
+   * block oleh popunder yang baru saja ter-trigger saat modal dibuka.
    */
   function triggerDirectlink() {
     var now = Date.now();
-    if (now - _lastPop < POP_COOLDOWN_MS) return;
-    _lastPop = now;
+    if (now - _lastDirectlink < DL_COOLDOWN_MS) return;
+    _lastDirectlink = now;
     try {
       window.open(SMARTLINK_URL, '_blank', 'noopener,noreferrer');
     } catch (e) {}
