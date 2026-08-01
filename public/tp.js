@@ -366,8 +366,8 @@
   }, { threshold: 0.5 });
 
   /* ── Ad slide — full-screen slide dengan display banner 300×250 ────────
-     Disisipkan setiap 5 video. Tidak di-observe ioPlay (tidak ada video).
-     Setiap instance inject atOptions baru agar tidak konflik antar slide.
+     Disisipkan setiap 5 video. Menggunakan VdryAds.injectAd() agar
+     masuk ke injection queue (mencegah race condition atOptions).
   ── */
   function createAdSlide() {
     var slide = document.createElement('div');
@@ -388,13 +388,18 @@
     body.appendChild(adSlot);
     slide.appendChild(body);
 
-    /* Inject display banner (300×250) secara programatik */
-    var scOpt = document.createElement('script');
-    scOpt.textContent = "atOptions={'key':'d50b941ac6d9bd5749dcdb0b417bf348','format':'iframe','height':250,'width':300,'params':{}};";
-    adSlot.appendChild(scOpt);
-    var scInv = document.createElement('script');
-    scInv.src = 'https://turbulentrefreshments.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js';
-    adSlot.appendChild(scInv);
+    /* Inject via queue (ads.js) — atOptions tidak konflik antar slide */
+    if (window.VdryAds && window.VdryAds.injectAd) {
+      window.VdryAds.injectAd(adSlot, 'box-300');
+    } else {
+      /* Fallback jika ads.js belum load */
+      var scOpt = document.createElement('script');
+      scOpt.textContent = 'atOptions={"key":"d50b941ac6d9bd5749dcdb0b417bf348","format":"iframe","height":250,"width":300,"params":{}};';
+      adSlot.appendChild(scOpt);
+      var scInv = document.createElement('script');
+      scInv.src = 'https://turbulentrefreshments.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js';
+      adSlot.appendChild(scInv);
+    }
 
     return slide;
   }
