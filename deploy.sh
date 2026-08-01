@@ -6,36 +6,40 @@ echo "  VIDOREY — Deploy to Firebase Hosting"
 echo "================================================"
 
 # ── Tentukan BACKEND_URL ──────────────────────────
-# Prioritas: KOYEB_BACKEND_URL → REPLIT_BACKEND_URL
-# Set salah satu di Secrets Replit sesuai backend yang dipakai.
+# Prioritas: KOYEB_BACKEND_URL → REPLIT_BACKEND_URL → baca dari config.js
+CONFIG="public/config.js"
 if [ -n "$KOYEB_BACKEND_URL" ]; then
   BACKEND_URL="$KOYEB_BACKEND_URL"
-  BACKEND_LABEL="Koyeb"
+  BACKEND_LABEL="Koyeb (env)"
 elif [ -n "$REPLIT_BACKEND_URL" ]; then
   BACKEND_URL="$REPLIT_BACKEND_URL"
-  BACKEND_LABEL="Replit"
+  BACKEND_LABEL="Replit (env)"
 else
-  echo ""
-  echo "  ❌ ERROR: Secret backend URL belum diset."
-  echo ""
-  echo "  Set salah satu di tab Secrets Replit (🔑):"
-  echo ""
-  echo "  Jika backend di Koyeb:"
-  echo "    Key  : KOYEB_BACKEND_URL"
-  echo "    Value: https://<app>-<org>.koyeb.app"
-  echo ""
-  echo "  Jika backend di Replit:"
-  echo "    Key  : REPLIT_BACKEND_URL"
-  echo "    Value: https://vidorey.<username>.replit.app"
-  echo ""
-  exit 1
+  # Fallback: ekstrak URL yang sudah ada di config.js
+  # (berlaku jika config.js sudah di-patch atau URL sudah di-hardcode langsung)
+  BACKEND_URL=$(grep -oP "(?<>: ')[^']*koyeb\.app|[^']*replit\.app" "$CONFIG" 2>/dev/null | head -1)
+  # regex lebih portable:
+  BACKEND_URL=$(grep -o "https://[a-zA-Z0-9._-]*\.\(koyeb\.app\|replit\.app\)" "$CONFIG" 2>/dev/null | head -1)
+  if [ -n "$BACKEND_URL" ]; then
+    BACKEND_LABEL="config.js (sudah terpatch)"
+  else
+    echo ""
+    echo "  ❌ ERROR: Backend URL tidak ditemukan."
+    echo ""
+    echo "  Set salah satu env var berikut (bukan secret, nilai publik):"
+    echo "    KOYEB_BACKEND_URL=https://<app>-<org>.koyeb.app"
+    echo "    REPLIT_BACKEND_URL=https://vidorey.<username>.replit.app"
+    echo ""
+    echo "  Atau pastikan config.js sudah berisi URL backend yang benar."
+    echo ""
+    exit 1
+  fi
 fi
 
 echo ""
 echo "[1/3] Backend ($BACKEND_LABEL): $BACKEND_URL"
 
-# ── Inject URL ke config.js (sementara) ──────────
-CONFIG="public/config.js"
+# ── Inject URL ke config.js (sementara, jika masih ada placeholder) ──
 cp "$CONFIG" "${CONFIG}.bak"
 
 # Pastikan config.js SELALU dikembalikan ke placeholder setelah script selesai,
