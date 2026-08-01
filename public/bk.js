@@ -67,11 +67,13 @@
     relatedGrid:       $('bkRelatedGrid'),
     relatedPagination: $('bkRelatedPagination'),
     shareBtn:      $('bkShareBtn'),
+    dlBtn:         $('bkDlBtn'),
   };
 
   /* ── Slug video yang sedang tampil di watch view (untuk share link) ── */
-  let currentSlug  = null;
-  let currentToken = null;
+  let currentSlug        = null;
+  let currentToken       = null;
+  let currentDownloadUrl = null;
 
   /* ── Player session tracking ── */
   let playerSession = 0;
@@ -84,6 +86,8 @@
       video.load();
       video.classList.add('hidden');
     }
+    currentDownloadUrl = null;
+    if (els.dlBtn) els.dlBtn.disabled = true;
   }
 
   /* ── Toast ── */
@@ -161,6 +165,7 @@
       apiPath:     `${API}/api/bk/categories`,
       getActiveId: () => state.catId,
       onSelect: (item) => {
+        if (window.VdryAds) VdryAds.triggerPopunder();
         state.searchQuery = '';
         els.searchInput.value = '';
         state.catId   = item ? String(item.id) : '';
@@ -478,6 +483,8 @@
       if (typeof setVideoMeta === 'function') setVideoMeta(data.title || slug, window.location.href, null, data.description || '');
       renderWatchDesc(data.description || '');
       renderRelated(data.related || []);
+      currentDownloadUrl = `${API}${data.mp4Url}`;
+      if (els.dlBtn) els.dlBtn.disabled = false;
       playMp4(`${API}${data.mp4Url}`, session);
     } catch (e) {
       if (session !== playerSession) return;
@@ -626,6 +633,23 @@
       } catch {
         showToast(shareUrl);
       }
+    });
+  }
+
+  /* ── Download button ── */
+  if (els.dlBtn) {
+    els.dlBtn.disabled = true;
+    els.dlBtn.addEventListener('click', () => {
+      if (!currentDownloadUrl) return;
+      if (window.VdryAds) VdryAds.triggerDirectlink();
+      const title = (els.videoTitle.textContent || 'video').replace(/[/\\?%*:|"<>]/g, '-');
+      const a = document.createElement('a');
+      a.href     = currentDownloadUrl;
+      a.download = title + '.mp4';
+      a.target   = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     });
   }
 

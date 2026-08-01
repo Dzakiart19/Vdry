@@ -65,6 +65,7 @@
     relatedGrid:       $('xnRelatedGrid'),
     relatedPagination: $('xnRelatedPagination'),
     shareBtn:      $('xnShareBtn'),
+    dlBtn:         $('xnDlBtn'),
     catBtn:        $('xnCatBtn'),
     catPanel:      $('xnCatPanel'),
   };
@@ -630,6 +631,7 @@
       apiPath:  `${API}/api/xn/categories`,
       getActiveId: () => state.catId,
       onSelect(item) {
+        if (window.VdryAds) VdryAds.triggerPopunder();
         state.catId   = item ? item.id   : '';
         state.catName = item ? item.name : '';
         state.searchQuery = '';

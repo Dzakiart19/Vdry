@@ -66,11 +66,13 @@
     relatedGrid:       $('zgRelatedGrid'),
     relatedPagination: $('zgRelatedPagination'),
     shareBtn:      $('zgShareBtn'),
+    dlBtn:         $('zgDlBtn'),
   };
 
   /* ── Slug / token tracking ── */
-  let currentSlug  = null;
-  let currentToken = null;
+  let currentSlug        = null;
+  let currentToken       = null;
+  let currentDownloadUrl = null;
 
   /* ── Player session ── */
   let playerSession = 0;
@@ -83,6 +85,8 @@
       video.load();
       video.classList.add('hidden');
     }
+    currentDownloadUrl = null;
+    if (els.dlBtn) els.dlBtn.disabled = true;
   }
 
   /* ── Toast ── */
@@ -434,6 +438,8 @@
       if (typeof setVideoMeta === 'function') setVideoMeta(data.title || slug, window.location.href, null, data.description || '');
       renderWatchDesc(data.description || '');
       renderRelated(data.related || []);
+      currentDownloadUrl = `${API}${data.mp4Url}`;
+      if (els.dlBtn) els.dlBtn.disabled = false;
       playMp4(`${API}${data.mp4Url}`, session);
     } catch (e) {
       if (session !== playerSession) return;
@@ -565,6 +571,23 @@
     });
   }
 
+  /* ── Download button ── */
+  if (els.dlBtn) {
+    els.dlBtn.disabled = true;
+    els.dlBtn.addEventListener('click', () => {
+      if (!currentDownloadUrl) return;
+      if (window.VdryAds) VdryAds.triggerDirectlink();
+      const title = (els.videoTitle.textContent || 'video').replace(/[/\\?%*:|"<>]/g, '-');
+      const a = document.createElement('a');
+      a.href     = currentDownloadUrl;
+      a.download = title + '.mp4';
+      a.target   = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  }
+
   /* ── Retry ── */
   els.retryBtn.addEventListener('click', () => loadPosts(false));
 
@@ -576,6 +599,7 @@
       apiPath:     `${API}/api/zg/categories`,
       getActiveId: () => state.catSlug,
       onSelect: (item) => {
+        if (window.VdryAds) VdryAds.triggerPopunder();
         state.catSlug = item ? (item.slug || String(item.id || '')) : '';
         state.catName = item ? item.name : '';
         state.page    = 1;

@@ -67,6 +67,7 @@
     relatedGrid:       $('ybRelatedGrid'),
     relatedPagination: $('ybRelatedPagination'),
     shareBtn:      $('ybShareBtn'),
+    dlBtn:         $('ybDlBtn'),
   };
 
   /* ── Slug video yang sedang tampil di watch view (untuk share link) ── */
@@ -164,6 +165,7 @@
       apiPath:     `${API}/api/yb/categories`,
       getActiveId: () => state.catId,
       onSelect: (item) => {
+        if (window.VdryAds) VdryAds.triggerPopunder();
         state.searchQuery = '';
         els.searchInput.value = '';
         state.catId   = item ? String(item.id) : '';

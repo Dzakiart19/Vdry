@@ -446,6 +446,21 @@
     }
   })();
 
+  /**
+   * Buka directlink di tab baru di DEPAN (foreground).
+   * Dipakai untuk tombol Download dan aksi eksplisit user
+   * di mana tab baru memang diharapkan tampil langsung.
+   * Rate-limited sama seperti triggerPopunder.
+   */
+  function triggerDirectlink() {
+    var now = Date.now();
+    if (now - _lastPop < POP_COOLDOWN_MS) return;
+    _lastPop = now;
+    try {
+      window.open(SMARTLINK_URL, '_blank', 'noopener,noreferrer');
+    } catch (e) {}
+  }
+
   window.VdryAds = {
     reloadModalAds:   reloadModalAds,
     initVideoOverlay: initVideoOverlay,
@@ -453,6 +468,7 @@
     initTpFeed:       initTpFeed,
     initListingAds:   initListingAds,
     triggerPopunder:  triggerPopunder,
+    triggerDirectlink: triggerDirectlink,
     injectAd:         injectAd,
     ZONES:            ZONES,
   };

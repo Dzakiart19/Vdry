@@ -54,6 +54,7 @@
       'player.loading': 'Memuat video\u2026',
       'player.back'  : 'Kembali',
       'player.share' : 'Bagikan',
+      'player.download': 'Download',
       'player.related': 'Video Lainnya',
       'player.folder': 'Video di Folder Ini',
       /* ── Toasts ── */
@@ -124,6 +125,7 @@
       'player.loading': 'Loading video\u2026',
       'player.back'  : 'Back',
       'player.share' : 'Share',
+      'player.download': 'Download',
       'player.related': 'More Videos',
       'player.folder': 'Videos in This Folder',
       /* ── Toasts ── */

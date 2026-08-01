@@ -66,6 +66,7 @@
     relatedGrid:       $('sbRelatedGrid'),
     relatedPagination: $('sbRelatedPagination'),
     shareBtn:      $('sbShareBtn'),
+    dlBtn:         $('sbDlBtn'),
   };
 
   /* ── HLS instance ── */

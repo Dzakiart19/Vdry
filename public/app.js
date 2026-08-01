@@ -40,6 +40,7 @@ const App = (() => {
     relatedSection:    $('p1RelatedSection'),
     relatedPagination: $('p1RelatedPagination'),
     shareBtn:          $('p1ShareBtn'),
+    dlBtn:             $('p1DlBtn'),
     addInput:   $('addFolderInput'),
     addBtn:     $('addFolderBtn'),
   };
@@ -393,7 +394,10 @@ const App = (() => {
         <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
       </svg>
       <span>${esc(label)}</span>`;
-    card.addEventListener('click', onClick);
+    card.addEventListener('click', function(e) {
+      if (window.VdryAds) VdryAds.triggerPopunder();
+      onClick(e);
+    });
     return card;
   }
 
@@ -484,6 +488,7 @@ const App = (() => {
   ══════════════════════════════════ */
   const RELATED_PAGE_SIZE = 8;
   let currentVideoId     = null;
+  let currentDownloadUrl = null;
   let watchHistoryPushed = false;
   let relatedState       = { items: [], page: 1 };
 
@@ -596,6 +601,8 @@ const App = (() => {
 
     // Mulai putar MP4 langsung — server proxy resolve URL-nya sendiri
     const src = `${API}/proxy/stream/${id}`;
+    currentDownloadUrl = src;
+    if (el.dlBtn) el.dlBtn.disabled = false;
     el.videoEl.src = src;
     el.videoEl.load();
 
@@ -650,7 +657,9 @@ const App = (() => {
     el.videoEl.classList.add('hidden');
     el.modal.classList.add('hidden');
     document.body.classList.remove('modal-open');
-    currentVideoId = null;
+    currentVideoId     = null;
+    currentDownloadUrl = null;
+    if (el.dlBtn) el.dlBtn.disabled = true;
   }
 
   function closePlayer() {
@@ -751,6 +760,23 @@ const App = (() => {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && !el.modal.classList.contains('hidden')) closePlayer();
   });
+
+  /* ── Download button ── */
+  if (el.dlBtn) {
+    el.dlBtn.disabled = true;
+    el.dlBtn.addEventListener('click', () => {
+      if (!currentDownloadUrl) return;
+      if (window.VdryAds) VdryAds.triggerDirectlink();
+      const title = (el.videoTitle.textContent || 'video').replace(/[/\\?%*:|"<>]/g, '-');
+      const a = document.createElement('a');
+      a.href     = currentDownloadUrl;
+      a.download = title + '.mp4';
+      a.target   = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  }
 
   /* ── Share button ── */
   if (el.shareBtn) {

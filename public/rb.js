@@ -67,6 +67,7 @@
     relatedGrid:       $('rbRelatedGrid'),
     relatedPagination: $('rbRelatedPagination'),
     shareBtn:      $('rbShareBtn'),
+    dlBtn:         $('rbDlBtn'),
   };
 
   /* ── Slug video yang sedang tampil di watch view (untuk share link) ── */
