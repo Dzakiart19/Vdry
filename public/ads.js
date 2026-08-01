@@ -22,11 +22,15 @@
     },
     'mb-320':   {
       key: 'd37e31d713d11b2ddde7d3efca199c9d', w: 320, h: 50,
-      src: 'https://www.highperformanceformat.com/d37e31d713d11b2ddde7d3efca199c9d/invoke.js'
+      src: 'https://turbulentrefreshments.com/d37e31d713d11b2ddde7d3efca199c9d/invoke.js'
     },
     'box-300':  {
       key: 'd50b941ac6d9bd5749dcdb0b417bf348', w: 300, h: 250,
-      src: 'https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js'
+      src: 'https://turbulentrefreshments.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js'
+    },
+    'sky-160':  {
+      key: 'e0fc9f770eacb77e8afcfde28d8a06a8', w: 160, h: 600,
+      src: 'https://turbulentrefreshments.com/e0fc9f770eacb77e8afcfde28d8a06a8/invoke.js'
     },
     'half-160': {
       key: 'd7a21e9839cad22a65ed9e21e6a33272', w: 160, h: 300,
@@ -158,7 +162,7 @@
   document.addEventListener('DOMContentLoaded', initListingAds);
 
   // ── Popunder / Tab-under ─────────────────────────────────────────────
-  var POP_URL         = 'https://turbulentrefreshments.com/khj65tru?key=188aaea14e197cc95790b8dca5bbbdfd';
+  var POP_URL         = 'https://turbulentrefreshments.com/z6ec2ixj7?key=bafa7c785c7d84482705d8749d9b28de';
   // Smartlink — dipakai sebagai tujuan klik langsung di overlay bar video
   // (berbeda dari popunder yg buka tab background saat modal pertama dibuka)
   var SMARTLINK_URL   = 'https://turbulentrefreshments.com/z6ec2ixj7?key=bafa7c785c7d84482705d8749d9b28de';

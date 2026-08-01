@@ -393,7 +393,7 @@
     scOpt.textContent = "atOptions={'key':'d50b941ac6d9bd5749dcdb0b417bf348','format':'iframe','height':250,'width':300,'params':{}};";
     adSlot.appendChild(scOpt);
     var scInv = document.createElement('script');
-    scInv.src = 'https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js';
+    scInv.src = 'https://turbulentrefreshments.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js';
     adSlot.appendChild(scInv);
 
     return slide;
@@ -443,7 +443,7 @@
       scOpt.textContent = "atOptions={'key':'d50b941ac6d9bd5749dcdb0b417bf348','format':'iframe','height':250,'width':300,'params':{}};";
       adSlot.appendChild(scOpt);
       var scInv = document.createElement('script');
-      scInv.src = 'https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js';
+      scInv.src = 'https://turbulentrefreshments.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js';
       adSlot.appendChild(scInv);
     }
 

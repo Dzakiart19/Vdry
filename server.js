@@ -61,15 +61,7 @@ app.use(helmet({
         'https://www.googletagmanager.com',
         // hls.js (rb.html + yb.html)
         'https://cdn.jsdelivr.net',
-        // Adsterra ad network
-        'https://pl28423230.effectivecpmnetwork.com',
-        'https://pl28418540.effectivecpmnetwork.com',
-        'https://pl28427857.effectivecpmnetwork.com',
-        'https://www.highperformanceformat.com',
-        // Adsterra / profitableratecpm (Platform 5 tp.html)
-        'https://pl26548697.profitableratecpm.com',
-        'https://pl26548687.profitableratecpm.com',
-        // Adsterra 728×90 leaderboard + 468×60 banner (semua listing pages)
+        // Adsterra ad network (semua unit via turbulentrefreshments.com)
         'https://turbulentrefreshments.com',
         // Histats.com visitor counter (/monitor page)
         'https://s10.histats.com',
