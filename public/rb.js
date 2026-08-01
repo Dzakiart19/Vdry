@@ -667,6 +667,13 @@
   });
 
   /* ── Share ── */
+  /* ── Download button (disabled — HLS format tidak mendukung direct download) ── */
+  if (els.dlBtn) {
+    els.dlBtn.addEventListener('click', () => {
+      showToast('Download tidak tersedia untuk format stream ini');
+    });
+  }
+
   // navigator.share() (mobile Chrome/Safari) kalau tersedia, kalau tidak
   // fallback ke copy-to-clipboard. Link-nya /rb/watch/<slug> — link ini
   // sendiri yang di-deep-link balik oleh init() di bawah.

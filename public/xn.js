@@ -588,6 +588,13 @@
     if (e.key === 'Escape' && !els.modal.classList.contains('hidden')) closeModal();
   });
 
+  /* ── Download button (disabled — HLS format tidak mendukung direct download) ── */
+  if (els.dlBtn) {
+    els.dlBtn.addEventListener('click', () => {
+      showToast('Download tidak tersedia untuk format stream ini');
+    });
+  }
+
   /* ── Share ── */
   if (els.shareBtn) {
     els.shareBtn.addEventListener('click', async () => {
