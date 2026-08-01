@@ -760,18 +760,9 @@ body {
   aspect-ratio: 16 / 9; /* fix: tanpa ini semua absolute children → container kolaps → player tiny */
 }
 
-/* ── Video overlay ad — real Adsterra 300×250 banner + skip bar ── */
+/* ── Video overlay ad — dihapus, tidak dipakai ── */
 .video-ad-overlay {
-  position: absolute;
-  bottom: 52px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 30;
-  overflow: hidden;
-  width: 320px;
-  max-width: 100%;
-  border-radius: 6px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+  display: none !important;
 }
 .video-ad-bar {
   display: flex;
