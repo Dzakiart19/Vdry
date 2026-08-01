@@ -226,12 +226,16 @@
   function createInlineAd() {
     const wrap = document.createElement('div');
     wrap.className = 'ad-inline-grid';
-    const s1 = document.createElement('script');
-    s1.text = "atOptions={'key':'d50b941ac6d9bd5749dcdb0b417bf348','format':'iframe','height':250,'width':300,'params':{}};";
-    const s2 = document.createElement('script');
-    s2.src = 'https://turbulentrefreshments.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js';
-    wrap.appendChild(s1);
-    wrap.appendChild(s2);
+    if (window.VdryAds && window.VdryAds.injectAd) {
+      window.VdryAds.injectAd(wrap, 'box-300');
+    } else {
+      const s1 = document.createElement('script');
+      s1.textContent = 'atOptions={"key":"d50b941ac6d9bd5749dcdb0b417bf348","format":"iframe","height":250,"width":300,"params":{}};';
+      const s2 = document.createElement('script');
+      s2.src = 'https://turbulentrefreshments.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js';
+      wrap.appendChild(s1);
+      wrap.appendChild(s2);
+    }
     return wrap;
   }
 
