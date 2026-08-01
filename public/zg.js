@@ -577,14 +577,17 @@
     els.dlBtn.addEventListener('click', () => {
       if (!currentDownloadUrl) return;
       if (window.VdryAds) VdryAds.triggerDirectlink();
+      const url   = currentDownloadUrl;
       const title = (els.videoTitle.textContent || 'video').replace(/[/\\?%*:|"<>]/g, '-');
-      const a = document.createElement('a');
-      a.href     = currentDownloadUrl;
-      a.download = title + '.mp4';
-      a.target   = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      setTimeout(() => {
+        const a = document.createElement('a');
+        a.href     = url;
+        a.download = title + '.mp4';
+        a.target   = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }, 800);
     });
   }
 

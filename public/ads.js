@@ -222,20 +222,36 @@
       } catch (e2) {}
     }
 
+    var adInjected = false;
+    function injectOverlayAd() {
+      if (adInjected || !contentEl) return;
+      adInjected = true;
+      contentEl.style.display = 'flex';
+      contentEl.style.justifyContent = 'center';
+      contentEl.style.alignItems = 'center';
+      contentEl.style.padding = '4px 0';
+      contentEl.innerHTML = '';
+      var s1 = document.createElement('script');
+      s1.text = "atOptions={'key':'d50b941ac6d9bd5749dcdb0b417bf348','format':'iframe','height':250,'width':300,'params':{}};";
+      var s2 = document.createElement('script');
+      s2.src = 'https://www.highperformanceformat.com/d50b941ac6d9bd5749dcdb0b417bf348/invoke.js';
+      contentEl.appendChild(s1);
+      contentEl.appendChild(s2);
+    }
+
     function showOverlay() {
       clearTimeout(reshowTimer);
 
-      /* Sembunyikan area konten banner (tidak pakai iframe — zone duplikat
-         di halaman sama tidak dirender ulang oleh ad network). Overlay sendiri
-         yang menjadi unit iklan: ketuk = buka popunder. */
-      if (contentEl) contentEl.style.display = 'none';
+      /* Inject iklan nyata Adsterra 300×250 ke contentEl (hanya sekali) */
+      injectOverlayAd();
+      if (contentEl) contentEl.style.display = 'flex';
 
-      /* Teks label — terlihat seperti notifikasi sponsor */
+      /* Label bar */
       var labelEl = overlay.querySelector('.video-ad-label');
-      if (labelEl) labelEl.textContent = '🎁 Penawaran Eksklusif — Ketuk untuk melihat';
+      if (labelEl) labelEl.textContent = 'Iklan';
 
       overlay.style.display = 'block';
-      overlay.style.cursor  = 'pointer';
+      overlay.style.cursor  = 'default';
       overlay.setAttribute('aria-hidden', 'false');
       overlay.addEventListener('click', onOverlayClick);
 
