@@ -127,6 +127,33 @@ app.use(cors({
   credentials: false,
 }));
 
+/* ── Web access guard ─────────────────────────────────────────────────
+   Di Koyeb (production), Firebase sudah serve frontend-nya sendiri.
+   Static files + SPA routes diblokir agar publik tidak bisa buka
+   URL backend langsung. API/proxy/monitor tetap jalan normal.
+   Replit dev (*.replit.dev / *.replit.app) dan localhost diizinkan
+   penuh untuk testing. ── */
+const WEB_DEV_HOSTS = /\.(replit\.dev|replit\.app)$|^localhost$|^127\.0\.0\.1$|^0\.0\.0\.0$/;
+app.use((req, res, next) => {
+  const p = req.path;
+  const isApiPath = p.startsWith('/api/')     ||
+                    p.startsWith('/proxy/')    ||
+                    p.startsWith('/monitor')   ||
+                    p.startsWith('/health')    ||
+                    p.startsWith('/embed/');
+  if (isApiPath) return next();
+  if (!WEB_DEV_HOSTS.test(req.hostname)) {
+    return res.status(403).send(
+      '<!doctype html><meta charset=utf-8>' +
+      '<title>403</title><body style="font:1rem/1.6 sans-serif;padding:2rem">' +
+      '<h2>403 — Akses Diblokir</h2>' +
+      '<p>Gunakan frontend resmi di ' +
+      '<a href="https://vidorey.web.app">vidorey.web.app</a></p></body>'
+    );
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname, 'public'), {
   maxAge: '2h',
   etag:   true,
