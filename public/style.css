@@ -1962,6 +1962,8 @@ body.rb-page .content {
   font-family: inherit;
   transition: border-color .2s, color .2s;
   line-height: 1;
+  position: relative;
+  z-index: 200;
 }
 .lang-toggle-btn:hover { border-color: var(--rose); color: var(--rose); }
 
