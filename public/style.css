@@ -2777,6 +2777,11 @@ body.tp-page .tp-loader { bottom: 140px; }
   background: linear-gradient(135deg, #4a0028, #f472b6);
 }
 
+/* ── ps-avatar-er ── */
+.ps-avatar-er {
+  background: linear-gradient(135deg, #3a0a14, #fda4af);
+}
+
 /* ── SEO: visually hidden H1 ── */
 .sr-only {
   position: absolute;

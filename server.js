@@ -23,6 +23,7 @@ const sb = require('./lib/scrapers/sb');
 const xn = require('./lib/scrapers/xn');
 const vd = require('./lib/scrapers/vd');
 const zg = require('./lib/scrapers/zg');
+const er = require('./lib/scrapers/er');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -169,6 +170,7 @@ app.use(sb.router);
 app.use(xn.router);
 app.use(vd.router);
 app.use(zg.router);
+app.use(er.router);
 
 /* ── Monitor & health — cache stats digabung read-only dari semua platform.
    Urutan & daftar persis meniru server.js lama (ybFreshSessionCache sengaja
@@ -184,6 +186,7 @@ registerMonitorRoutes(app, {
     xn.caches[0], xn.caches[1], xn.caches[2], xn.caches[3], xn.caches[4], // p8: posts, m3u8, video, fresh, categories
     vd.caches[0], vd.caches[1], vd.caches[2],                               // vd: posts, video, thumb
     zg.caches[0], zg.caches[1], zg.caches[2], zg.caches[3],                // zg: posts, categories, video, thumb
+    er.caches[0], er.caches[1],                                              // er: posts, video
   ].map(c => c.stats()),
 });
 
@@ -191,7 +194,7 @@ registerMonitorRoutes(app, {
 /* ── Shortlink resolver — /api/s/:platform/:token → { slug } ── */
 app.get('/api/s/:platform/:token', (req, res) => {
   const { platform, token } = req.params;
-  if (!['rb', 'yb', 'bk', 'tp', 'sb', 'xn', 'vd', 'zg'].includes(platform)) return res.status(404).json({ error: 'not found' });
+  if (!['rb', 'yb', 'bk', 'tp', 'sb', 'xn', 'vd', 'zg', 'er'].includes(platform)) return res.status(404).json({ error: 'not found' });
   if (!/^[a-z0-9]{11}$/.test(token)) return res.status(400).json({ error: 'invalid token' });
   const slug = resolveToken(platform, token);
   if (!slug) return res.status(404).json({ error: 'Link kadaluarsa atau tidak ditemukan' });
@@ -203,7 +206,7 @@ app.get('/api/s/:platform/:token', (req, res) => {
    Paths yang valid → 200; unknown → 404
    agar crawler tidak mencatat soft-404.
 ═══════════════════════════════════════ */
-const VALID_SPA_PATHS = new Set(['/', '/rb', '/yb', '/bk', '/tp', '/sb', '/xn', '/vd', '/zg']);
+const VALID_SPA_PATHS = new Set(['/', '/rb', '/yb', '/bk', '/tp', '/sb', '/xn', '/vd', '/zg', '/er']);
 
 app.get('*', (req, res) => {
   const p = req.path;
