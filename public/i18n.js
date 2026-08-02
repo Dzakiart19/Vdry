@@ -12,7 +12,7 @@
   'use strict';
 
   var STORAGE_KEY = 'vidorey_lang';
-  var DEFAULT = 'id';
+  var DEFAULT = 'en';
 
   var T = {
     id: {
