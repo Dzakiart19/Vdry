@@ -32,8 +32,11 @@ User requested full EN/ID bilingual toggle across all platforms.
 ## File coverage (all done)
 - public/i18n.js: translation engine + boot + CustomEvent dispatch
 - public/style.css: .lang-toggle-btn styles
-- All 9 HTML (index, rb, yb, bk, sb, xn, vd, zg, tp): i18n.js script first, langToggle button, data-i18n attrs throughout
-- rb/yb/bk/sb/xn/zg.js: heading builder uses _t(), langchange listener calls updateSearchHeading()
+- All 10 HTML (index, rb, yb, bk, sb, xn, vd, zg, er, tp): i18n.js script first, langToggle button, data-i18n attrs throughout
+- rb/yb/bk/sb/xn/zg/er.js: heading builder uses _t(), langchange listener calls updateSearchHeading()
 - vd/app/tp.js: _t() for toasts and errors
 - utils.js: _t(cat.all) and _t(cat.empty) in initVdryCategoryPicker
 - zg.js: own category renderer uses _t(cat.all/cat.empty)
+
+## Known i18n gap (2026-08-02)
+- `nav.er` key missing from i18n.js — er.html uses `data-i18n="nav.er"` on the ps-desc span but the key is not yet in either dictionary. Falls back to raw Indonesian text gracefully. Add when doing a full i18n pass.

@@ -1,19 +1,19 @@
 ---
 name: Vidorey Nav Drawer (Platform Switcher)
-description: Platform switcher adalah hamburger sidebar drawer. Dua seksi berbeda — listing platform di atas divider, TikTok-style di bawah. 6 platform, 6 HTML files.
+description: Platform switcher adalah hamburger sidebar drawer. Dua seksi berbeda — listing platform di atas divider, TikTok-style di bawah. 10 scrapers, 10 HTML files (2026-08-02).
 ---
 
 ## The Rule
 Platform navigation adalah **sidebar drawer** (hamburger ≡ button), BUKAN dropdown. Nama platform di UI **tidak boleh menyebut nama web sumber** (ruangbokep, yobokep, bokepking, tik.porn, situsbokep, dst).
 
-## Reality check (2026-07-14)
-Vidorey punya **6 platform aktif**, bukan 7. Sempat ada rencana/leftover kode untuk "rc" (Vidorey TikTok 2, reddclips) tapi **tidak pernah dibangun** — tidak ada `rc.html` atau `lib/scrapers/rc.js` di repo. Urutan kode yang benar: p1 (P1), rb (P2), yb (P3), bk (P4), tp (P5), sb (P6).
+## Reality check (2026-08-02)
+Vidorey punya **10 scraper aktif**: p1, rb (P2), yb (P3), bk (P4), tp (P5/TikTok), sb (P6), vd (P7), xn (P8), zg (P9), er (P10). "rc" (reddclips) **tidak pernah dibangun** — tidak ada rc.html atau rc.js.
 
-**Urutan UI (nav drawer) berbeda dari urutan kode:**
-- Vidorey 1–5 = P1/P2/P3/P4/P6 (listing platform, seksi atas)
+**Urutan UI (nav drawer):**
+- Vidorey 1–9 = P1/P2/P3/P4/P6/P8(xn)/P7(vd)/P9(zg)/P10(er) — listing platform, seksi atas
 - Vidorey TikTok 1 = P5 (TikTok-style, seksi "Fitur Lain")
-- P5 (TP) **tidak** dihitung sebagai "Vidorey 5" — TikTok adalah fitur terpisah, bukan platform listing ke-5.
-- "Vidorey 5" di nav drawer = P6/sb (situsbokep.cc)
+- P5 (TP) **tidak** dihitung sebagai numbered listing — TikTok adalah fitur terpisah.
+- "Vidorey 5" = P6/sb, "Vidorey 6" = P8/xn, "Vidorey 7" = P7/vd, "Vidorey 8" = P9/zg, "Vidorey 9" = P10/er
 
 ## ATURAN SEKSI NAV DRAWER (WAJIB DIIKUTI)
 
@@ -24,12 +24,15 @@ Platform dengan UI listing/grid (video card + pagination + search bar + kategori
 
 | Platform | URL | Nama UI |
 |---|---|---|
-| P1 | `/` | Vidorey 1 |
-| P2 | `/rb` | Vidorey 2 |
-| P3 | `/yb` | Vidorey 3 |
-| P4 | `/bk` | Vidorey 4 |
-| P6 | `/sb` | Vidorey 5 |
-| P8 | `/xn` | Vidorey 6 |
+| P1  | `/`   | Vidorey 1 |
+| P2  | `/rb` | Vidorey 2 |
+| P3  | `/yb` | Vidorey 3 |
+| P4  | `/bk` | Vidorey 4 |
+| P6  | `/sb` | Vidorey 5 |
+| P8  | `/xn` | Vidorey 6 |
+| P7  | `/vd` | Vidorey 7 |
+| P9  | `/zg` | Vidorey 8 |
+| P10 | `/er` | Vidorey 9 |
 
 ### Seksi Bawah — "Fitur Lain" (KHUSUS TikTok-style)
 Platform dengan UI TikTok-style (vertical scroll-snap, tidak ada grid/card). Ditempatkan **di bawah** `<hr class="nav-section-divider">` + label `<div class="nav-drawer-label">Fitur Lain</div>`.
@@ -40,12 +43,16 @@ Platform dengan UI TikTok-style (vertical scroll-snap, tidak ada grid/card). Dit
 
 ### Struktur HTML Nav Drawer (referensi)
 ```html
-<!-- Seksi atas: listing platforms (P1, P2, P3, P4, P6) -->
+<!-- Seksi atas: listing platforms (P1–P4, P6, P8, P7, P9, P10) -->
 <a class="nav-plat-item" href="/">...</a>
 <a class="nav-plat-item" href="/rb">...</a>
 <a class="nav-plat-item" href="/yb">...</a>
 <a class="nav-plat-item" href="/bk">...</a>
 <a class="nav-plat-item" href="/sb">...</a>
+<a class="nav-plat-item" href="/xn">...</a>
+<a class="nav-plat-item" href="/vd">...</a>
+<a class="nav-plat-item" href="/zg">...</a>
+<a class="nav-plat-item" href="/er">...</a>
 
 <!-- Divider — pemisah listing vs TikTok -->
 <hr class="nav-section-divider">
@@ -65,13 +72,16 @@ Dropdown lama tidak terlihat user. Diganti hamburger ChatGPT-style. Nama sumber 
 ## Nama Platform (UI — nav drawer & topbar)
 | Platform | URL | Nama UI | Deskripsi Nav | Seksi |
 |---|---|---|---|---|
-| P1 | `/` | Vidorey 1 | Folder video · streaming | Atas |
-| P2 | `/rb` | Vidorey 2 | Video harian · cari & tonton & kategori | Atas |
-| P3 | `/yb` | Vidorey 3 | Video harian · cari & tonton & kategori | Atas |
-| P4 | `/bk` | Vidorey 4 | Video harian · cari & tonton & kategori | Atas |
-| P6 | `/sb` | Vidorey 5 | Video harian · cari & tonton | Atas |
-| P8 | `/xn` | Vidorey 6 | Video harian · cari & tonton | Atas |
-| P5 | `/tp` | Vidorey TikTok 1 | TikTok · scroll vertikal · tag browser | Bawah (Fitur Lain) |
+| P1  | `/`   | Vidorey 1 | Folder video · streaming | Atas |
+| P2  | `/rb` | Vidorey 2 | Video harian · cari & tonton & kategori | Atas |
+| P3  | `/yb` | Vidorey 3 | Video harian · cari & tonton & kategori | Atas |
+| P4  | `/bk` | Vidorey 4 | Video harian · cari & tonton & kategori | Atas |
+| P6  | `/sb` | Vidorey 5 | Video harian · cari & tonton | Atas |
+| P8  | `/xn` | Vidorey 6 | Video harian · cari & tonton | Atas |
+| P7  | `/vd` | Vidorey 7 | Video harian · cari & tonton | Atas |
+| P9  | `/zg` | Vidorey 8 | Homemade amateur · real people | Atas |
+| P10 | `/er` | Vidorey 9 | Album erotis · video amatir | Atas |
+| P5  | `/tp` | Vidorey TikTok 1 | TikTok · scroll vertikal · tag browser | Bawah (Fitur Lain) |
 
 ## IDs dan classes — state saat ini
 
@@ -104,6 +114,9 @@ Semua `.ps-avatar` pakai **`<img src="/logo.png" alt="Vidorey">`** — logo Vido
 | P4 (bk) | `.ps-avatar-bk` | — |
 | P6 (sb) — Vidorey 5 | `.ps-avatar-sb` | gradient hijau `#065f2e → #34d399` |
 | P8 (xn) — Vidorey 6 | `.ps-avatar-xn` | gradient orange `#7c2d00 → #fb923c` |
+| P7 (vd) — Vidorey 7 | `.ps-avatar-vd` | — |
+| P9 (zg) — Vidorey 8 | `.ps-avatar-zg` | — |
+| P10 (er) — Vidorey 9 | `.ps-avatar-er` | — |
 | P5 (tp) | `.ps-avatar-tp` | — |
 
 ### CSS dead code di style.css (tidak berbahaya, tidak dipakai)
@@ -119,12 +132,15 @@ Semua `.ps-avatar` pakai **`<img src="/logo.png" alt="Vidorey">`** — logo Vido
 
 ## Active item per halaman
 - `index.html` → Vidorey 1 `.active` + `aria-current="page"`
-- `rb.html` → Vidorey 2 `.active` + `aria-current="page"`
-- `yb.html` → Vidorey 3 `.active` + `aria-current="page"`
-- `bk.html` → Vidorey 4 `.active` + `aria-current="page"`
-- `sb.html` → Vidorey 5 `.active` + `aria-current="page"`
-- `xn.html` → Vidorey 6 `.active` + `aria-current="page"`
-- `tp.html` → Vidorey TikTok 1 `.active` + `aria-current="page"`
+- `rb.html`    → Vidorey 2 `.active` + `aria-current="page"`
+- `yb.html`    → Vidorey 3 `.active` + `aria-current="page"`
+- `bk.html`    → Vidorey 4 `.active` + `aria-current="page"`
+- `sb.html`    → Vidorey 5 `.active` + `aria-current="page"`
+- `xn.html`    → Vidorey 6 `.active` + `aria-current="page"`
+- `vd.html`    → Vidorey 7 `.active` + `aria-current="page"`
+- `zg.html`    → Vidorey 8 `.active` + `aria-current="page"`
+- `er.html`    → Vidorey 9 `.active` + `aria-current="page"`
+- `tp.html`    → Vidorey TikTok 1 `.active` + `aria-current="page"`
 
 ## SPA Route — WAJIB di setiap scraper
 

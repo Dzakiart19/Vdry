@@ -282,9 +282,9 @@ Tambahkan `<button id="langToggle" class="lang-toggle-btn">EN</button>` di topba
 
 ---
 
-## FASE 5 — Update Semua 7 HTML yang Ada
+## FASE 5 — Update Semua 10 HTML yang Ada (2026-08-02)
 
-- [ ] **Tambah platform baru ke nav drawer di SEMUA HTML yang ada**: `index, rb, yb, bk, sb, tp` + platform baru `pN.html` itu sendiri
+- [ ] **Tambah platform baru ke nav drawer di SEMUA HTML yang ada**: `index, rb, yb, bk, sb, xn, vd, zg, er, tp` + platform baru `pN.html` itu sendiri
 - [ ] Format entry nav drawer baru — **`data-i18n` pada `ps-desc` WAJIB**:
 ```html
 <a class="nav-plat-item" href="/pN">
@@ -355,11 +355,15 @@ Tambahkan `<button id="langToggle" class="lang-toggle-btn">EN</button>` di topba
 | `public/i18n.js` | Tambah key `nav.pN` (ID + EN) + key platform-specific lainnya jika diperlukan |
 | `public/style.css` | tambah `.ps-avatar-pN`, `.pN-page` rules |
 | `public/index.html` | tambah platform baru ke nav drawer (posisi sesuai tipe) |
-| `public/rb.html` | tambah platform baru ke nav drawer |
-| `public/yb.html` | tambah platform baru ke nav drawer |
-| `public/bk.html` | tambah platform baru ke nav drawer |
-| `public/sb.html` | tambah platform baru ke nav drawer |
-| `public/tp.html` | tambah platform baru ke nav drawer |
+| `public/rb.html`    | tambah platform baru ke nav drawer |
+| `public/yb.html`    | tambah platform baru ke nav drawer |
+| `public/bk.html`    | tambah platform baru ke nav drawer |
+| `public/sb.html`    | tambah platform baru ke nav drawer |
+| `public/xn.html`    | tambah platform baru ke nav drawer |
+| `public/vd.html`    | tambah platform baru ke nav drawer |
+| `public/zg.html`    | tambah platform baru ke nav drawer |
+| `public/er.html`    | tambah platform baru ke nav drawer |
+| `public/tp.html`    | tambah platform baru ke nav drawer |
 | `public/smartlinks.js` | tambah card selector ke `CARD_SEL` |
 | `public/sitemap.xml` | tambah `<url>` baru |
 | `firebase.json` | tambah dua rewrite `/pN` + `/pN/**` |

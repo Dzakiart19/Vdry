@@ -26,3 +26,4 @@
 - [Watch Modal Scroll/Overlap Fix](vidorey-watch-scroll-fix.md) — GPU video layer bleed fix (isolation:isolate + z-index:1 on related); Social Bar suppressor in ads.js; modal z-index bumped to 10000.
 - [Download Button + Directlink Fix](vidorey-download-directlink.md) — triggerDirectlink pakai cooldown terpisah (_lastDirectlink 5s); 800ms delay sebelum download; overlay dihapus (no-op + CSS display:none !important).
 - [Vidorey Shortlink DB Persistence](vidorey-shortlink-db-persistence.md) — ensureTable() auto-DDL at startup; no manual migration needed; seed from data/shortlinks-seed.json on fresh clone.
+- [ER Platform 10 Architecture](er-platform9-architecture.md) — erome.com HTML scrape; version filters broken (semua redirect /explore); categories = search-based keywords; direct MP4, no tokens.

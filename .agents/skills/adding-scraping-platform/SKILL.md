@@ -5,7 +5,7 @@ description: Add a new scraping platform (Platform N) to Vidorey. Covers BOTH la
 
 # Adding a New Scraping Platform to Vidorey
 
-## Platform Registry (current — 9 platforms)
+## Platform Registry (current — 10 platforms)
 
 | Platform | Route | Source site | Delivery | Scraper | HTML | JS | UI Name | UI Type |
 |---|---|---|---|---|---|---|---|---|
@@ -18,6 +18,7 @@ description: Add a new scraping platform (Platform N) to Vidorey. Covers BOTH la
 | P7  | `/vd` | videy.design    | MP4 direct | `lib/scrapers/vd.js`  | `vd.html`    | `vd.js`   | Vidorey 7        | Listing |
 | P8  | `/xn` | xchina.tube     | HLS m3u8   | `lib/scrapers/xn.js`  | `xn.html`    | `xn.js`   | Vidorey 6        | Listing |
 | P9  | `/zg` | zoig.com        | MP4 direct | `lib/scrapers/zg.js`  | `zg.html`    | `zg.js`   | Vidorey 8        | Listing |
+| P10 | `/er` | erome.com       | MP4 direct | `lib/scrapers/er.js`  | `er.html`    | `er.js`   | Vidorey 9        | Listing |
 
 **⚠️ Aturan naming:** Nama UI (Vidorey N) **tidak boleh menyebut nama web sumber** (ruangbokep, tik.porn, dsb.).
 

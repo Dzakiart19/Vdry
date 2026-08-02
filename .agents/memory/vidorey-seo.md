@@ -1,6 +1,6 @@
 ---
 name: Vidorey SEO Strategy
-description: Meta tag template, keyword strategy, robots.txt, sitemap.xml — untuk naikkan CPM via Tier 1 traffic. 6 platform.
+description: Meta tag template, keyword strategy, robots.txt, sitemap.xml — untuk naikkan CPM via Tier 1 traffic. 10 platforms (2026-08-02).
 ---
 
 ## Tujuan
@@ -83,26 +83,26 @@ Semua halaman pakai keyword bahasa **Inggris** agar Google indexing mengirim tra
 | File | Isi |
 |---|---|
 | `public/robots.txt` | `Allow: /`, `Disallow: /monitor`, `Disallow: /health`, `Sitemap:` link |
-| `public/sitemap.xml` | 6 URL platform, `changefreq: daily`, priority 1.0 (index) / 0.9–0.8 (platform) |
+| `public/sitemap.xml` | 10 URL platform, `changefreq: daily`, priority 1.0 (index) / 0.9–0.8 (platform) |
 
 ## Favicon
 `<link rel="icon" type="image/png" href="/logo.png" />` — wajib di semua HTML. tp.html & rc.html sempat ketinggalan, sudah ditambah.
 
 ## Schema.org (Structured Data)
-- **Semua 6 halaman** → JSON-LD array `[WebSite, WebPage]` — keduanya selalu ada bersamaan; plus **VideoObject** dinamis via `public/utils.js` saat video dibuka
+- **Semua 10 halaman** → JSON-LD array `[WebSite, WebPage]` — keduanya selalu ada bersamaan; plus **VideoObject** dinamis via `public/utils.js` saat video dibuka
 - `WebSite` schema: name, url, description, potentialAction (SearchAction ke `/?q={search_term_string}`)
 - `WebPage` schema: name, url, description, isPartOf → WebSite utama
 - Format: `<script type="application/ld+json">[ {...WebSite}, {...WebPage} ]</script>` tepat sebelum `</head>`
 - Platform baru wajib pakai format array ini — jangan hanya WebPage saja
 
 ## Google Analytics / GTM
-- GTM container: `GTM-NWZSVQT9` — dipasang di semua 6 HTML (head + noscript body)
+- GTM container: `GTM-NWZSVQT9` — dipasang di semua 10 HTML (head + noscript body)
 - GA4 Measurement ID: `G-6MB6SQTZWK` — dikonfigurasi via GTM tag "Google Tag", trigger "Initialization - All Pages"
 - CSP server.js sudah include `https://www.googletagmanager.com` di scriptSrc
 
 ## Google Search Console
 - Properti: `https://vidorey.web.app` — terverifikasi via file HTML `public/googlef064cc99be6a7884.html`
-- Meta verification tag: `Vl8CnSoQmgdUxFfXGw4k7nzAPRZBgImHr2OrBPnmaAI` — di semua 6 HTML
+- Meta verification tag: `Vl8CnSoQmgdUxFfXGw4k7nzAPRZBgImHr2OrBPnmaAI` — di semua 10 HTML
 - Sitemap terdaftar, homepage sudah terindex. Jangan hapus file verifikasi.
 
 ## Bing Webmaster Tools
@@ -120,13 +120,16 @@ Setiap halaman wajib punya tag `<h1>` di dalam `<main>`. Gunakan CSS `.sr-only` 
 ## Meta tags per platform (saat ini)
 | Platform | File | Title keyword |
 |---|---|---|
-| P1 | `index.html` | "Free XXX Videos & Porn Movies \| Watch HD Sex Online" |
-| P2 | `rb.html` | "Free Porn Videos \| New XXX Movies Updated Daily" |
-| P3 | `yb.html` | "XXX Videos \| Free Premium Adult Streaming Online" |
-| P4 | `bk.html` | "Free HD Sex Videos \| Adult Porn Streaming" |
-| P6 | `sb.html` | "Free HD Sex Videos \| Adult Porn Streaming" |
-| P8 | `xn.html` | "Free Chinese XXX Videos \| HD Asian Porn Streaming" |
-| P5 | `tp.html` | "Free Short Porn Clips \| Scroll XXX Videos" |
+| P1  | `index.html` | "Free XXX Videos & Porn Movies \| Watch HD Sex Online" |
+| P2  | `rb.html`    | "Free Porn Videos \| New XXX Movies Updated Daily" |
+| P3  | `yb.html`    | "XXX Videos \| Free Premium Adult Streaming Online" |
+| P4  | `bk.html`    | "Free HD Sex Videos \| Adult Porn Streaming" |
+| P6  | `sb.html`    | "Free HD Sex Videos \| Adult Porn Streaming" |
+| P8  | `xn.html`    | "Free Chinese XXX Videos \| HD Asian Porn Streaming" |
+| P7  | `vd.html`    | "Free Amateur Sex Videos \| Adult Porn Streaming" |
+| P9  | `zg.html`    | "Free Homemade Porn Videos \| Real Amateur Sex" |
+| P10 | `er.html`    | "Free Amateur Erotic Videos & Adult Albums" |
+| P5  | `tp.html`    | "Free Short Porn Clips \| Scroll XXX Videos" |
 
 ## How to apply — platform baru
 Gunakan template `<head>` lengkap di atas — sudah mencakup semua item. Jangan lewati satu pun.
