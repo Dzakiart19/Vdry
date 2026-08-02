@@ -213,28 +213,12 @@
       </svg>
     </button>
   </form>
-</div>
-
-<!-- ─── FILTER BAR (sort + category) ─── -->
-<div class="er-filter-bar" id="erFilterBar">
-  <!-- Sort tabs -->
-  <div class="er-sort-tabs" id="erSortTabs">
-    <button type="button" class="er-sort-btn active" data-sort="hot">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M13.5 2C13.5 2 13 8 10 11c-2 2-5 2.5-5 2.5S7 16 7 19a5 5 0 0010 0c0-6-3.5-17-3.5-17z"/></svg>
-      Hot
+  <div class="vdry-cat-wrap">
+    <button type="button" class="vdry-cat-btn" id="erCatBtn">
+      <span data-i18n="cat.btn">Kategori</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
-    <button type="button" class="er-sort-btn" data-sort="new">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      New
-    </button>
-  </div>
-  <!-- Category pills -->
-  <div class="er-cat-pills" id="erCatPills">
-    <button type="button" class="er-cat-pill active" data-cat="all">All</button>
-    <button type="button" class="er-cat-pill" data-cat="straight">Straight</button>
-    <button type="button" class="er-cat-pill" data-cat="trans">Trans</button>
-    <button type="button" class="er-cat-pill" data-cat="gay">Gay</button>
-    <button type="button" class="er-cat-pill" data-cat="hentai">Hentai</button>
+    <div class="vdry-cat-panel" id="erCatPanel"></div>
   </div>
 </div>
 

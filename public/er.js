@@ -34,8 +34,8 @@
     totalPages:  1,
     loading:     false,
     searchQuery: '',
-    sort:        'hot',
-    cat:         'all',
+    catId:       '',
+    catName:     '',
   };
 
   /* ── DOM refs ── */
@@ -44,6 +44,8 @@
     searchForm:    $('erSearchForm'),
     searchInput:   $('erSearchInput'),
     searchHeading: $('erSearchHeading'),
+    catBtn:        $('erCatBtn'),
+    catPanel:      $('erCatPanel'),
     grid:          $('erGrid'),
     pagination:    $('erPagination'),
     loading:       $('erLoadingState'),
@@ -127,59 +129,42 @@
 
   /* ── Search heading ── */
   function updateSearchHeading() {
-    const q = state.searchQuery;
-    if (!q) {
+    const q   = state.searchQuery;
+    const cat = state.catName;
+    if (!q && !cat) {
       els.searchHeading.classList.remove('visible');
       els.searchHeading.innerHTML = '';
       return;
     }
     els.searchHeading.classList.add('visible');
-    els.searchHeading.innerHTML =
-      `${_t('heading.search')}: <strong>"${escHtml(q)}"</strong>` +
-      `<button class="rb-search-clear" id="erSearchClear">${_t('heading.clearSearch')}</button>`;
-    document.getElementById('erSearchClear').addEventListener('click', () => {
-      state.searchQuery = '';
-      state.page = 1;
-      els.searchInput.value = '';
-      updateSearchHeading();
-      loadPosts(true);
-    });
-  }
-
-  /* ── Filter bar ── */
-  function initFilterBar() {
-    document.querySelectorAll('#erSortTabs .er-sort-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (btn.dataset.sort === state.sort) return;
-        state.sort = btn.dataset.sort;
+    if (q) {
+      els.searchHeading.innerHTML =
+        `${_t('heading.search')}: <strong>"${escHtml(q)}"</strong>` +
+        `<button class="rb-search-clear" id="erSearchClear">${_t('heading.clearSearch')}</button>`;
+      document.getElementById('erSearchClear').addEventListener('click', () => {
+        state.searchQuery = '';
         state.page = 1;
-        document.querySelectorAll('#erSortTabs .er-sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
+        els.searchInput.value = '';
+        updateSearchHeading();
         loadPosts(true);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
-    });
-    document.querySelectorAll('#erCatPills .er-cat-pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (btn.dataset.cat === state.cat) return;
-        state.cat  = btn.dataset.cat;
-        state.page = 1;
-        document.querySelectorAll('#erCatPills .er-cat-pill').forEach(b => b.classList.toggle('active', b.dataset.cat === state.cat));
+    } else {
+      els.searchHeading.innerHTML =
+        `${_t('heading.cat')}: <strong>${escHtml(cat)}</strong>` +
+        `<button class="rb-search-clear" id="erSearchClear">${_t('heading.clearSearch')}</button>`;
+      document.getElementById('erSearchClear').addEventListener('click', () => {
+        state.catId   = '';
+        state.catName = '';
+        state.page    = 1;
+        updateSearchHeading();
         loadPosts(true);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
-    });
-  }
-
-  function syncFilterBar() {
-    document.querySelectorAll('#erSortTabs .er-sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
-    document.querySelectorAll('#erCatPills .er-cat-pill').forEach(b => b.classList.toggle('active', b.dataset.cat === state.cat));
-    const filterBar = document.getElementById('erFilterBar');
-    if (filterBar) filterBar.classList.toggle('hidden', !!state.searchQuery);
+    }
   }
 
   /* ── History helpers ── */
   function saveNav(push) {
-    const s = { erPage: state.page, erQ: state.searchQuery, erSort: state.sort, erCat: state.cat };
+    const s = { erPage: state.page, erQ: state.searchQuery, erCat: state.catId, erCatName: state.catName };
     if (push) history.pushState(s, '', '/er');
     else      history.replaceState(s, '', '/er');
   }
@@ -190,16 +175,13 @@
     state.loading = true;
     showState('loading');
     updateSearchHeading();
-    syncFilterBar();
     saveNav(pushNav);
 
     const q    = state.searchQuery;
     const page = state.page;
     let qs = `p=${page}`;
-    if (q) qs += `&q=${encodeURIComponent(q)}`;
-    if (!q) {
-      qs += `&sort=${state.sort}&cat=${state.cat}`;
-    }
+    if (q)           qs += `&q=${encodeURIComponent(q)}`;
+    else if (state.catId) qs += `&cat=${encodeURIComponent(state.catId)}`;
 
     try {
       const data = await apiFetch(`/api/er/posts?${qs}`);
