@@ -528,10 +528,10 @@
       return;
     }
     if (s && typeof s.erPage !== 'undefined') {
-      state.page        = s.erPage  || 1;
-      state.searchQuery = s.erQ     || '';
-      state.sort        = s.erSort  || 'hot';
-      state.cat         = s.erCat   || 'all';
+      state.page        = s.erPage    || 1;
+      state.searchQuery = s.erQ       || '';
+      state.catId       = s.erCat     || '';
+      state.catName     = s.erCatName || '';
       if (els.searchInput) els.searchInput.value = state.searchQuery;
       loadPosts(false);
     }
@@ -594,7 +594,25 @@
   /* ── Init ── */
   const deepLinkMatch = location.pathname.match(/^\/er\/watch\/([^/]+)\/?$/);
 
-  initFilterBar();
+  /* ── Kategori picker ── */
+  if (window.initVdryCategoryPicker && document.getElementById('erCatBtn')) {
+    initVdryCategoryPicker({
+      button:      document.getElementById('erCatBtn'),
+      panel:       document.getElementById('erCatPanel'),
+      apiPath:     `${API}/api/er/categories`,
+      getActiveId: () => state.catId,
+      onSelect: (item) => {
+        if (window.VdryAds) VdryAds.triggerPopunder();
+        state.searchQuery = '';
+        els.searchInput.value = '';
+        state.catId   = item ? String(item.id) : '';
+        state.catName = item ? item.name : '';
+        state.page = 1;
+        loadPosts(true);
+      },
+    });
+  }
+
   loadPosts(false);
   if (window.VdryAds) VdryAds.initVideoOverlay('er');
   if (window.VdryAds) VdryAds.initVideoTap('er');
