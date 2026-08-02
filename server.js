@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════
    Vidorey — Multi-Platform Video Browser
-   Composition root: security middleware + mount sembilan platform (terisolasi
+   Composition root: security middleware + mount 10 platform (terisolasi
    penuh satu sama lain) + monitor/health routes + SPA fallback.
-   Detail per-platform ada di lib/scrapers/{p1,rb,yb,bk,tp,sb,xn,vd,zg}.js
+   Detail per-platform ada di lib/scrapers/{p1,rb,yb,bk,tp,sb,xn,vd,zg,er}.js
 ═══════════════════════════════════════════════════════════════════════ */
 
 const express   = require('express');
