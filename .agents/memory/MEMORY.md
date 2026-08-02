@@ -20,7 +20,8 @@
 - [XN Platform 8 Architecture](xn-platform8-architecture.md) — xchina.tube POST API + AES-CBC decrypt key "xxx" + HLS token TTL ~1.5h + self-healing + tp.helloye.com thumb.
 - [VD Platform 7 Architecture](vd-platform7-architecture.md) — videy.design PHP HTML scrape; `.video-card` root (not `a[href=...]`); title OUTSIDE `<a>` in sibling `.video-info`; direct MP4 no tokens; no search/categories.
 - [ZG Platform 8 Architecture](zg-platform8-architecture.md) — zoig.com; X-Forwarded-For residential IP bypass; signed MP4 token changes per request → 8-min cache + self-heal; poster attr for thumb; ul.browse.related for related videos.
-- [Vidorey i18n EN/ID Toggle](vidorey-i18n.md) — full toggle stored in localStorage; data-i18n/html/placeholder attrs + _t() in all JS; langchange CustomEvent re-renders headings.
+- [Vidorey i18n EN/ID Toggle](vidorey-i18n.md) — default='en'; button shows CURRENT lang; nav.p3–p7 added; emojis in copy; ?v=3 cache-bust; langToggle z-index:200.
+- [Vidorey Web Access Guard](vidorey-web-guard.md) — WEB_DEV_HOSTS regex blokir static+SPA di Koyeb; API/proxy/monitor tetap terbuka; 127.0.0.1 wajib di allowlist.
 - [Vidorey Ad Optimization](vidorey-ad-optimization.md) — ads.js + sticky banner system; createInlineAd() pos 8/16/24 di semua P1–P9 kecuali tp; 9 unit Adsterra aktif semua sudah diimplementasi; zone conflict rule.
 - [Vidorey Audit 2026-07-28](vidorey-audit-2026-07-28.md) — P3 playmogo.com & P6/P7 fbplay.vip already handled gracefully (dead-cache); p1 deadStreamIds cleanup added; tpThumbCache dead comment removed.
 - [Watch Modal Scroll/Overlap Fix](vidorey-watch-scroll-fix.md) — GPU video layer bleed fix (isolation:isolate + z-index:1 on related); Social Bar suppressor in ads.js; modal z-index bumped to 10000.

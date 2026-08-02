@@ -197,16 +197,17 @@ Langkah untuk update nav drawer:
 
 ### 3j. Body — Script sebelum `</body>`
 ```html
-<script src="/i18n.js"></script>   <!-- WAJIB: harus PERTAMA, sebelum config.js -->
+<script src="/i18n.js?v=3"></script>  <!-- WAJIB: harus PERTAMA, sebelum config.js -->
 <script src="/config.js"></script>
 <script src="/utils.js"></script>
 <script src="/adblock.js"></script>
-<script src="/ads.js"></script>    <!-- WAJIB: sebelum platform JS -->
-<script src="/pN.js"></script>     <!-- app logic platform -->
-<script src="/smartlinks.js"></script>  <!-- WAJIB ada -->
+<script src="/ads.js"></script>        <!-- WAJIB: sebelum platform JS -->
+<script src="/pN.js"></script>         <!-- app logic platform -->
+<script src="/smartlinks.js"></script> <!-- WAJIB ada -->
 ```
 ⚠️ **`i18n.js` HARUS urutan pertama** — `config.js` dan `pN.js` bergantung pada `window._t()` yang di-export `i18n.js`. Jika urutan terbalik, `_t is not defined` error.
 ⚠️ **`ads.js` HARUS sebelum platform JS** — platform JS memanggil `VdryAds.*` saat init.
+⚠️ **Query string `?v=3`** — wajib agar browser tidak serve cached i18n.js lama. Bump versi jika i18n.js diubah signifikan.
 
 ---
 

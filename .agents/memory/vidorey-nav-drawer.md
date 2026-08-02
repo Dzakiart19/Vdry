@@ -70,18 +70,20 @@ Platform dengan UI TikTok-style (vertical scroll-snap, tidak ada grid/card). Dit
 Dropdown lama tidak terlihat user. Diganti hamburger ChatGPT-style. Nama sumber disembunyikan atas permintaan user eksplisit.
 
 ## Nama Platform (UI — nav drawer & topbar)
-| Platform | URL | Nama UI | Deskripsi Nav | Seksi |
-|---|---|---|---|---|
-| P1  | `/`   | Vidorey 1 | Folder video · streaming | Atas |
-| P2  | `/rb` | Vidorey 2 | Video harian · cari & tonton & kategori | Atas |
-| P3  | `/yb` | Vidorey 3 | Video harian · cari & tonton & kategori | Atas |
-| P4  | `/bk` | Vidorey 4 | Video harian · cari & tonton & kategori | Atas |
-| P6  | `/sb` | Vidorey 5 | Video harian · cari & tonton | Atas |
-| P8  | `/xn` | Vidorey 6 | Video harian · cari & tonton | Atas |
-| P7  | `/vd` | Vidorey 7 | Video harian · cari & tonton | Atas |
-| P9  | `/zg` | Vidorey 8 | Homemade amateur · real people | Atas |
-| P10 | `/er` | Vidorey 9 | Album erotis · video amatir | Atas |
-| P5  | `/tp` | Vidorey TikTok 1 | TikTok · scroll vertikal · tag browser | Bawah (Fitur Lain) |
+Deskripsi pakai copy bergaya platform (emoji 🔥💦🥵🫦🔞). Teks di bawah adalah fallback hardcoded di HTML; teks aktual saat runtime diambil dari i18n.js via `data-i18n` key.
+
+| Platform | URL | Nama UI | i18n key | Deskripsi ID (runtime) | Seksi |
+|---|---|---|---|---|---|
+| P1  | `/`   | Vidorey 1 | `nav.p1` | Folder bokep · streaming 💦 | Atas |
+| P2  | `/rb` | Vidorey 2 | `nav.p2` | Update harian · cari & tonton 🥵 | Atas |
+| P3  | `/yb` | Vidorey 3 | `nav.p3` | Bokep segar · cari & tonton 🫦 | Atas |
+| P4  | `/bk` | Vidorey 4 | `nav.p4` | Video panas · cari & tonton 🔥 | Atas |
+| P6  | `/sb` | Vidorey 5 | `nav.p5` | Koleksi hot · cari & tonton 💦 | Atas |
+| P8  | `/xn` | Vidorey 6 | `nav.p6` | Video Asia hot · cari & tonton 🥵 | Atas |
+| P7  | `/vd` | Vidorey 7 | `nav.p7` | Streaming langsung · tonton sekarang 🔞 | Atas |
+| P9  | `/zg` | Vidorey 8 | `nav.p8` | Homemade asli · amateur hot 🫦 | Atas |
+| P10 | `/er` | Vidorey 9 | `nav.p9` / `nav.er` | Album erotis · foto & video 💦 | Atas |
+| P5  | `/tp` | Vidorey TikTok 1 | `nav.tp` | Scroll video panas · gaya TikTok 🥵 | Bawah (Fitur Lain) |
 
 ## IDs dan classes — state saat ini
 
@@ -126,9 +128,12 @@ Semua `.ps-avatar` pakai **`<img src="/logo.png" alt="Vidorey">`** — logo Vido
 | Layer | z-index |
 |---|---|
 | `.topbar` (P1–P4, P6) | 100 |
+| `.lang-toggle-btn` | 200 (position:relative — wajib agar tidak terblok nav-overlay saat drawer terbuka) |
 | `.nav-overlay` | 149 |
 | `.nav-drawer` | 150 |
 | `.modal` (video player) | 500 |
+
+⚠️ `.lang-toggle-btn` harus punya `position: relative; z-index: 200` di style.css — tanpa ini, nav-overlay (z-index:149, pointer-events:all saat terbuka) memblokir klik tombol bahasa.
 
 ## Active item per halaman
 - `index.html` → Vidorey 1 `.active` + `aria-current="page"`
