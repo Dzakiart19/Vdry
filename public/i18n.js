@@ -201,7 +201,7 @@
     });
     /* Update toggle button label */
     var btn = document.getElementById('langToggle');
-    if (btn) btn.textContent = _lang === 'id' ? 'EN' : 'ID';
+    if (btn) btn.textContent = _lang === 'id' ? 'ID' : 'EN';
     /* Update <html lang> */
     document.documentElement.lang = _lang === 'id' ? 'id' : 'en';
   }
