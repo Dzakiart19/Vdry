@@ -34,6 +34,8 @@
     totalPages:  1,
     loading:     false,
     searchQuery: '',
+    sort:        'hot',
+    cat:         'all',
   };
 
   /* ── DOM refs ── */
@@ -144,9 +146,40 @@
     });
   }
 
+  /* ── Filter bar ── */
+  function initFilterBar() {
+    document.querySelectorAll('#erSortTabs .er-sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.sort === state.sort) return;
+        state.sort = btn.dataset.sort;
+        state.page = 1;
+        document.querySelectorAll('#erSortTabs .er-sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
+        loadPosts(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+    document.querySelectorAll('#erCatPills .er-cat-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.cat === state.cat) return;
+        state.cat  = btn.dataset.cat;
+        state.page = 1;
+        document.querySelectorAll('#erCatPills .er-cat-pill').forEach(b => b.classList.toggle('active', b.dataset.cat === state.cat));
+        loadPosts(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+  }
+
+  function syncFilterBar() {
+    document.querySelectorAll('#erSortTabs .er-sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
+    document.querySelectorAll('#erCatPills .er-cat-pill').forEach(b => b.classList.toggle('active', b.dataset.cat === state.cat));
+    const filterBar = document.getElementById('erFilterBar');
+    if (filterBar) filterBar.classList.toggle('hidden', !!state.searchQuery);
+  }
+
   /* ── History helpers ── */
   function saveNav(push) {
-    const s = { erPage: state.page, erQ: state.searchQuery };
+    const s = { erPage: state.page, erQ: state.searchQuery, erSort: state.sort, erCat: state.cat };
     if (push) history.pushState(s, '', '/er');
     else      history.replaceState(s, '', '/er');
   }
@@ -157,12 +190,16 @@
     state.loading = true;
     showState('loading');
     updateSearchHeading();
+    syncFilterBar();
     saveNav(pushNav);
 
     const q    = state.searchQuery;
     const page = state.page;
     let qs = `p=${page}`;
     if (q) qs += `&q=${encodeURIComponent(q)}`;
+    if (!q) {
+      qs += `&sort=${state.sort}&cat=${state.cat}`;
+    }
 
     try {
       const data = await apiFetch(`/api/er/posts?${qs}`);
@@ -509,8 +546,10 @@
       return;
     }
     if (s && typeof s.erPage !== 'undefined') {
-      state.page        = s.erPage || 1;
-      state.searchQuery = s.erQ    || '';
+      state.page        = s.erPage  || 1;
+      state.searchQuery = s.erQ     || '';
+      state.sort        = s.erSort  || 'hot';
+      state.cat         = s.erCat   || 'all';
       if (els.searchInput) els.searchInput.value = state.searchQuery;
       loadPosts(false);
     }
@@ -573,6 +612,7 @@
   /* ── Init ── */
   const deepLinkMatch = location.pathname.match(/^\/er\/watch\/([^/]+)\/?$/);
 
+  initFilterBar();
   loadPosts(false);
   if (window.VdryAds) VdryAds.initVideoOverlay('er');
   if (window.VdryAds) VdryAds.initVideoTap('er');
