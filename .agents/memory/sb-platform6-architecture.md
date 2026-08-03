@@ -9,8 +9,14 @@ description: situsbokep.cc (Vidorey 5 di UI) — scraping, proxy, search fix, da
 - **URL**: `/sb`
 - **Sumber**: situsbokep.cc (WP-based, xvideos embedframe)
 
-## Chain video
-`situsbokep.cc/view/[slug]` → `itemprop="embedURL"` → `www.xvideos.com/embedframe/[xv_id]` → `html5player.setVideoHLS(...)` → `*.xvideos-cdn.com` m3u8
+## Chain video (UPDATED 2026-08-03)
+situsbokep.cc sekarang pakai fbplay.vip embed (xvideos sudah tidak dipakai):
+`situsbokep.cc/view/[slug]` → `itemprop="embedURL"` → `https://db.fbplay.vip/embed/video/[fbplayId]` → `playlistUrl = 'https://zz.fbplay.vip/api/stream/[id]/playlist.m3u8'` → segmen dari `*.tiktokcdn.com`
+
+Legacy fallback (jika embedURL masih berisi xvideos):
+`situsbokep.cc/view/[slug]` → xvideos.com/embedframe/[xv_id] → `html5player.setVideoHLS(...)` → `*.xvideos-cdn.com`
+
+**Why:** fbplay.vip mengubah arsitektur — dulu merelay xvideos, sekarang serve HLS-nya sendiri dengan segmen TikTok CDN. Signed URL segmen valid ~1 tahun (`x-expires` ~2027+), jadi cache 8 jam tetap aman.
 
 ## Scraping detail
 - Listing HTML: `article.thumb-block, article.loop-video` (cheerio)
@@ -36,9 +42,12 @@ GET /wp-json/wp/v2/posts?search=QUERY&page=N&per_page=24&_embed=wp:featuredmedia
 **How to apply:** Cek setiap kali platform WordPress baru ditambah — kalau HTML pagination listing tidak berubah antar halaman untuk search, gunakan WP REST API untuk search mode.
 
 ## CDN allowlist (isAllowedSbCdnUrl)
-- `*.xvideos-cdn.com`, `xvideos-cdn.com`
-- `*.xnxx-cdn.com`, `xnxx-cdn.com`
-- Extension allowed: `.ts`, `.m3u8`, `.m3u`, `.aac`, `.mp4`, `.m4s`, `.key`, `.init`
+- `*.fbplay.vip`, `fbplay.vip` — fbplay HLS master manifest
+- `*.tiktokcdn.com`, `tiktokcdn.com` — segmen HLS (dilayani fbplay via TikTok CDN)
+- `*.xvideos-cdn.com`, `xvideos-cdn.com` — legacy fallback
+- `*.xnxx-cdn.com`, `xnxx-cdn.com` — legacy fallback
+- Extension allowed: `.ts`, `.m3u8`, `.m3u`, `.aac`, `.mp4`, `.m4s`, `.key`, `.init`, `.image`
+- Path pattern `/stream/` juga diizinkan (fbplay API path tidak pakai extension)
 
 ## Thumbnail allowlist (isAllowedSbThumb)
 - `situsbokep.cc`, `*.situsbokep.cc`
@@ -55,10 +64,10 @@ GET /wp-json/wp/v2/posts?search=QUERY&page=N&per_page=24&_embed=wp:featuredmedia
 | `sbVideoCache` | 4 jam | 300 | `p7_video` |
 | `sbFreshCache` | 60 detik | 100 | `p7_fresh` |
 
-Token xvideos TTL ~1 tahun → 8 jam cache aman. `sbFreshCache` dipakai untuk self-healing re-resolve xvId tanpa hit situsbokep lagi.
+Segmen TikTok CDN TTL ~1 tahun → 8 jam cache aman. `sbFreshCache` dipakai untuk self-healing re-resolve tanpa hit situsbokep lagi.
 
-## Token xvideos — self-healing
-Jika stream 403/gagal, `freshResolveM3u8(slug)` re-fetch xvideos embedframe langsung (lewati situsbokep page) menggunakan `_xvId` tersimpan di `sbVideoCache`.
+## Self-healing
+`freshResolveM3u8(slug)` memeriksa `_fbplayId` atau `_xvId` di `sbVideoCache`, lalu re-fetch embed langsung (fbplay atau xvideos) tanpa hit situsbokep page lagi. Referer untuk segmen TikTok CDN: `https://db.fbplay.vip/` (bukan xvideos.com).
 
 ## Watch view (P6)
 Full-page layout identik P2/P3/P4: `watch-topbar` + `watch-main` + `watch-related` sticky sidebar. Deep-link `/sb/watch/<token>` (11-char shortlink). HLS via hls.js. Related di-scrape dari `article.thumb-block, article.loop-video` di halaman video.
