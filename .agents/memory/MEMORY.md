@@ -14,7 +14,7 @@
 - [Vidorey Shortlink](vidorey-shortlink.md) — lib/shortlink.js token registry; registerSlug(platform,slug)→11char; /api/s/:platform/:token di server.js; full client encodeSlug/decodeSlug + currentToken flow.
 - [No Source Ads Rule](no-source-ads.md) — platform baru wajib proxy MP4/m3u8 langsung; tidak boleh ada iframe/embed sumber di browser; jika chain tidak bisa di-resolve server-side → not feasible.
 - [TP Architecture (Vidorey TikTok 1)](tp-platform5-architecture.md) — tik.porn __NEXT_DATA__ scrape; HLS via video-cdn.tik.porn; base64url proxy; axTpGetSafe; search dedup seenVideoIds (SSR pagination tidak bekerja); BUKAN Vidorey 5.
-- [SB Architecture (Vidorey 5)](sb-platform6-architecture.md) — situsbokep.cc P6 code; UI = Vidorey 5 (TikTok tidak dihitung); search via WP REST API (HTML scrape /page/N/?s= selalu return hal.1); xvideos embedframe → HLS.
+- [SB Architecture (Vidorey 5)](sb-platform6-architecture.md) — situsbokep.cc P6; fbplay.vip embed → HLS (segmen TikTok CDN TTL ~1yr); xvideos hanya legacy fallback; search WP REST API.
 - [Vidorey SEO Strategy](vidorey-seo.md) — lang="en" + og:locale=en_US + English keywords; GTM GTM-NWZSVQT9; GA4 G-6MB6SQTZWK; GSC terverifikasi; Bing terdaftar; H1 sr-only wajib.
 - [New Platform Checklist](new-platform-checklist.md) — checklist 7 fase lengkap saat tambah platform baru; semua file yang harus diubah tercantum.
 - [XN Platform 8 Architecture](xn-platform8-architecture.md) — xchina.tube POST API + AES-CBC decrypt key "xxx" + HLS token TTL ~1.5h + self-healing + tp.helloye.com thumb.
@@ -22,7 +22,7 @@
 - [ZG Platform 8 Architecture](zg-platform8-architecture.md) — zoig.com; X-Forwarded-For residential IP bypass; signed MP4 token changes per request → 8-min cache + self-heal; poster attr for thumb; ul.browse.related for related videos.
 - [Vidorey i18n EN/ID Toggle](vidorey-i18n.md) — default='en'; button shows CURRENT lang; nav.p3–p7 added; emojis in copy; ?v=3 cache-bust; langToggle z-index:200.
 - [Vidorey Web Access Guard](vidorey-web-guard.md) — WEB_DEV_HOSTS regex blokir static+SPA di Koyeb; API/proxy/monitor tetap terbuka; 127.0.0.1 wajib di allowlist.
-- [Vidorey Ad Optimization](vidorey-ad-optimization.md) — ads.js + sticky banner system; createInlineAd() pos 8/16/24 di semua P1–P9 kecuali tp; 9 unit Adsterra aktif semua sudah diimplementasi; zone conflict rule.
+- [Vidorey Ad Optimization](vidorey-ad-optimization.md) — ads.js + sticky banner; createInlineAd() pos 8/16/24 P1–P9 kecuali tp; directlink/popunder pakai ProPush rm358.com (bukan Adsterra); zone conflict rule.
 - [Vidorey Audit 2026-07-28](vidorey-audit-2026-07-28.md) — P3 playmogo.com & P6/P7 fbplay.vip already handled gracefully (dead-cache); p1 deadStreamIds cleanup added; tpThumbCache dead comment removed.
 - [Watch Modal Scroll/Overlap Fix](vidorey-watch-scroll-fix.md) — GPU video layer bleed fix (isolation:isolate + z-index:1 on related); Social Bar suppressor in ads.js; modal z-index bumped to 10000.
 - [Download Button + Directlink Fix](vidorey-download-directlink.md) — triggerDirectlink pakai cooldown terpisah (_lastDirectlink 5s); 800ms delay sebelum download; overlay dihapus (no-op + CSS display:none !important).

@@ -16,21 +16,19 @@ ditemukan di halaman ini" → video di-dead-cache 6 jam lalu difilter dari listi
 fetch (axios/cheerio) mengembalikan "resource removed or unavailable" (4/4 sample). Butuh
 browser automation untuk konfirmasi, bukan patch scraper biasa.
 
-## P6/P7 (situsbokep.cc / sb.js) — xvideos embed migrated to native fbplay.vip player
-situsbokep.cc embed terbaru memakai `db.fbplay.vip/embed/video/{hash}` — tanpa substring
-`xvideos.com`, sehingga `extractXvId()` mengembalikan null → "Sumber video tidak didukung"
-→ dead-cache. Hanya post lama (yang masih pakai xvideos embedframe) yang bisa diputar.
+## P6 (situsbokep.cc / sb.js) — xvideos embed migrated to native fbplay.vip player
 
-**Status: handled gracefully.** Kode sudah benar: fbplay.vip di-bypass total (extractXvId
-ekstrak xv_id, lalu server langsung hit xvideos.com/embedframe — fbplay.vip tidak pernah
-di-fetch). Post yang tidak punya xvId langsung dead-cache.
+**STATUS: ✅ FIXED (2026-08-03)** — lihat `sb-platform6-architecture.md` untuk detail lengkap.
 
-**Jangan wire native fbplay.vip:** manifest-nya menyisipkan ad creative (tiktokcdn.com .ts
-segment) dan sebagian video masih "processing". Melanggar no-source-ads rule. Butuh
-sign-off eksplisit sebelum diimplementasikan.
+situsbokep.cc sepenuhnya migrasi ke `db.fbplay.vip/embed/video/{hash}`. Tidak ada lagi xvideos
+embedframe. Fix: tambah `extractFbplayId()` + `resolveFbplayHls()` di sb.js. CDN allowlist
+diperluas ke `*.fbplay.vip` + `*.tiktokcdn.com` (segmen HLS di-serve dari TikTok CDN dengan
+signed URL TTL ~1 tahun). Semua SB video sekarang resolve via fbplay dengan HLS normal.
 
-**Why this matters:** P6/P7 degradasi seiring migrasi post baru ke fbplay.vip — ini source-side
-change, bukan bug proxy/token.
+**Catatan awal audit lama (sudah tidak berlaku):** fbplay.vip pernah di-bypass karena
+dicurigai inject ad creative di segmen. Setelah dicek ulang 2026-08-03, segmen tiktokcdn.com
+adalah content video asli (bukan ad), dan TTL signed URL aman (~2027). No-source-ads rule
+tidak dilanggar karena semua diproxy server-side.
 
 ## Minor issues resolved (2026-07-28)
 - **p1.js `deadStreamIds` cleanup**: Ditambahkan `setInterval` 10 menit untuk hapus entry

@@ -135,16 +135,16 @@ IP dari `x-forwarded-for` header (first value), truncated karena Replit proxy.
 
 ## Histats Counter — Site-Wide Tracking (fixed 2026-07-28)
 
-**Status saat ini: tracking script terpasang di SEMUA 9 halaman publik**
+**Status saat ini: tracking script terpasang di SEMUA 10 halaman publik**
 (`public/index.html`, `rb.html`, `yb.html`, `bk.html`, `sb.html`, `tp.html`,
-`vd.html`, `xn.html`, `zg.html`) — bukan cuma `/monitor`.
+`vd.html`, `xn.html`, `zg.html`, `er.html`) — bukan cuma `/monitor`.
 
 **Bug lama (sudah diperbaiki):** sebelumnya kode `_Hasync.push(['Histats.start', ...])`
 HANYA ada di halaman `/monitor` (dashboard admin internal, di `lib/monitor.js`).
 Akibatnya statistik Histats situs (sid 5040431) tidak pernah bertambah dari
 pengunjung asli — yang tertrack cuma sesi admin sendiri saat buka `/monitor`.
 Fix: tambahkan snippet yang sama (tanpa widget counter visual, cuma tracking)
-sebelum `</body>` di kesembilan halaman publik tadi.
+sebelum `</body>` di kesepuluh halaman publik tadi.
 
 ### Snippet yang dipasang di tiap halaman publik (sebelum `</body>`)
 ```html
