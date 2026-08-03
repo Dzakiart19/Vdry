@@ -160,7 +160,7 @@ window.initVdryCategoryPicker = function (opts) {
    Sesi berikutnya (tab baru / visit baru) trigger ulang 1x lagi.
    Tidak mengganggu UX — video tetap terbuka normal. ── */
 (function () {
-  var SL_URL = 'https://turbulentrefreshments.com/z6ec2ixj7?key=bafa7c785c7d84482705d8749d9b28de';
+  var SL_URL = 'https://rm358.com/4/11490160';
   var SL_KEY = 'vdry_sl';
   if (sessionStorage.getItem(SL_KEY)) return;
 
