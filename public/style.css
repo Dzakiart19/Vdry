@@ -377,6 +377,7 @@ body {
   align-items: center;
   gap: 5px;
   padding: 3px 11px 3px 8px;
+  margin-left: auto;
   margin-right: 8px;
   background: linear-gradient(135deg, #0d1b2a 0%, #102030 100%);
   border: 1px solid rgba(80,180,255,.4);
@@ -404,16 +405,14 @@ body {
   line-height: 1.4;
   opacity: .85;
 }
-@media (max-width: 600px) {
+/* Mobile: tetap styled, cukup lebih compact */
+@media (max-width: 768px) {
   .partner-topbar-link::before { display: none; }
-  .partner-topbar-text { display: none; }
   .partner-topbar-link {
-    padding: 4px 7px;
-    font-size: 15px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    animation: none;
+    padding: 3px 9px;
+    font-size: 11px;
+    gap: 3px;
+    margin-right: 6px;
   }
 }
 
