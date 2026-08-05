@@ -367,36 +367,29 @@ body {
   background: var(--bg);
 }
 
-/* ─── Partner Banner ─── */
-.partner-bar {
-  display: flex;
+/* ─── Partner Topbar Link ─── */
+.partner-topbar-link {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 16px;
-  margin-bottom: 20px;
-  background: linear-gradient(90deg, rgba(255,60,80,.08) 0%, rgba(255,60,80,.14) 50%, rgba(255,60,80,.08) 100%);
-  border: 1px solid rgba(255,60,80,.25);
-  border-radius: 8px;
-  text-align: center;
-  box-sizing: border-box;
-}
-.partner-label {
+  gap: 4px;
+  padding: 4px 10px;
+  margin-right: 6px;
+  background: rgba(255,60,80,.12);
+  border: 1px solid rgba(255,60,80,.3);
+  border-radius: 20px;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.partner-link {
-  font-size: 13px;
   font-weight: 600;
   color: #ff3c50;
   text-decoration: none;
-  transition: opacity .2s;
+  white-space: nowrap;
+  transition: background .2s, opacity .2s;
+  flex-shrink: 0;
 }
-.partner-link:hover { opacity: .75; text-decoration: underline; }
+.partner-topbar-link:hover { background: rgba(255,60,80,.22); opacity: .9; }
+@media (max-width: 480px) {
+  .partner-topbar-text { display: none; }
+  .partner-topbar-link { padding: 4px 7px; font-size: 13px; background: transparent; border: none; }
+}
 
 /* ─── Section heading ─── */
 .section-heading {
