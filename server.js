@@ -213,7 +213,7 @@ registerMonitorRoutes(app, {
     xn.caches[0], xn.caches[1], xn.caches[2], xn.caches[3], xn.caches[4], // p8: posts, m3u8, video, fresh, categories
     vd.caches[0], vd.caches[1], vd.caches[2],                               // vd: posts, video, thumb
     zg.caches[0], zg.caches[1], zg.caches[2], zg.caches[3],                // zg: posts, categories, video, thumb
-    er.caches[0], er.caches[1],                                              // er: posts, video
+    er.caches[0], er.caches[1], er.caches[2],                                 // er: posts, video, thumb
   ].map(c => c.stats()),
 });
 

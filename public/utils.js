@@ -166,7 +166,7 @@ window.initVdryCategoryPicker = function (opts) {
 
   function onFirstCardClick(e) {
     var card = e.target.closest(
-      '.rb-card,.yb-card,.bk-card,.sb-card,.xn-card,.vd-card,.zg-card' +
+      '.rb-card,.yb-card,.bk-card,.sb-card,.xn-card,.vd-card,.zg-card,.er-card' +
       ',.tp-slide:not(.tp-slide-ad):not(.tp-slide-end)'
     );
     if (!card) return;

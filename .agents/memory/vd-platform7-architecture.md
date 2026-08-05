@@ -46,7 +46,10 @@ Title is in `.video-info > .video-title` which is a **sibling** of `<a>`, both i
 - Related: `$('a.related-video-link[href*="watch.php?id="]')` → thumb from `.related-thumbnail` `style` background-image URL, title from `.related-title` text
 
 ### Pagination
-- `totalPages = posts.length >= 20 ? page + 50 : page`  (site has no total page count in HTML)
+- videy.design hanya tampilkan tombol "Next" (tidak ada nomor halaman total)
+- **Lazy pagination:** parse `a.pagination-btn[href*="page="]` → jika ada link dengan page > current → `totalPages = page + 1`, jika tidak ada → `totalPages = page` (halaman terakhir)
+- Strategi ini akurat: frontend tampilkan tombol Next hanya saat benar-benar ada halaman berikutnya, tanpa perlu tebak total
+- **Jangan gunakan `page + N` heuristic** — meleset jauh, user bisa navigate ke halaman kosong
 
 ### CDN allowlist
 Only `videy.design` hostname — no secondary CDN domains observed.

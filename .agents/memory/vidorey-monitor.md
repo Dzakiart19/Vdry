@@ -115,21 +115,46 @@ stuck "Connecting..." di Koyeb deployment.
 
 ## Tracking Middleware
 
-| Badge | Trigger path | CSS color (background → text) |
-|---|---|---|
-| `stream` | `/proxy/stream/:id` | — |
-| `video` | `/api/video/:id` | — |
-| `folder` | `/api/folder/:id` | — |
-| `rb_video` | `/api/rb/video/:slug` | — |
-| `rb_posts` | `/api/rb/posts` | — |
-| `yb_video` | `/api/yb/video/:slug` | — |
-| `yb_posts` | `/api/yb/posts` | — |
-| `bk_video` | `/api/bk/video/:slug` | `#1c2a3a` → `#38bdf8` |
-| `bk_posts` | `/api/bk/posts` | `#1c2a3a` → `#38bdf8` |
-| `tp_video` | `/api/tp/video/:slug` | `#3a0a1a` → `#e91e8c` |
-| `tp_posts` | `/api/tp/posts` | `#3a0a1a` → `#ff4d6d` |
+Setiap platform punya 3 badge: `*_posts` (listing), `*_video` (watch), `*_stream` (HLS/MP4 proxy start).
+
+| Badge | Trigger path |
+|---|---|
+| `stream` | `/proxy/stream/:id` (P1 MP4) |
+| `video` | `/api/video/:id` |
+| `folder` | `/api/folder/:id` |
+| `rb_video` | `/api/rb/video/:slug` |
+| `rb_posts` | `/api/rb/posts` |
+| `rb_stream` | `/proxy/rb/hls/:slug` |
+| `yb_video` | `/api/yb/video/:slug` |
+| `yb_posts` | `/api/yb/posts` |
+| `yb_stream` | `/proxy/yb/hls/:slug` |
+| `bk_video` | `/api/bk/video/:slug` |
+| `bk_posts` | `/api/bk/posts` |
+| `bk_stream` | `/proxy/bk/stream/:slug` |
+| `tp_video` | `/api/tp/video/:slug` |
+| `tp_posts` | `/api/tp/posts` |
+| `tp_stream` | `/proxy/tp/hls/:slug` |
+| `sb_video` | `/api/sb/video/:slug` |
+| `sb_posts` | `/api/sb/posts` |
+| `sb_stream` | `/proxy/sb/hls/:slug` |
+| `xn_video` | `/api/xn/video/:slug` |
+| `xn_posts` | `/api/xn/posts` |
+| `xn_stream` | `/proxy/xn/hls/:slug` |
+| `vd_video` | `/api/vd/video/:slug` |
+| `vd_posts` | `/api/vd/posts` |
+| `vd_stream` | `/proxy/vd/stream/:slug` |
+| `zg_video` | `/api/zg/video/:slug` |
+| `zg_posts` | `/api/zg/posts` |
+| `zg_stream` | `/proxy/zg/stream/:slug` |
+| `er_video` | `/api/er/video/:albumId` |
+| `er_posts` | `/api/er/posts` |
+| `er_stream` | `/proxy/er/stream/:albumId` |
+
+**Catatan tracking HLS:** hanya `/proxy/XX/hls/:slug` (master m3u8 request = video start) yang ditrack, bukan `/proxy/XX/seg` (segment — terlalu frekuent, akan flood monitor).
 
 IP dari `x-forwarded-for` header (first value), truncated karena Replit proxy.
+
+**Badge CSS convention:** setiap event type butuh rule `.b-<type>` di monitor.js inline CSS. Saat tambah event type baru, wajib tambahkan CSS-nya sekalian atau badge tampil tanpa warna (fallback putih).
 
 ---
 

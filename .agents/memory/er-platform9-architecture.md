@@ -11,7 +11,7 @@ description: erome.com HTML scrape, direct MP4 proxy, search-based categories (v
 - **Files**: `lib/scrapers/er.js`, `public/er.html`, `public/er.js`
 - **Delivery**: Direct MP4 proxy (no HLS, no signed token)
 - **Avatar CSS**: `.ps-avatar-er`
-- **Monitor badges**: `er_video` / `er_posts`
+- **Monitor badges**: `er_video` / `er_posts` / `er_stream`
 - **Shortlink**: platform `'er'`
 
 ## Source site
@@ -35,8 +35,8 @@ Kita hanya ambil album yang punya `span.album-videos` (album berisi video).
 
 ### CDN
 - MP4: `v{N}.erome.com` (Ceph/S3, Range OK, tanpa signed token, TTL tidak ada)
-- Thumb: `s{N}.erome.com` — bisa di-expose langsung ke browser (CSP sudah allow `https:`)
-- CDN validation: `isAllowedErUrl()` — check `hostname.endsWith('.erome.com')`
+- Thumb: `s{N}.erome.com` — **diproxy server-side** via `/proxy/er/thumb?url=...` (erThumbCache 24h)
+- CDN validation: `isAllowedErUrl()` + `isAllowedErThumbUrl` (alias) — check `hostname.endsWith('.erome.com')`
 - **Tidak perlu self-healing** — URL MP4 tidak berisi token TTL
 
 ## Categories — search-based
@@ -83,6 +83,7 @@ Version filter sudah mati → gunakan search keyword sebagai "kategori":
 |---|---|---|---|---|
 | `erPostsCache` | `er_posts` | 5 mnt | 300 | Listing/search results |
 | `erVideoCache` | `er_video` | 4 jam | 500 | Album detail (MP4 URL permanen, TTL panjang aman) |
+| `erThumbCache` | `er_thumb` | 24 jam | 1000 | Thumbnail buffer (arraybuffer, keyed by full CDN URL) |
 
 Cache key posts: `${page}:${q}:${catId}` — sederhana, tidak pakai sort/version.
 
