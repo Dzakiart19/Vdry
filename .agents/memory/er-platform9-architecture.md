@@ -14,6 +14,14 @@ description: erome.com HTML scrape, direct MP4 proxy, search-based categories (v
 - **Monitor badges**: `er_video` / `er_posts` / `er_stream`
 - **Shortlink**: platform `'er'`
 
+## Thumbnail hosting constraint
+
+ER listing and related thumbnails are returned as relative `/proxy/er/thumb` paths. The frontend must prepend `BACKEND_URL` when the page is hosted separately from the scraper backend.
+
+**Why:** Firebase Hosting serves the frontend while the ER thumbnail proxy runs on the backend host; a relative URL otherwise targets Firebase and fails.
+
+**How to apply:** Normalize relative ER media URLs in `public/er.js`, while leaving absolute URLs unchanged for self-hosted/local environments.
+
 ## Source site
 
 erome.com adalah user-submitted album site. Setiap album bisa berisi foto saja, video saja, atau campuran.

@@ -127,6 +127,14 @@
     return r.json();
   }
 
+  /* API ER mengembalikan URL proxy relatif. Saat frontend berada di Firebase,
+     URL relatif harus diarahkan kembali ke backend, bukan ke Firebase Hosting. */
+  function mediaUrl(url) {
+    if (!url) return '';
+    if (/^(https?:|data:|blob:)/i.test(url)) return url;
+    return `${API}${url}`;
+  }
+
   /* ── Search heading ── */
   function updateSearchHeading() {
     const q   = state.searchQuery;
@@ -223,7 +231,7 @@
   function renderPosts(posts) {
     els.grid.innerHTML = posts.map(p => {
       // erome thumb CDN (s{N}.erome.com) exposed langsung — imgSrc CSP sudah allow https:
-      const thumb = escHtml(p.thumb || '');
+      const thumb = escHtml(mediaUrl(p.thumb || ''));
       const title = escHtml(p.title || '');
       const slug  = escHtml(p.slug  || '');
       return `<div class="rb-card" data-slug="${slug}" tabindex="0" role="button" aria-label="${title}">
@@ -354,7 +362,7 @@
     const pageItems  = items.slice(start, start + RELATED_PAGE_SIZE);
 
     els.relatedGrid.innerHTML = pageItems.map(p => {
-      const thumb = escHtml(p.thumb || '');
+      const thumb = escHtml(mediaUrl(p.thumb || ''));
       const title = escHtml(p.title || '');
       const slug  = escHtml(p.slug  || '');
       return `<div class="rb-card" data-slug="${slug}" tabindex="0" role="button" aria-label="${title}">
