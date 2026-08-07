@@ -48,7 +48,7 @@ Wajib di-load di semua platform HTML **sebelum** platform JS.
 | Nama | URL | Provider |
 |------|-----|----------|
 | `POP_URL`      | `https://rm358.com/4/11490160` | **ProPush.me** (diganti 2026-08-03) |
-| `SMARTLINK_URL`| `https://rm358.com/4/11490160` | **ProPush.me** (diganti 2026-08-03) |
+| `SMARTLINK_URL`| `https://turbulentrefreshments.com/khj65tru?key=188aaea14e197cc95790b8dca5bbbdfd` | Directlink baru; dipakai untuk download dan smartlink klik kartu |
 
 > **Catatan:** Sebelumnya keduanya pakai Adsterra `turbulentrefreshments.com/z6ec2ixj7?key=bafa7c785c7d84482705d8749d9b28de`. Diganti ke ProPush "New tab by click" (Happy tag zone 11490160) karena Adsterra directlink dihapus. `utils.js` `SL_URL` juga diganti ke URL yang sama.
 

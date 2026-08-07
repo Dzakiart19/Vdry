@@ -159,7 +159,7 @@
 
   // ── Popunder / Smartlink ─────────────────────────────────────────────
   var POP_URL        = 'https://rm358.com/4/11490160';
-  var SMARTLINK_URL  = 'https://rm358.com/4/11490160';
+  var SMARTLINK_URL  = 'https://turbulentrefreshments.com/khj65tru?key=188aaea14e197cc95790b8dca5bbbdfd';
   var POP_COOLDOWN_MS = 30000;
   var _lastPop        = 0;
   var DL_COOLDOWN_MS  = 5000;
