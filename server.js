@@ -62,7 +62,7 @@ app.use(helmet({
         'https://www.googletagmanager.com',
         // hls.js (rb.html + yb.html)
         'https://cdn.jsdelivr.net',
-        // Adsterra ad network (semua unit via turbulentrefreshments.com)
+        // Jaringan iklan (semua unit via turbulentrefreshments.com)
         'https://turbulentrefreshments.com',
         // Histats.com visitor counter (/monitor page)
         'https://s10.histats.com',
@@ -98,7 +98,7 @@ app.use(helmet({
     },
   },
   crossOriginEmbedderPolicy: false, // video HLS butuh cross-origin resource
-  crossOriginOpenerPolicy:   false, // Adsterra popunder perlu window.opener
+  crossOriginOpenerPolicy:   false, // Popunder perlu window.opener
   crossOriginResourcePolicy: false, // Firebase frontend beda origin — allow cross-origin load (img, video)
 }));
 

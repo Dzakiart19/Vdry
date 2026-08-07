@@ -7,7 +7,7 @@
       atOptions yang sudah di-overwrite unit B.
    2. NO CACHE BUSTER — ?_t= dihapus dari URL invoke.js; beberapa
       CDN tidak mengenali path dengan query param → gagal serve.
-   3. atOptions = {} tanpa window. — sesuai format resmi Adsterra.
+   3. atOptions = {} tanpa window. — sesuai format jaringan iklan.
    4. MODAL ADS — inject ulang saat modal terbuka (bukan saat hidden).
    5. AUTO-REFRESH — listing: 90s, modal: 60s.
 ────────────────────────────────────────────────────────────────────── */
@@ -157,8 +157,8 @@
 
   document.addEventListener('DOMContentLoaded', initListingAds);
 
-  // ── Adsterra directlink ─────────────────────────────────────────────
-  // Popunder dikelola oleh script Adsterra yang dimuat di setiap halaman.
+  // ── Directlink jaringan iklan ───────────────────────────────────────
+  // Popunder dikelola oleh script jaringan iklan yang dimuat di setiap halaman.
   // Jangan buka URL popunder custom dari sini.
   var SMARTLINK_URL  = 'https://turbulentrefreshments.com/khj65tru?key=188aaea14e197cc95790b8dca5bbbdfd';
   var DL_COOLDOWN_MS  = 5000;
@@ -166,7 +166,7 @@
 
   function triggerPopunder() {
     // Compatibility no-op: existing platform handlers may still call this.
-    // The active popunder is the Adsterra script included in each HTML page.
+    // The active popunder is the network script included in each HTML page.
   }
 
   // ── Video Overlay (dinonaktifkan) ────────────────────────────────────

@@ -81,13 +81,13 @@ function triggerDirectlink() {
 
 ## Video Overlay — Dihapus
 
-**Why:** Semua 10 Adsterra zone sudah dipakai di posisi lain. Zone 300×250 yang di-inject ke overlay = duplikat `createInlineAd()` di grid. Ad network tidak render zone yang sama 2× → overlay selalu blank (cuma garis bar).
+**Why:** Semua zone sudah dipakai di posisi lain. Zone 300×250 yang di-inject ke overlay = duplikat `createInlineAd()` di grid. Ad network tidak render zone yang sama 2× → overlay selalu blank (cuma garis bar).
 
 **Fix:**
 - `initVideoOverlay(prefix)` → no-op (langsung `return`)
 - CSS: `.video-ad-overlay { display: none !important }` — force hide meskipun browser cache JS lama
 
-**Jangan restore overlay** kecuali ada zone Adsterra baru yang belum dipakai di posisi manapun.
+**Jangan restore overlay** kecuali ada zone baru yang belum dipakai di posisi manapun.
 
 ## SVG Width/Height — Wajib di Attribute
 

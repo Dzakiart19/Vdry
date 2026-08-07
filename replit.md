@@ -56,9 +56,9 @@ Tiap modul `lib/scrapers/*.js` export `{ router, caches }` — `caches` dipakai 
 Navigasi antar platform via **sidebar drawer** — tombol hamburger ≡ di kiri topbar membuka panel geser dari kiri (seperti ChatGPT). Menampilkan dua seksi terpisah: **seksi atas** (listing biasa: Vidorey 1–8) dan **seksi bawah "Fitur Lain"** (khusus TikTok-style: Vidorey TikTok 1). Highlight platform aktif. Tutup dengan tombol ✕, klik backdrop, atau Esc.
 
 ## Iklan
-Jaringan iklan: **Adsterra** (direkomendasikan untuk traffic Indonesia). ExoClick sudah dihapus sepenuhnya. Semua iklan dikelola terpusat via `public/ads.js`.
+Jaringan iklan: semua unit dikelola terpusat via `public/ads.js`. ExoClick sudah dihapus sepenuhnya.
 
-### Prinsip optimasi (rekomendasi Adsterra AI Support)
+### Prinsip optimasi jaringan iklan
 Traffic Indonesia = Tier-3, CPM lebih rendah dari US/UK. Strategi paling optimal:
 - **Popunder + Social Bar** membayar lebih baik dari banner biasa untuk traffic ID
 - **Native Banner** menyatu dengan feed, tidak terasa seperti iklan, fill rate tinggi

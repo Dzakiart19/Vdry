@@ -1,13 +1,13 @@
 ---
 name: Vidorey Ad Optimization
-description: Arsitektur iklan Adsterra lengkap — ads.js, zone registry, sticky system, setup per platform, aturan zona, dan pola init. Status: sudah dioptimasi Juli 2026.
+description: Arsitektur iklan lengkap — ads.js, zone registry, sticky system, setup per platform, aturan zona, dan pola init.
 ---
 
 # Vidorey Ad Optimization
 
 ## Konteks: Mengapa setup ini
 
-Traffic mayoritas Indonesia = Tier-3, CPM rendah. Adsterra AI Support merekomendasikan:
+Traffic mayoritas Indonesia = Tier-3, CPM rendah. Rekomendasi jaringan:
 **Popunder + Social Bar + Native Banner** sebagai kombinasi terbaik untuk traffic ID.
 Banner biasa hanya pelengkap — jangan berlebihan karena zone key duplikat di halaman yang sama justru menurunkan CPM.
 
@@ -23,7 +23,7 @@ Banner biasa hanya pelengkap — jangan berlebihan karena zone key duplikat di h
 
 ## Domain mirror ad network
 
-`effectivecpmnetwork.com`, `turbulentrefreshments.com`, `highperformanceformat.com` adalah **CDN mirror dari jaringan Adsterra yang sama** — hash key identik, domain berbeda. Jangan anggap provider berbeda.
+`effectivecpmnetwork.com`, `turbulentrefreshments.com`, `highperformanceformat.com` adalah **CDN mirror dari jaringan iklan yang sama** — hash key identik, domain berbeda. Jangan anggap provider berbeda.
 
 ---
 
@@ -47,10 +47,10 @@ Wajib di-load di semua platform HTML **sebelum** platform JS.
 
 | Nama | URL | Provider |
 |------|-----|----------|
-| `POP_URL`      | — | Dihapus; popunder ditangani script Adsterra yang dimuat di setiap halaman |
+| `POP_URL`      | — | Dihapus; popunder ditangani script jaringan iklan yang dimuat di setiap halaman |
 | `SMARTLINK_URL`| `https://turbulentrefreshments.com/khj65tru?key=188aaea14e197cc95790b8dca5bbbdfd` | Directlink baru; dipakai untuk download dan smartlink klik kartu |
 
-> **Catatan:** Sebelumnya keduanya pakai Adsterra `turbulentrefreshments.com/z6ec2ixj7?key=bafa7c785c7d84482705d8749d9b28de`. Diganti ke ProPush "New tab by click" (Happy tag zone 11490160) karena Adsterra directlink dihapus. `utils.js` `SL_URL` juga diganti ke URL yang sama.
+> **Catatan:** Directlink memakai URL jaringan iklan yang dikonfigurasi di `ads.js`; `utils.js` `SL_URL` juga memakai URL yang sama.
 
 ### Script static di semua HTML (bukan via ZONES)
 
@@ -97,9 +97,9 @@ Native Banner butuh container: `<div id="container-761a1a8645cd2263043bfeb6f2e87
 - MutationObserver cancel hide jika iframe muncul sebelum 6s
 
 ### `initVideoOverlay(prefix)`
-- **DIHAPUS / NO-OP** — fungsi masih ada tapi langsung `return`. Overlay bar dihapus karena semua zone key Adsterra sudah terpakai di posisi lain (zone conflict) sehingga konten ad tidak pernah muncul.
+- **DIHAPUS / NO-OP** — fungsi masih ada tapi langsung `return`. Overlay bar dihapus karena semua zone key sudah terpakai di posisi lain (zone conflict) sehingga konten ad tidak pernah muncul.
 - CSS: `.video-ad-overlay { display: none !important }` — force hide agar tidak tampil bahkan dengan cached JS.
-- **Jangan restore overlay ini** kecuali ada zone Adsterra baru yang belum dipakai.
+- **Jangan restore overlay ini** kecuali ada zone baru yang belum dipakai.
 
 ### `initVideoTap(prefix)`
 - Transparent div `#PREFIXVideoTapZone` menutup area video
@@ -112,7 +112,7 @@ Native Banner butuh container: `<div id="container-761a1a8645cd2263043bfeb6f2e87
 
 ### `triggerPopunder()`
 - Compatibility no-op; tidak membuka URL custom.
-- Popunder aktif ditangani script Adsterra static yang dimuat di setiap HTML.
+- Popunder aktif ditangani script jaringan iklan static yang dimuat di setiap HTML.
 
 ### `triggerDirectlink()`
 - `window.open(SMARTLINK_URL, '_blank')` — tab depan (foreground), bukan background
@@ -310,7 +310,7 @@ SVG wajib punya `width="15" height="15"` — **wajib di attribute, TIDAK cukup C
 
 ## Bug history
 
-- **Video overlay selalu blank (garis doang)** — semua 10 Adsterra zone sudah dipakai di posisi lain; zone 300×250 yang di-inject ke overlay adalah duplikat dari `createInlineAd()`. Ad network tidak render zone yang sama 2×. Fix: hapus overlay sepenuhnya (`initVideoOverlay` = no-op, CSS `display:none !important`).
+- **Video overlay selalu blank (garis doang)** — semua zone sudah dipakai di posisi lain; zone 300×250 yang di-inject ke overlay adalah duplikat dari `createInlineAd()`. Ad network tidak render zone yang sama 2×. Fix: hapus overlay sepenuhnya (`initVideoOverlay` = no-op, CSS `display:none !important`).
 - **triggerDirectlink tidak fire saat klik Download** — `triggerDirectlink()` share `_lastPop` dengan `triggerPopunder()` (cooldown 30 detik). Saat modal buka → popunder set `_lastPop` → klik Download dalam 30 detik → directlink blocked. Fix: pisah variabel `_lastDirectlink` + `DL_COOLDOWN_MS = 5000`.
 - **Download button — download langsung tanpa iklan dulu** — `a.click()` dipanggil langsung setelah `triggerDirectlink()` (yang buka tab baru). Fix: tambah `setTimeout 800ms` sebelum `a.click()` agar tab iklan keburu terbuka.
 
@@ -322,5 +322,5 @@ SVG wajib punya `width="15" height="15"` — **wajib di attribute, TIDAK cukup C
 - **Orphaned CSS** `.tp-footer-banner-wrap` masih ada di style.css setelah HTML-nya dihapus. Fix: hapus dari style.css.
 - **`createInlineAd()` semua platform bypass queue** — 8 file platform JS (`app.js`, `rb.js`, `yb.js`, `bk.js`, `sb.js`, `xn.js`, `vd.js`, `zg.js`) masing-masing punya `createInlineAd()` yang inject langsung via `s1.text = "atOptions=..."` + `s2.src = invoke.js` tanpa melewati `VdryAds.injectAd()`. Race condition tetap terjadi walau `ads.js` sudah dibenahi. Fix (2026-08-01): ganti semua ke `window.VdryAds.injectAd(wrap, 'box-300')` dengan fallback direct inject jika `VdryAds` belum load.
 - **Race condition `atOptions` global di `ads.js`** — semua slot inject hampir bersamaan (stagger 300ms); invoke.js unit A membaca `atOptions` yang sudah di-overwrite oleh unit B. Fix (2026-08-01): serial injection queue (`_iq[]` + `_iqBusy`) — setiap slot tunggu invoke.js load + 600ms buffer sebelum slot berikutnya, hard timeout 5s per slot.
-- **Cache buster `?_t=Date.now()` di URL invoke.js** — CDN Adsterra tidak kenali path dengan query string, request jatuh ke miss setiap kali. Fix (2026-08-01): hapus cache buster dari `invoke.js` URL (modal ads tetap pakai cache buster di URL-nya sendiri karena beda mekanisme).
-- **`window.atOptions =` seharusnya `atOptions =`** — penulisan `window.atOptions` membuat variabel tidak terdapat di scope yang diharapkan Adsterra. Fix (2026-08-01): tulis `atOptions = {...}` tanpa prefix `window.`.
+- **Cache buster `?_t=Date.now()` di URL invoke.js** — CDN iklan tidak kenali path dengan query string, request jatuh ke miss setiap kali. Fix: hapus cache buster dari `invoke.js` URL.
+- **`window.atOptions =` seharusnya `atOptions =`** — penulisan `window.atOptions` membuat variabel tidak terdapat di scope yang diharapkan jaringan iklan. Fix: tulis `atOptions = {...}` tanpa prefix `window.`.
