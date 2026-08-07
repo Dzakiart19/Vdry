@@ -22,7 +22,7 @@
 - [ZG Platform 8 Architecture](zg-platform8-architecture.md) — zoig.com; X-Forwarded-For residential IP bypass; signed MP4 token changes per request → 8-min cache + self-heal; poster attr for thumb; ul.browse.related for related videos.
 - [Vidorey i18n EN/ID Toggle](vidorey-i18n.md) — default='en'; button shows CURRENT lang; nav.p3–p7 added; emojis in copy; ?v=3 cache-bust; langToggle z-index:200.
 - [Vidorey Web Access Guard](vidorey-web-guard.md) — WEB_DEV_HOSTS regex blokir static+SPA di Koyeb; API/proxy/monitor tetap terbuka; 127.0.0.1 wajib di allowlist.
-- [Vidorey Ad Optimization](vidorey-ad-optimization.md) — ads.js + sticky banner; createInlineAd() pos 8/16/24 P1–P9 kecuali tp; directlink/popunder pakai ProPush rm358.com (bukan Adsterra); zone conflict rule.
+- [Vidorey Ad Optimization](vidorey-ad-optimization.md) — ads.js + sticky banner; Adsterra scripts menangani popunder; directlink memakai zone turbulentrefreshments; zone conflict rule.
 - [Vidorey Audit 2026-07-28](vidorey-audit-2026-07-28.md) — P3 playmogo.com & P6/P7 fbplay.vip already handled gracefully (dead-cache); p1 deadStreamIds cleanup added; tpThumbCache dead comment removed.
 - [Watch Modal Scroll/Overlap Fix](vidorey-watch-scroll-fix.md) — GPU video layer bleed fix (isolation:isolate + z-index:1 on related); Social Bar suppressor in ads.js; modal z-index bumped to 10000.
 - [Download Button + Directlink Fix](vidorey-download-directlink.md) — triggerDirectlink pakai cooldown terpisah (_lastDirectlink 5s); 800ms delay sebelum download; overlay dihapus (no-op + CSS display:none !important).

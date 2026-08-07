@@ -47,7 +47,7 @@ Wajib di-load di semua platform HTML **sebelum** platform JS.
 
 | Nama | URL | Provider |
 |------|-----|----------|
-| `POP_URL`      | `https://rm358.com/4/11490160` | **ProPush.me** (diganti 2026-08-03) |
+| `POP_URL`      | — | Dihapus; popunder ditangani script Adsterra yang dimuat di setiap halaman |
 | `SMARTLINK_URL`| `https://turbulentrefreshments.com/khj65tru?key=188aaea14e197cc95790b8dca5bbbdfd` | Directlink baru; dipakai untuk download dan smartlink klik kartu |
 
 > **Catatan:** Sebelumnya keduanya pakai Adsterra `turbulentrefreshments.com/z6ec2ixj7?key=bafa7c785c7d84482705d8749d9b28de`. Diganti ke ProPush "New tab by click" (Happy tag zone 11490160) karena Adsterra directlink dihapus. `utils.js` `SL_URL` juga diganti ke URL yang sama.
@@ -111,8 +111,8 @@ Native Banner butuh container: `<div id="container-761a1a8645cd2263043bfeb6f2e87
 - Fixed overlay bar `#tpAdBar` muncul 5s setelah load, reshow 120s
 
 ### `triggerPopunder()`
-- `window.open(POP_URL, '_blank')` + `w.blur(); window.focus()`
-- Rate-limit: 1× per 30 detik global (`_lastPop`, `POP_COOLDOWN_MS = 30000`)
+- Compatibility no-op; tidak membuka URL custom.
+- Popunder aktif ditangani script Adsterra static yang dimuat di setiap HTML.
 
 ### `triggerDirectlink()`
 - `window.open(SMARTLINK_URL, '_blank')` — tab depan (foreground), bukan background

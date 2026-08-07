@@ -157,22 +157,16 @@
 
   document.addEventListener('DOMContentLoaded', initListingAds);
 
-  // ── Popunder / Smartlink ─────────────────────────────────────────────
-  var POP_URL        = 'https://rm358.com/4/11490160';
+  // ── Adsterra directlink ─────────────────────────────────────────────
+  // Popunder dikelola oleh script Adsterra yang dimuat di setiap halaman.
+  // Jangan buka URL popunder custom dari sini.
   var SMARTLINK_URL  = 'https://turbulentrefreshments.com/khj65tru?key=188aaea14e197cc95790b8dca5bbbdfd';
-  var POP_COOLDOWN_MS = 30000;
-  var _lastPop        = 0;
   var DL_COOLDOWN_MS  = 5000;
   var _lastDirectlink = 0;
 
   function triggerPopunder() {
-    var now = Date.now();
-    if (now - _lastPop < POP_COOLDOWN_MS) return;
-    _lastPop = now;
-    try {
-      var w = window.open(POP_URL, '_blank', 'noopener,noreferrer');
-      if (w) { w.blur(); window.focus(); }
-    } catch (e) {}
+    // Compatibility no-op: existing platform handlers may still call this.
+    // The active popunder is the Adsterra script included in each HTML page.
   }
 
   // ── Video Overlay (dinonaktifkan) ────────────────────────────────────
