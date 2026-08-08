@@ -43,7 +43,7 @@ Semua halaman pakai keyword bahasa **Inggris** agar Google indexing mengirim tra
   <!-- Favicon -->
   <link rel="stylesheet" href="/style.css" />
   <link rel="icon" type="image/png" href="/logo.png" />
-  <!-- Schema.org — WAJIB array [WebSite, WebPage] -->
+  <!-- Schema.org — array [WebSite, WebPage] -->
   <script type="application/ld+json">
   [
     {
@@ -51,12 +51,7 @@ Semua halaman pakai keyword bahasa **Inggris** agar Google indexing mengirim tra
       "@type": "WebSite",
       "name": "Vidorey",
       "url": "https://vidorey.web.app/",
-      "description": "Watch free XXX videos and porn movies online. Thousands of HD sex videos updated daily. No registration needed.",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://vidorey.web.app/?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
+       "description": "Watch free XXX videos and porn movies online. Thousands of HD sex videos updated daily. No registration needed."
     },
     {
       "@context": "https://schema.org",
@@ -76,7 +71,7 @@ Semua halaman pakai keyword bahasa **Inggris** agar Google indexing mengirim tra
   <!-- End Google Tag Manager (noscript) -->
 ```
 
-**Why:** `og:locale=id_ID` → crawler anggap konten Indonesia → traffic Tier 1 tidak dikirim, CPM rendah. `lang="en"` + `og:locale=en_US` wajib di semua halaman. GTM wajib di head (script) + tepat setelah `<body>` (noscript). google-site-verification wajib di semua halaman agar GSC tetap valid.
+**Why:** `og:locale=id_ID` → crawler anggap konten Indonesia → traffic Tier 1 tidak dikirim, CPM rendah. `lang="en"` + `og:locale=en_US` wajib di semua halaman. GTM wajib di head (script) + tepat setelah `<body>` (noscript). google-site-verification wajib di semua halaman agar GSC tetap valid. Jangan menambahkan `SearchAction` selama homepage belum memiliki rute pencarian `?q=` yang benar-benar berfungsi.
 
 ## File statis SEO
 
@@ -90,7 +85,7 @@ Semua halaman pakai keyword bahasa **Inggris** agar Google indexing mengirim tra
 
 ## Schema.org (Structured Data)
 - **Semua 10 halaman** → JSON-LD array `[WebSite, WebPage]` — keduanya selalu ada bersamaan; plus **VideoObject** dinamis via `public/utils.js` saat video dibuka
-- `WebSite` schema: name, url, description, potentialAction (SearchAction ke `/?q={search_term_string}`)
+- `WebSite` schema: name, url, description. Tidak ada `SearchAction` karena homepage belum mendukung pencarian melalui URL `?q=`.
 - `WebPage` schema: name, url, description, isPartOf → WebSite utama
 - Format: `<script type="application/ld+json">[ {...WebSite}, {...WebPage} ]</script>` tepat sebelum `</head>`
 - Platform baru wajib pakai format array ini — jangan hanya WebPage saja
