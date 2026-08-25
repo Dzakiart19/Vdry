@@ -809,9 +809,17 @@ body {
   aspect-ratio: 16 / 9; /* fix: tanpa ini semua absolute children → container kolaps → player tiny */
 }
 
-/* ── Video overlay ad — dihapus, tidak dipakai ── */
+/* ── Video overlay ad — pre-roll & mid-roll (Phase 2) ── */
 .video-ad-overlay {
-  display: none !important;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(4px);
+  z-index: 5;
 }
 .video-ad-bar {
   display: flex;
@@ -821,6 +829,8 @@ body {
   background: linear-gradient(90deg, rgba(20,20,20,0.96) 0%, rgba(40,20,0,0.96) 100%);
   border-top: 1px solid rgba(255,180,0,0.35);
   gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .video-ad-label {
   color: #f5c842;
@@ -849,7 +859,92 @@ body {
   color: #fff;
 }
 .video-ad-close-btn:disabled { opacity: 0.4; cursor: default; }
-.video-ad-content { display: none; min-height: 250px; background: #000; }
+.video-ad-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 250px;
+  width: 100%;
+  background: #000;
+  flex: 1;
+}
+.video-ad-content > div { max-width: 300px; width: 100%; }
+
+/* ── Adblock overlay (Phase 2 escalation) ── */
+#vdry-adb-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.94);
+  backdrop-filter: blur(8px);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+.vdry-adb-overlay-box {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  background: var(--surface2, #1a1a1a);
+  border: 1px solid var(--border2, #2a2a2a);
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.7);
+}
+.vdry-adb-overlay-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+.vdry-adb-overlay-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text, #fff);
+  margin: 0 0 12px;
+}
+.vdry-adb-overlay-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text2, #aaa);
+  margin: 0 0 20px;
+}
+.vdry-adb-overlay-refresh {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: #f5c842;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.vdry-adb-overlay-refresh:hover { background: #ffd466; }
+.vdry-adb-overlay-continue {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  color: var(--muted, #888);
+  border: 1px solid var(--border2, #2a2a2a);
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.vdry-adb-overlay-continue:hover { color: var(--text, #fff); }
+
+/* ── Native listing ad card ── */
+.vd-native-ad-card {
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.06);
+}
 
 /* ── TikTok feed fixed overlay bar ── */
 .tp-ad-bar {

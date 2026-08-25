@@ -1,15 +1,13 @@
 'use strict';
-/* ── Vidorey Ads Manager ───────────────────────────────────────────────
-   Fix utama:
-   1. INJECTION QUEUE — serialisasi satu per satu: set atOptions →
-      tunggu invoke.js selesai load → baru inject berikutnya.
-      Mencegah race condition di mana invoke.js unit A membaca
-      atOptions yang sudah di-overwrite unit B.
-   2. NO CACHE BUSTER — ?_t= dihapus dari URL invoke.js; beberapa
-      CDN tidak mengenali path dengan query param → gagal serve.
-   3. atOptions = {} tanpa window. — sesuai format jaringan iklan.
-   4. MODAL ADS — inject ulang saat modal terbuka (bukan saat hidden).
-   5. AUTO-REFRESH — listing: 90s, modal: 60s.
+/* ── Vidorey Ads Manager — Phase 2 overhaul ───────────────────────────
+   Revenue-first updates:
+   1. INJECTION QUEUE — serialize atOptions + invoke.js to prevent race
+   2. PRE-ROLL OVERLAY (re-enabled) — 5s countdown, skippable, uses box-300.
+      Triggered when modal opens. User must wait 5s before skip.
+   3. MID-ROLL OVERLAY — every 5 min of playback, 5s banner at bottom.
+   4. NATIVE LISTING ADS — inject an ad card every 12 grid items
+      (positions 6, 18, 30, …). Removes 0-revenue "dead" slots between grid.
+   5. AUTO-REFRESH — listing: 90s, modal: 60s, mid-roll: 8 min.
 ────────────────────────────────────────────────────────────────────── */
 (function () {
 
@@ -101,6 +99,7 @@
   /**
    * Panggil tepat setelah modal.classList.remove('hidden').
    * Inject semua [data-ad-zone] di dalam modal.
+   * Pre-roll: bungkus video stage 5 detik dengan overlay iklan box-300.
    * Auto-refresh setiap 60 detik selama modal terbuka.
    */
   var _modalRefreshMap = [];
@@ -109,7 +108,7 @@
     if (!modalEl) return;
 
     _modalRefreshMap = _modalRefreshMap.filter(function (item) {
-      if (item.modalEl === modalEl) { clearInterval(item.tid); return false; }
+      if (item.modalEl === modalEl) { clearInterval(item.tid); clearInterval(item.mid); return false; }
       return true;
     });
 
@@ -125,7 +124,139 @@
 
     doInject();
     var tid = setInterval(doInject, 60000);
-    _modalRefreshMap.push({ modalEl: modalEl, tid: tid });
+    _modalRefreshMap.push({ modalEl: modalEl, tid: tid, mid: null });
+
+    // ── Pre-roll overlay activation ──
+    startPreRoll(modalEl);
+    // ── Mid-roll timer (5-min interval) ──
+    startMidRoll(modalEl);
+  }
+
+  // ── Pre-roll overlay ──────────────────────────────────────────────
+  //    Shows a 300x250 ad over the video stage for 5 seconds when the
+  //    modal opens. Skip button disabled until countdown finishes.
+  var _preRollTimers = [];
+  function clearPreRollTimers() {
+    _preRollTimers.forEach(clearTimeout);
+    _preRollTimers = [];
+  }
+
+  function startPreRoll(modalEl) {
+    if (!modalEl) return;
+    var overlay = modalEl.querySelector('.video-ad-overlay');
+    var content = modalEl.querySelector('.video-ad-content');
+    var timerEl = modalEl.querySelector('[id$="VideoAdTimer"]');
+    var closeBtn = modalEl.querySelector('[id$="VideoAdClose"]');
+    if (!overlay || !content || !timerEl || !closeBtn) return;
+
+    // Reset state
+    content.innerHTML = '';
+    closeBtn.disabled = true;
+    timerEl.textContent = '5';
+    overlay.style.display = '';
+    overlay.setAttribute('aria-hidden', 'false');
+
+    // Inject box-300 ad into overlay
+    var adSlot = document.createElement('div');
+    adSlot.setAttribute('data-ad-zone', 'box-300');
+    adSlot.style.margin = '0 auto';
+    content.appendChild(adSlot);
+    injectAd(adSlot, 'box-300');
+
+    var remaining = 5;
+    var intervalId = setInterval(function () {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(intervalId);
+        timerEl.textContent = '0';
+        closeBtn.disabled = false;
+        // Auto-hide after 1s delay post-countdown (lets user click skip)
+        var t = setTimeout(function () {
+          overlay.style.display = 'none';
+          overlay.setAttribute('aria-hidden', 'true');
+        }, 1000);
+        _preRollTimers.push(t);
+      } else {
+        timerEl.textContent = String(remaining);
+      }
+    }, 1000);
+    _preRollTimers.push(intervalId);
+
+    // Skip button handler
+    closeBtn.onclick = function () {
+      if (closeBtn.disabled) return;
+      clearInterval(intervalId);
+      overlay.style.display = 'none';
+      overlay.setAttribute('aria-hidden', 'true');
+    };
+  }
+
+  // ── Mid-roll overlay ──────────────────────────────────────────────
+  //    Every 5 minutes of playback, show a 5s banner at bottom of video.
+  //    Banner uses box-300. Can be dismissed early.
+  var _midRollTimers = [];
+  function clearMidRollTimers() {
+    _midRollTimers.forEach(clearInterval);
+    _midRollTimers = [];
+  }
+
+  function startMidRoll(modalEl) {
+    if (!modalEl) return;
+    var videoEl = modalEl.querySelector('video');
+    if (!videoEl) return;
+
+    clearMidRollTimers();
+
+    var lastShowAt = 0;
+    var MID_ROLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+    function checkMidRoll() {
+      if (modalEl.classList.contains('hidden')) {
+        clearMidRollTimers();
+        return;
+      }
+      if (videoEl.paused || videoEl.ended) return;
+      var now = Date.now();
+      if (now - lastShowAt < MID_ROLL_INTERVAL_MS) return;
+
+      lastShowAt = now;
+      showMidRollBanner(modalEl);
+    }
+
+    var intervalId = setInterval(checkMidRoll, 5000); // check every 5s
+    _midRollTimers.push(intervalId);
+    _modalRefreshMap[_modalRefreshMap.length - 1].mid = intervalId;
+  }
+
+  function showMidRollBanner(modalEl) {
+    // Reuse the pre-roll overlay, but with a different label
+    var overlay = modalEl.querySelector('.video-ad-overlay');
+    var label = modalEl.querySelector('.video-ad-label');
+    var content = modalEl.querySelector('.video-ad-content');
+    if (!overlay || !content) return;
+
+    content.innerHTML = '';
+    if (label) label.textContent = 'Iklan (5s)';
+
+    var adSlot = document.createElement('div');
+    adSlot.setAttribute('data-ad-zone', 'box-300');
+    adSlot.style.margin = '0 auto';
+    content.appendChild(adSlot);
+    injectAd(adSlot, 'box-300');
+
+    overlay.style.display = '';
+    overlay.setAttribute('aria-hidden', 'false');
+
+    var remaining = 5;
+    var intervalId = setInterval(function () {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(intervalId);
+        overlay.style.display = 'none';
+        overlay.setAttribute('aria-hidden', 'true');
+      }
+    }, 1000);
+    _midRollTimers.push(intervalId);
   }
 
   // ── Listing Page Ads ─────────────────────────────────────────────────
@@ -155,6 +286,35 @@
     setInterval(doInject, 90000);
   }
 
+  // ── Native listing injection ────────────────────────────────────────
+  //    Inject an ad card (box-300) between grid items at position 6, 18, 30, …
+  //    Works with any platform grid that uses .rb-grid > .rb-card or .grid-item.
+  function injectNativeListingAds(gridEl) {
+    if (!gridEl) return;
+    var cards = gridEl.querySelectorAll(':scope > .rb-card, :scope > .grid-item, :scope > [data-card]');
+    if (cards.length < 6) return;
+
+    // Position 6 (index 5), then every 12 cards after that
+    var injectPositions = [];
+    for (var pos = 6; pos < cards.length; pos += 12) {
+      injectPositions.push(pos - 1); // 0-indexed insertion BEFORE this card
+    }
+
+    injectPositions.forEach(function (idx) {
+      var card = cards[idx];
+      if (!card) return;
+      // Skip if an ad already exists right before this card
+      if (card.previousElementSibling && card.previousElementSibling.classList.contains('vd-native-ad-card')) return;
+
+      var adCard = document.createElement('div');
+      adCard.className = 'vd-native-ad-card rb-card';
+      adCard.setAttribute('data-ad-zone', 'box-300');
+      adCard.style.cssText = 'display:flex;align-items:center;justify-content:center;min-height:250px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.05);';
+      gridEl.insertBefore(adCard, card);
+      injectAd(adCard, 'box-300');
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', initListingAds);
 
   // ── Directlink jaringan iklan ───────────────────────────────────────
@@ -167,12 +327,6 @@
   function triggerPopunder() {
     // Compatibility no-op: existing platform handlers may still call this.
     // The active popunder is the network script included in each HTML page.
-  }
-
-  // ── Video Overlay (dinonaktifkan) ────────────────────────────────────
-  function initVideoOverlay(prefix) {
-    /* Dihapus — overlay bar tidak dipakai */
-    return;
   }
 
   // ── Video Tap Zone ───────────────────────────────────────────────────
@@ -323,12 +477,19 @@
     } catch (e) {}
   }
 
+  // Compatibility shim — old callers may still call initVideoOverlay
+  function initVideoOverlay(prefix) {
+    // No-op shim; pre-roll is now driven by reloadModalAds()
+    return;
+  }
+
   window.VdryAds = {
     reloadModalAds:    reloadModalAds,
     initVideoOverlay:  initVideoOverlay,
     initVideoTap:      initVideoTap,
     initTpFeed:        initTpFeed,
     initListingAds:    initListingAds,
+    injectNativeListingAds: injectNativeListingAds,
     triggerPopunder:   triggerPopunder,
     triggerDirectlink: triggerDirectlink,
     injectAd:          injectAd,
