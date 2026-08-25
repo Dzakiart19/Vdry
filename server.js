@@ -116,6 +116,7 @@ app.use(cors({
       (hostname.endsWith('.replit.dev')  && proto === 'https:')        ||
       (hostname.endsWith('.replit.app')  && proto === 'https:')        ||
       (hostname.endsWith('.koyeb.app')   && proto === 'https:')        ||
+      (hostname.endsWith('.space-z.ai')  && proto === 'https:')        ||  // sandbox preview
       origin === 'https://vidorey.web.app'                             ||
       origin === 'https://vidorey.firebaseapp.com'
     );
@@ -131,9 +132,10 @@ app.use(cors({
    Di Koyeb (production), Firebase sudah serve frontend-nya sendiri.
    Static files + SPA routes diblokir agar publik tidak bisa buka
    URL backend langsung. API/proxy/monitor tetap jalan normal.
-   Replit dev (*.replit.dev / *.replit.app) dan localhost diizinkan
+   Replit dev (*.replit.dev / *.replit.app), localhost, dan sandbox
+   preview (*.space-z.ai — reverse proxy dev environment) diizinkan
    penuh untuk testing. ── */
-const WEB_DEV_HOSTS = /\.(replit\.dev|replit\.app)$|^localhost$|^127\.0\.0\.1$|^0\.0\.0\.0$/;
+const WEB_DEV_HOSTS = /\.(replit\.dev|replit\.app|space-z\.ai)$|^localhost$|^127\.0\.0\.1$|^0\.0\.0\.0$/;
 app.use((req, res, next) => {
   const p = req.path;
   const isApiPath = p.startsWith('/api/')     ||
