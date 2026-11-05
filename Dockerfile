@@ -7,7 +7,10 @@ WORKDIR /app
 
 # curl dibutuhkan lib/curlfetch.js — fetch tik.porn (TP) memakai fingerprint
 # TLS curl karena Cloudflare memblokir fingerprint Node (lihat lib/curlfetch.js)
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
+# Acquire::Retries — build Koyeb kadang kena mirror Debian yang flaky; tanpa
+# retry build bisa gagal dan Koyeb tetap menjalankan instance versi lama.
+RUN apt-get -o Acquire::Retries=5 update \
+    && apt-get -o Acquire::Retries=5 install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy package files dulu (layer caching — npm install hanya re-run jika
