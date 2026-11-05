@@ -5,6 +5,11 @@ FROM node:20-slim
 # Set working directory
 WORKDIR /app
 
+# curl dibutuhkan lib/curlfetch.js — fetch tik.porn (TP) memakai fingerprint
+# TLS curl karena Cloudflare memblokir fingerprint Node (lihat lib/curlfetch.js)
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy package files dulu (layer caching — npm install hanya re-run jika
 # package.json / package-lock.json berubah)
 COPY package.json ./
