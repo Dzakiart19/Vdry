@@ -5,13 +5,10 @@ FROM node:20-slim
 # Set working directory
 WORKDIR /app
 
-# curl dibutuhkan lib/curlfetch.js — fetch tik.porn (TP) memakai fingerprint
-# TLS curl karena Cloudflare memblokir fingerprint Node (lihat lib/curlfetch.js)
-# Acquire::Retries — build Koyeb kadang kena mirror Debian yang flaky; tanpa
-# retry build bisa gagal dan Koyeb tetap menjalankan instance versi lama.
-RUN apt-get -o Acquire::Retries=5 update \
-    && apt-get -o Acquire::Retries=5 install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
+# Catatan: curl TIDAK di-install via apt-get — build Koyeb gagal saat
+# apt-get (mirror Debian flaky) dan Koyeb terus menjalankan versi lama.
+# Solusi: binary curl STATIS di-commit di lib/bin/curl (lihat lib/curlfetch.js
+# resolver). Binary statis = zero system dependency, jalan di node:20-slim.
 
 # Copy package files dulu (layer caching — npm install hanya re-run jika
 # package.json / package-lock.json berubah)
